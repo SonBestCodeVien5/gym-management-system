@@ -1,0 +1,57 @@
+# 1. Cấu hình mặc định: Tự động nhận diện file văn bản và ép về LF
+* text=auto eol=lf
+
+# 2. Các file mã nguồn cụ thể (Ép LF tuyệt đối)
+*.js      text eol=lf
+*.go      text eol=lf
+*.ts      text eol=lf
+*.json    text eol=lf
+*.sh      text eol=lf
+*.sql     text eol=lf
+*.md      text eol=lf
+*.html    text eol=lf
+*.css     text eol=lf
+
+# 3. Các file cấu hình (YAML, Docker, Environment)
+*.yml     text eol=lf
+*.yaml    text eol=lf
+Dockerfile text eol=lf
+.env* text eol=lf
+.gitignore text eol=lf
+
+# 4. Các file đặc thù của Windows (Giữ nguyên CRLF để chạy được trên Win)
+*.bat     text eol=crlf
+*.cmd     text eol=crlf
+*.ps1  text eol=crlf
+*.psm1 text eol=crlf 
+
+# 5. Khai báo các file Nhị phân (Binary) - KHÔNG ĐƯỢC CHẠM VÀO
+# Git sẽ không cố gắng sửa kết thúc dòng của các file này để tránh hỏng file
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.ico     binary
+*.pdf     binary
+*.zip     binary
+*.exe     binary
+
+# 6. Lock files (Nên để Git tự quyết định hoặc ép LF cho đồng bộ)
+package-lock.json text eol=lf
+go.sum            text eol=lf
+
+# Nếu dùng Python
+*.py      text eol=lf
+
+# Nếu dùng Makefile (bắt buộc tab, nhưng eol=lf vẫn ổn)
+Makefile  text eol=lf
+
+# Fonts
+*.woff    binary
+*.woff2   binary
+*.ttf     binary
+*.eot     binary
+
+# Video/Audio nếu có trong repo
+*.mp4     binary
+*.mp3     binary
