@@ -1,0 +1,2 @@
+// Using extension REST Client in VS Code to test API endpoints
+GET http://localhost:8080/ping
