@@ -1,12 +1,12 @@
 package repository
 
-import(
+import (
 	"context"
 
 	"github.com/SonBestCodeVien5/gym-management-system/internal/models"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 // MemberRepository defines the interface for member-related database operations
@@ -16,13 +16,13 @@ type MemberRepository interface {
 	GetByCCID(ctx context.Context, ccid string) (*models.Member, error)
 }
 
-//memberRepoImpl implements the MemberRepository interface
+// memberRepoImpl implements the MemberRepository interface
 type memberRepoImpl struct {
 	collection *mongo.Collection
 }
 
 // NewMemberRepository creates a new instance of MemberRepository
-func NewMemberRepository(db *mongo.Database, collectionName string) MemberRepository {
+func NewMemberRepository(db *mongo.Database) MemberRepository {
 	return &memberRepoImpl{
 		collection: db.Collection("members"),
 	}
