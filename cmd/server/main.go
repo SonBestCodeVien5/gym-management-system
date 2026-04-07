@@ -1,47 +1,59 @@
 package main
 
 import (
-	"context"
-	"fmt"
-	"log"
-	"time"
+    "context"
+    "log"
+    "os"
 
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+    "github.com/gin-gonic/gin"
+    "github.com/joho/godotenv"
+    
+    // Import đúng tên module dự án của bạn!
+    "github.com/SonBestCodeVien5/gym-management-system/pkg/database" 
 )
 
 func main() {
-	// 1. In ra lời chào Hello World
-	fmt.Println("--- GYM MANAGEMENT SYSTEM ---")
-	fmt.Println("Status: Initializing Backend...")
+    // 1. Tải file cấu hình .env
+    err := godotenv.Load()
+    if err != nil {
+        log.Println("Error: Not found .env file, using environment variables instead")
+    }
 
-	// 2. Thiết lập chuỗi kết nối (URI)
-	// Lưu ý: Dùng đúng username/password bạn đã đặt trong docker-compose
-	uri := "mongodb://admin:password123@localhost:27017"
+    // 2. Kết nối Database
+    // Trong file .env của chúng ta, nó tên là MONGODB_URI (chứ không phải MONGO_URI)
+    mongoURI := os.Getenv("MONGODB_URI")
+    if mongoURI == "" {
+        log.Fatal("Error: MONGODB_URI is not set in environment variables")
+    }
 
-	// 3. Tạo context với thời gian chờ (timeout) 10 giây
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second) // Đổi sang 10*time.Second
-	defer cancel()
+    // Hàm ConnectMongoDB trả về 2 giá trị: client và err (phải hứng cả err)
+    dbClient, err := database.ConnectMongoDB(mongoURI)
+    if err != nil {
+        log.Fatalf("Error: Failed to connect to MongoDB: %v", err)
+    }
+    // Đóng kết nối an toàn khi tắt server
+    defer dbClient.Disconnect(context.Background())
 
-	// 4. Kết nối tới MongoDB
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
-	if err != nil {
-		log.Fatalf("❌ Lỗi kết nối ban đầu: %v", err)
-	}
+    // 3. Khởi tạo Gin Engine (Web framework)
+    r := gin.Default()
 
-	// 5. Ping thử xem Database có phản hồi không
-	err = client.Ping(ctx, nil)
-	if err != nil {
-		log.Fatalf("❌ Không thể phản hồi MongoDB: %v", err)
-	}
+    // 4. Định nghĩa Route đơn giản để test HTTP
+    r.GET("/ping", func(c *gin.Context) {
+        c.JSON(200, gin.H{
+            "message": "pong",
+            "status":  "Backend Go + MongoDB đã sẵn sàng và đang chờ lệnh!",
+        })
+    })
 
-	fmt.Println("✅ Kết nối MongoDB THÀNH CÔNG!")
-	fmt.Println("🚀 Backend đã sẵn sàng phục vụ Sơn tại Linux WSL 2!")
-
-	// 6. Ngắt kết nối khi xong (Cleanup)
-	defer func() {
-		if err = client.Disconnect(ctx); err != nil {
-			panic(err)
-		}
-	}()
+    // 5. Chạy Server
+    port := os.Getenv("PORT")
+    if port == "" {
+        port = "8080"
+    }
+    log.Printf("Server is running on port %s...", port)
+    
+    // Khởi động server (sẽ chạy vòng lặp vô hạn ở đây)
+    if err := r.Run(":" + port); err != nil {
+        log.Fatalf("Error: Failed to start server: %v", err)
+    }
 }
