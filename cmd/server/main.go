@@ -10,6 +10,9 @@ import (
     
     // Import đúng tên module dự án của bạn!
     "github.com/SonBestCodeVien5/gym-management-system/pkg/database" 
+    "github.com/SonBestCodeVien5/gym-management-system/internal/handlers"
+    "github.com/SonBestCodeVien5/gym-management-system/internal/repository"
+    "github.com/SonBestCodeVien5/gym-management-system/internal/service"
 )
 
 func main() {
@@ -34,6 +37,13 @@ func main() {
     // Đóng kết nối an toàn khi tắt server
     defer dbClient.Disconnect(context.Background())
 
+    db := dbClient.Database("gym_management")
+
+    // 3. Khởi tạo Repository, Service, Handler
+    memberRepo := repository.NewMemberRepository(db)
+    memberService := service.NewMemberService(memberRepo)
+    memberHandler := handlers.NewMemberHandler(memberService)
+
     // 3. Khởi tạo Gin Engine (Web framework)
     r := gin.Default()
 
@@ -44,6 +54,11 @@ func main() {
             "status":  "Backend Go + MongoDB đã sẵn sàng và đang chờ lệnh!",
         })
     })
+    // Định nghĩa route cho member registration
+    api := r.Group("/api/v1")
+{
+    api.POST("/registration", memberHandler.Register)
+}
 
     // 5. Chạy Server
     port := os.Getenv("PORT")

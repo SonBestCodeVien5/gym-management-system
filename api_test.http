@@ -1,2 +1,17 @@
-// Using extension REST Client in VS Code to test API endpoints
+# Health check
 GET http://localhost:8080/ping
+
+###
+
+# Member registration
+POST http://localhost:8080/api/v1/registration
+Content-Type: application/json
+
+{
+  "ccid": "012345678901",
+  "full_name": "Nguyen Van A",
+  "email": "a@example.com",
+  "phone": "0900000000",
+  "gender": "male",
+  "level": "basic"
+}

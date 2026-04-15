@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	"github.com/SonBestCodeVien5/gym-management-system/internal/models"
 	"go.mongodb.org/mongo-driver/bson"
@@ -48,6 +49,9 @@ func (r *memberRepoImpl) GetByID(ctx context.Context, id string) (*models.Member
 
 	err = r.collection.FindOne(ctx, filter).Decode(&member)
 	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, ErrNotFound
+		}
 		return nil, err
 	}
 	return &member, nil
@@ -60,6 +64,9 @@ func (r *memberRepoImpl) GetByCCID(ctx context.Context, ccid string) (*models.Me
 
 	err := r.collection.FindOne(ctx, filter).Decode(&member)
 	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, ErrNotFound
+		}
 		return nil, err
 	}
 	return &member, nil
