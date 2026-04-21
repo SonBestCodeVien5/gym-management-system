@@ -4,6 +4,7 @@ Tài liệu này lưu trữ các quyết định thiết kế kiến trúc hệ 
 
 Tai lieu lien quan:
 - Nhat ky phat trien va cac van de da gap: [development_journal.md](development_journal.md)
+- Huong dan viet bao cao phan tich-thiet ke: [system_analysis_design_guide.md](system_analysis_design_guide.md)
 
 ## Muc luc nhanh (Wiki Index)
 - [Go Interface + Struct private](#faq-go-interface-private-struct)
@@ -22,6 +23,16 @@ Tai lieu lien quan:
 - [REST Client va dau ###](#faq-dev-rest-client-separator)
 - [mongosh interactive vs --eval](#faq-dev-mongosh-modes)
 - [localhost vs 127.0.0.1](#faq-dev-localhost-vs-loopback)
+- [Mo hinh phat trien phan mem phu hop](#faq-sdlc-model-selection)
+- [Vi sao chon Iterative-Incremental](#faq-sdlc-iterative)
+- [Pham vi Scrum ap dung cho do an](#faq-sdlc-scrum)
+- [Quy trinh phan tich nghiep vu](#faq-analysis-workflow)
+- [Functional va Non-functional requirements](#faq-analysis-fr-nfr)
+- [Traceability tu Use Case den API va DB](#faq-analysis-traceability)
+- [UML nen dua vao bao cao](#faq-analysis-uml)
+- [Thiet ke API cho he thong nghiep vu](#faq-analysis-api-design)
+- [Kiem thu theo tang va theo nghiep vu](#faq-analysis-testing)
+- [Rui ro kien truc va cach giam](#faq-analysis-risks)
 
 ---
 
@@ -124,3 +135,108 @@ Vi vay build pass ma khong co output la binh thuong.
 <a id="faq-dev-localhost-vs-loopback"></a>
 ### 16. Tai sao `localhost` fail trong Compass nhung `127.0.0.1` lai ok?
 **Tra loi:** Trong WSL + Docker + Windows, `localhost` co the bi anh huong boi phan giai IPv4/IPv6 va forwarding. `127.0.0.1` ep loopback IPv4 nen thuong on dinh hon trong local dev.
+
+---
+
+## PHẦN 5: MÔ HÌNH PHÁT TRIỂN PHẦN MỀM (SDLC) & QUẢN LÝ THỰC THI
+
+<a id="faq-sdlc-model-selection"></a>
+### 17. Nên mô tả mô hình phát triển phần mềm nào cho dự án này?
+**Tra loi:** Phu hop nhat la mo hinh **lai (Hybrid)**: 
+* Khung tong the theo **Iterative-Incremental** (phat trien theo tung dot nang cap).
+* To chuc cong viec theo **Scrum-lite** (backlog, sprint ngan, review cuoi sprint).
+* Bo sung checkpoint ky thuat theo **V-Model mini** (moi tang code co test tuong ung).
+
+Cach viet vao bao cao:
+1. Phase 1: Khoi tao kien truc + model du lieu.
+2. Phase 2: Hoan thien luong dang ky + ket noi DB + test API.
+3. Phase 3: Mo rong payment/suspension/attendance + hardening.
+
+<a id="faq-sdlc-iterative"></a>
+### 18. Vi sao khong chon Waterfall thuần?
+**Tra loi:** Vi nghiep vu Gym thay doi theo qua trinh lam, va quyet dinh ky thuat (nhu schema/model/rule) thuong can dieu chinh sau khi test thuc te. Iterative-Incremental giam rui ro do:
+1. Co ban chay duoc som (vertical slice) de xac thuc huong di.
+2. Moi sprint chot 1 use case hoan chinh, de demo va nhan feedback.
+3. Loi duoc phat hien som hon, chi phi sua thap hon.
+
+<a id="faq-sdlc-scrum"></a>
+### 19. Ap dung Scrum vao do an 1 nhanh (main) nhu the nao cho gon?
+**Tra loi:** Dung Scrum toi gian:
+1. Product Backlog: danh sach use case uu tien (registration, payment, suspension, attendance).
+2. Sprint 1-2 tuan: moi sprint chot 1-2 use case.
+3. Definition of Done:
+	 - Build pass
+	 - API test pass
+	 - Co tai lieu cap nhat trong docs
+4. Sprint Review: demo endpoint + log van de + bai hoc.
+
+---
+
+## PHẦN 6: PHÂN TÍCH & THIẾT KẾ HỆ THỐNG CHO BÁO CÁO
+
+<a id="faq-analysis-workflow"></a>
+### 20. Quy trinh phan tich nghiep vu nen trinh bay ra sao?
+**Tra loi:** Trinh bay theo chuoi sau de hoi dong de theo doi:
+1. Stakeholders va Actors (Member, Receptionist, Trainer, Manager).
+2. Pain points va Business Goals.
+3. Use Case list + priority.
+4. Business Rules (30 ngay bao nghi, 7 ngay tap bu, refund 50%/20%/0%).
+5. Du lieu can luu + ly do luu.
+6. Mapping Use Case -> API -> Data model -> Test case.
+
+<a id="faq-analysis-fr-nfr"></a>
+### 21. Functional Requirements va Non-functional Requirements nen viet the nao?
+**Tra loi:**
+* **FR** (lam duoc gi): Dang ky, thanh toan, bao luu, tiep tuc hoc, diem danh, tim chi nhanh gan nhat.
+* **NFR** (chat luong):
+	1. Hieu nang: response API trong nguong chap nhan cho CRUD co ban.
+	2. Toan ven du lieu: `ccid` unique, khong cho trung dinh danh.
+	3. Bao mat: phan quyen theo role, khong expose thong tin nhay cam.
+	4. Kha nang bao tri: tach tang handler/service/repository.
+
+<a id="faq-analysis-traceability"></a>
+### 22. Lam sao the hien traceability (truy vet yeu cau) trong bao cao?
+**Tra loi:** Lap bang truy vet (Requirement Traceability Matrix):
+1. Ma yeu cau (FR-01, FR-02...).
+2. Use Case lien quan.
+3. Endpoint/API hien thuc.
+4. Collection/field lien quan.
+5. Test case xac nhan.
+
+Vi du:
+* FR-01 Dang ky hoc vien -> UC-Registration -> `POST /api/v1/registration` -> `members.ccid` -> TC-REG-001.
+
+<a id="faq-analysis-uml"></a>
+### 23. Nen dua nhung so do nao vao phan thiet ke he thong?
+**Tra loi:** Toi thieu nen co:
+1. Use Case Diagram (actors + use case).
+2. ERD/Logical Data Model (Mongo collections + references).
+3. Sequence Diagram cho 2 luong chinh (registration, payment/refund).
+4. Component Diagram cho kien truc 3 tang (handler/service/repository).
+5. State Transition cho `subscription.status` (Active/Suspended/Expired/Refunded).
+
+<a id="faq-analysis-api-design"></a>
+### 24. Nguyen tac thiet ke API nghiep vu de viet bao cao?
+**Tra loi:**
+1. Resource-oriented endpoint (`/members`, `/subscriptions`, `/attendance`).
+2. HTTP status ro nghia (200/201/400/404/409/500).
+3. Idempotency cho cac tac vu cap nhat trang thai neu can.
+4. Validate input tai handler + business validation tai service.
+5. Quy uoc response thong nhat: `message`, `data`, `error`.
+
+<a id="faq-analysis-testing"></a>
+### 25. Nen trinh bay chien luoc kiem thu the nao?
+**Tra loi:** Chia 3 lop:
+1. Unit test service (rule nghiep vu).
+2. Integration test API + DB (route -> service -> repo).
+3. Manual/UAT test theo use case bang REST Client.
+
+Mo hinh viet bao cao: moi FR it nhat co 1 test case pass.
+
+<a id="faq-analysis-risks"></a>
+### 26. Rui ro kien truc trong du an nay la gi va cach giam?
+**Tra loi:**
+1. Rui ro coupling voi MongoDB -> giam bang error abstraction (`ErrNotFound`).
+2. Rui ro trung `ccid` do race condition -> tao unique index + handle duplicate key.
+3. Rui ro sai cau hinh local (Compass/URI) -> chuan hoa `.env` va local guide.
+4. Rui ro truot pham vi -> chia sprint theo use case, moi sprint co DoD ro rang.

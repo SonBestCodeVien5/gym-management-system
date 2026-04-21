@@ -8,6 +8,7 @@ Tai lieu nay ghi lai:
 - Cac kien thuc nen nam de tiep tuc mo rong du an.
 
 Xem them phan hoi-dap kien truc: [faq_why.md](faq_why.md)
+Huong dan viet bao cao phan tich-thiet ke: [system_analysis_design_guide.md](system_analysis_design_guide.md)
 
 ## 2. Tien do theo timeline (branch main, tuyen tinh)
 | Thu tu | Commit | Noi dung chinh |
