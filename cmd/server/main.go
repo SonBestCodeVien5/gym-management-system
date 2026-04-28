@@ -58,6 +58,7 @@ func main() {
     api := r.Group("/api/v1")
 {
     api.POST("/registration", memberHandler.Register)
+    api.GET("/members/:id", memberHandler.GetByID)
 }
 
     // 5. Chạy Server
