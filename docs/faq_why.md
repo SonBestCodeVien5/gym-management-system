@@ -73,6 +73,20 @@ Hàm `NewMemberRepository` mang nhiệm vụ **khởi tạo** đối tượng đ
 * **Nhúng (Embedded) cho `Suspension`:** Lịch sử bảo lưu phụ thuộc hoàn toàn vào thẻ tập (`Subscription`). Việc nhúng thẳng vào trong giúp hệ thống chỉ cần 1 thao tác đọc là lấy được toàn bộ trạng thái hiện tại, triệt tiêu các lệnh JOIN đắt đỏ.
 * **Tham chiếu (Reference) cho `MemberID` và `CourseID`:** Hội viên và Gói tập là các thực thể độc lập, dùng chung ở nhiều thẻ tập khác nhau. Việc tham chiếu giúp tránh phình to CSDL và ngăn chặn lỗi bất đồng bộ khi cập nhật thông tin.
 
+<a id="faq-db-unique-index"></a>
+### 5.1 Tại sao phải tạo unique index cho `ccid` nếu service đã check trùng?
+**Trả lời:** Vì service chỉ check duoc trong ngữ cảnh một request, còn unique index là lớp bảo vệ cuối cùng ở mức database.
+* Nếu hai request đến cùng lúc, cả hai đều có thể check thấy `ccid` chưa tồn tại.
+* Unique index chặn trường hợp race condition ngay khi insert.
+* Vì vậy cách đúng là dùng cả hai: service báo lỗi sớm, database đảm bảo toàn vẹn dữ liệu.
+
+<a id="faq-arch-subscription-flow"></a>
+### 5.2 Subscription lưu tham chiếu như thế nào?
+**Trả lời:** Subscription lưu ID của member, course, branch thay vì nhúng toàn bộ object.
+* `MemberID`, `CourseID`, `HomeBranchID` là các tham chiếu.
+* Service sẽ gọi repository tương ứng để xác nhận dữ liệu trước khi tạo subscription.
+* Cách này giữ document gọn và đúng với access pattern hiện tại.
+
 <a id="faq-db-objectid"></a>
 ### 6. Tại sao ID lại dùng `primitive.ObjectID` thay vì số tự tăng (Auto-increment)?
 **Trả lời:** Số tự tăng hoạt động tốt trên 1 máy chủ SQL đơn lẻ, nhưng sẽ xung đột trên hệ thống phân tán nhiều máy chủ của NoSQL. `ObjectID` là chuỗi thập lục phân 12-byte do chính thuật toán của MongoDB sinh ra (bao gồm cả timestamp). Nó đảm bảo tính độc nhất vô nhị toàn cầu và tăng tốc độ truy vấn qua Index mà không cần cơ chế khóa (locking).
@@ -131,6 +145,13 @@ Vi vay build pass ma khong co output la binh thuong.
 **Tra loi:**
 * Khong co `--eval`: vao che do interactive shell, phai tu go query.
 * Co `--eval`: one-shot mode, in ket qua ngay.
+
+<a id="faq-dev-rfc3339"></a>
+### 15.1 Tại sao handler subscription lại parse thời gian theo RFC3339?
+**Trả lời:** Vì `time.Time` trong model cần một format input cố định, và RFC3339 là chuẩn dễ hiểu nhất cho API.
+* Có timezone rõ ràng.
+* Tránh nhầm lẫn ngày/tháng.
+* Tương thích tốt với Go, JSON, MongoDB.
 
 <a id="faq-dev-localhost-vs-loopback"></a>
 ### 16. Tai sao `localhost` fail trong Compass nhung `127.0.0.1` lai ok?
@@ -205,6 +226,7 @@ Cach viet vao bao cao:
 
 Vi du:
 * FR-01 Dang ky hoc vien -> UC-Registration -> `POST /api/v1/registration` -> `members.ccid` -> TC-REG-001.
+* FR-03 Tao subscription -> UC-SubscriptionCreate -> `POST /api/v1/subscriptions` -> `subscriptions.member_id`, `course_id`, `home_branch_id` -> TC-SUB-001.
 
 <a id="faq-analysis-uml"></a>
 ### 23. Nen dua nhung so do nao vao phan thiet ke he thong?
@@ -223,6 +245,13 @@ Vi du:
 3. Idempotency cho cac tac vu cap nhat trang thai neu can.
 4. Validate input tai handler + business validation tai service.
 5. Quy uoc response thong nhat: `message`, `data`, `error`.
+
+### 24.1 Nguon du lieu nao duoc lay khi tao subscription?
+**Tra loi:** Service tao subscription khong tin vao price trong request, ma lay gia va so buoi tu `Course`.
+* `UnitPrice` = `Course.BasePrice`
+* `TotalSessions` = `Course.SessionCount`
+* `RemainingSessions` = `TotalSessions`
+* `Status` khoi tao = `active`
 
 <a id="faq-analysis-testing"></a>
 ### 25. Nen trinh bay chien luoc kiem thu the nao?

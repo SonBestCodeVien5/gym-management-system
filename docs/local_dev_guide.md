@@ -15,9 +15,14 @@ Luong xu ly hien tai:
 3. `internal/repository/member_repo.go` query vao collection `members`.
 4. `internal/service/member_service.go` xu ly logic dang ky member.
 5. `internal/handlers/member_handler.go` nhan request HTTP va tra JSON.
+6. `internal/repository/course_repo.go`, `branch_repo.go` query theo `_id` cho subscription.
+7. `internal/repository/subscription_repo.go`, `internal/service/subscription_service.go`, `internal/handlers/subscription_handler.go` phuc vu luong subscription.
 
 Luot request dang ky:
 HTTP Request -> Handler -> Service -> Repository -> MongoDB -> JSON Response.
+
+Luot request subscription:
+HTTP Request -> Subscription Handler -> Subscription Service -> Member/Course/Branch Repo + Subscription Repo -> MongoDB -> JSON Response.
 
 ## 3. Chay he thong local
 ### 3.1 Chay MongoDB bang Docker
@@ -46,6 +51,13 @@ go run cmd/server/main.go
 Neu thanh cong, log se co:
 - `Connected to MongoDB successfully`
 - `Listening and serving HTTP on :8080`
+
+### 3.4 Route hien co
+- `GET /ping`
+- `POST /api/v1/registration`
+- `GET /api/v1/members/:id`
+- `POST /api/v1/subscriptions`
+- `GET /api/v1/subscriptions/:id`
 
 ## 4. Test API
 ### 4.1 File `api_test.http` dung format dung
@@ -82,6 +94,13 @@ curl -s http://localhost:8080/ping
 curl -s -X POST http://localhost:8080/api/v1/registration \
   -H 'Content-Type: application/json' \
   -d '{"ccid":"012345678901","full_name":"Nguyen Van A","email":"a@example.com","phone":"0900000000","gender":"male","level":"basic"}'
+```
+
+Subscription test mau (RFC3339):
+```bash
+curl -s -X POST http://localhost:8080/api/v1/subscriptions \
+  -H 'Content-Type: application/json' \
+  -d '{"member_id":"PUT_MEMBER_OBJECT_ID","course_id":"PUT_COURSE_OBJECT_ID","home_branch_id":"PUT_BRANCH_OBJECT_ID","start_date":"2026-04-28T10:00:00Z","end_date":"2026-05-28T10:00:00Z","session_per_week":3}'
 ```
 
 ## 5. Xem record trong MongoDB
@@ -123,6 +142,10 @@ mongodb://admin:password123@localhost:27017/?authSource=admin&directConnection=t
 6. Authentication DB: `admin`
 7. TLS/SSL: Off
 
+### 6.3 Luu y ve index `ccid`
+- `members.ccid` co unique index.
+- Neu insert member trung `ccid`, DB co the chong lai ngay ca khi service check chua truoc do.
+
 ## 7. Loi thuong gap va cach xu ly
 ### 7.1 `Authentication failed`
 Nguyen nhan:
@@ -144,9 +167,15 @@ Cach sua:
 - Thuong do DB auth sai, port dang ban, hoac env thieu.
 - Kiem tra lai `.env`, `docker ps`, va log terminal.
 
+### 7.5 `invalid start_date format` khi test subscription
+- Do input date khong dung RFC3339.
+- Dinh dang dung la `2026-04-28T10:00:00Z` hoac co timezone ro rang.
+
 ## 8. Checkpoint da hoan thanh
 1. Ket noi MongoDB thanh cong.
 2. Route `GET /ping` hoat dong.
 3. Route `POST /api/v1/registration` hoat dong.
 4. Member duoc insert vao `gym_management.members`.
 5. Da giam coupling nhe: service khong check `mongo.ErrNoDocuments` truc tiep, su dung loi trung lap tu repository.
+6. Da co unique index `ccid`.
+7. Da co route subscription va parser RFC3339.

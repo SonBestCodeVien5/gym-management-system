@@ -24,6 +24,15 @@ Huong dan viet bao cao phan tich-thiet ke: [system_analysis_design_guide.md](sys
 | 9 | `bdb00ee` | Them service/handler + registration flow |
 | 10 | `95c0f66` | Cap nhat va test lai MongoDB URI |
 
+## 2.1. Tien do moi trong workspace hien tai (sau commit cuoi)
+1. `internal/repository/member_repo.go`: them unique index `ccid` trong constructor repository.
+2. `internal/repository/course_repo.go`: them repo doc `GetByID` cho `courses`.
+3. `internal/repository/branch_repo.go`: them repo doc `GetByID` cho `branches`.
+4. `internal/repository/subscription_repo.go`: them repository cho `subscriptions`.
+5. `internal/service/subscription_service.go`: them rule create subscription va kiem tra tham chieu member/course/branch.
+6. `internal/handlers/subscription_handler.go`: them handler API cho subscription, parse `RFC3339`.
+7. `cmd/server/main.go`: wire day du member + subscription flow vao Gin routes.
+
 ## 3. Trang thai hien tai cua he thong
 Da hoan thanh:
 1. Chay duoc backend Go + Gin.
@@ -31,11 +40,14 @@ Da hoan thanh:
 3. Route `GET /ping` hoat dong.
 4. Route `POST /api/v1/registration` hoat dong.
 5. Da co 3 tang cho module member: repository, service, handler.
-6. Da giam coupling nhe o service bang cach dung `repository.ErrNotFound` thay vi check loi Mongo truc tiep.
+6. Da co block subscription ban dau: repository, service, handler, wire vao main.
+7. Da giam coupling nhe o service bang cach dung `repository.ErrNotFound` thay vi check loi Mongo truc tiep.
+8. Da them unique index `ccid` de chong race condition trung member.
 
 Dang co:
-1. Chua day du endpoint CRUD member (moi co registration).
-2. Chua trien khai use case payment/suspension/resume/attendance theo Phase 2.
+1. Member moi co registration va get-by-id.
+2. Subscription moi co create va get-by-id.
+3. Chua trien khai day du payment/suspension/resume/attendance theo Phase 2.
 
 ## 4. Nhat ky van de da gap va cach xu ly
 
@@ -99,6 +111,14 @@ Dang co:
 - Kien thuc lien quan (FAQ):
   1. [mongosh interactive vs --eval](faq_why.md#faq-dev-mongosh-modes)
 
+### Van de 7: Handler subscription parse ngay gio bi sai kieu
+- Trieu chung: `parseTimeValue` tra ve sai kieu so voi `time.Time` trong model.
+- Nguyen nhan: Handler ban dau dung nham `primitive.DateTime` thay vi `time.Time`.
+- Cach xu ly:
+  1. Doi helper parse thanh `time.Time`.
+  2. Dung `time.Parse(time.RFC3339, ...)` cho input JSON.
+- Bai hoc: Khi model da chon `time.Time`, handler phai parse ve cung kieu de khop service va Mongo.
+
 ## 5. Kien thuc bo sung can nam
 
 ### 5.1 Service vs Repository (vi sao co 2 ham ten gan giong nhau)
@@ -111,11 +131,18 @@ Dang co:
 Da lam:
 1. Mapping loi not-found o repository -> `ErrNotFound` trung lap.
 2. Service khong can import package Mongo de check not-found.
+3. Handler member khong import repository nua, chi map loi service.
 
 Con de sau (refactor nang):
 1. Tach domain model va persistence model.
 2. Tach strategy tao ID khoi service.
 - Wiki lien quan: [Coupling va cach giam](faq_why.md#faq-arch-coupling)
+
+### 5.4 Block subscription hien tai da co gi
+1. `CourseRepository` va `BranchRepository` chi can `GetByID` vi Mongo da tu co index `_id`.
+2. `SubscriptionRepository` ho tro `Create` va `GetByID`.
+3. `SubscriptionService` kiem tra tham chieu `member/course/branch` va lay gia tu `Course`.
+4. `SubscriptionHandler` parse `start_date`, `end_date` theo RFC3339.
 
 ### 5.3 Extension MongoDB vs MongoDB Compass
 - Extension VS Code: tien cho query nhanh trong luong code.
@@ -129,12 +156,13 @@ Con de sau (refactor nang):
 3. `POST /api/v1/registration` pass.
 4. Query trong `gym_management.members` thay record vua tao.
 5. URI trong `.env` da on dinh voi local (`127.0.0.1`).
+6. `POST /api/v1/subscriptions` co the chuan bi test sau khi chot payload mau.
 
 ## 7. De xuat buoc tiep theo
-1. Hoan thien member read endpoint (`GET /api/v1/members/:id`).
-2. Them unique index cho `ccid` o MongoDB de tranh race condition.
-3. Bat dau module `payment` theo business rule Phase 2.
+1. Hoan thien test API cho `GET /api/v1/members/:id` va `GET /api/v1/subscriptions/:id`.
+2. Chot payload mau cho `POST /api/v1/subscriptions`.
+3. Bat dau module `payment` / `suspension` theo business rule Phase 2.
 
 ---
 
-Cap nhat lan cuoi: theo trang thai code va commit den ngay 2026-04-18.
+Cap nhat lan cuoi: theo trang thai code va commit den ngay 2026-04-28.
