@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/SonBestCodeVien5/gym-management-system/internal/models"
 	"github.com/SonBestCodeVien5/gym-management-system/internal/service"
@@ -121,10 +122,10 @@ func (h *SubscriptionHandler) GetByID(c *gin.Context) {
 	})
 }
 
-func parseTimeValue(value string) (primitive.DateTime, error) {
-	parsed, err := primitive.ParseDateTime(value)
-	if err == nil {
-		return parsed, nil
+func parseTimeValue(value string) (time.Time, error) {
+	parsed, err := time.Parse(time.RFC3339, value)
+	if err != nil {
+		return time.Time{}, err
 	}
-	return primitive.NewDateTimeFromTime(primitive.NewDateTimeFromTime), err
+	return parsed, nil
 }
