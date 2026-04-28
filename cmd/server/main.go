@@ -44,8 +44,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error: Failed to initialize member repository: %v", err)
 	}
+	courseRepo := repository.NewCourseRepository(db)
+	branchRepo := repository.NewBranchRepository(db)
+	subscriptionRepo := repository.NewSubscriptionRepository(db)
 	memberService := service.NewMemberService(memberRepo)
 	memberHandler := handlers.NewMemberHandler(memberService)
+	subscriptionService := service.NewSubscriptionService(subscriptionRepo, memberRepo, courseRepo, branchRepo)
+	subscriptionHandler := handlers.NewSubscriptionHandler(subscriptionService)
 
 	// 3. Khởi tạo Gin Engine (Web framework)
 	r := gin.Default()
@@ -62,6 +67,8 @@ func main() {
 	{
 		api.POST("/registration", memberHandler.Register)
 		api.GET("/members/:id", memberHandler.GetByID)
+		api.POST("/subscriptions", subscriptionHandler.Create)
+		api.GET("/subscriptions/:id", subscriptionHandler.GetByID)
 	}
 
 	// 5. Chạy Server

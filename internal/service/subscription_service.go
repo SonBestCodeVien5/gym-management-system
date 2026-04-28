@@ -1,0 +1,111 @@
+package service
+
+import (
+	"context"
+	"errors"
+	"time"
+
+	"github.com/SonBestCodeVien5/gym-management-system/internal/models"
+	"github.com/SonBestCodeVien5/gym-management-system/internal/repository"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+var (
+	ErrInvalidSubscriptionInput      = errors.New("invalid subscription input")
+	ErrSubscriptionNotFound          = errors.New("subscription not found")
+	ErrSubscriptionReferenceNotFound = errors.New("subscription reference not found")
+)
+
+type SubscriptionService interface {
+	CreateSubscription(ctx context.Context, subscription *models.Subscription) error
+	GetSubscriptionByID(ctx context.Context, id string) (*models.Subscription, error)
+}
+
+type subscriptionServiceImpl struct {
+	subscriptionRepo repository.SubscriptionRepository
+	memberRepo       repository.MemberRepository
+	courseRepo       repository.CourseRepository
+	branchRepo       repository.BranchRepository
+}
+
+func NewSubscriptionService(
+	subscriptionRepo repository.SubscriptionRepository,
+	memberRepo repository.MemberRepository,
+	courseRepo repository.CourseRepository,
+	branchRepo repository.BranchRepository,
+) SubscriptionService {
+	return &subscriptionServiceImpl{
+		subscriptionRepo: subscriptionRepo,
+		memberRepo:       memberRepo,
+		courseRepo:       courseRepo,
+		branchRepo:       branchRepo,
+	}
+}
+
+func (s *subscriptionServiceImpl) CreateSubscription(ctx context.Context, subscription *models.Subscription) error {
+	if subscription == nil || subscription.MemberID.IsZero() || subscription.CourseID.IsZero() || subscription.HomeBranchID.IsZero() {
+		return ErrInvalidSubscriptionInput
+	}
+	if subscription.SessionPerWeek <= 0 {
+		return ErrInvalidSubscriptionInput
+	}
+	if subscription.StartDate.IsZero() || subscription.EndDate.IsZero() || subscription.StartDate.After(subscription.EndDate) {
+		return ErrInvalidSubscriptionInput
+	}
+
+	member, err := s.memberRepo.GetByID(ctx, subscription.MemberID.Hex())
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return ErrSubscriptionReferenceNotFound
+		}
+		return err
+	}
+	if member == nil {
+		return ErrSubscriptionReferenceNotFound
+	}
+
+	course, err := s.courseRepo.GetByID(ctx, subscription.CourseID.Hex())
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return ErrSubscriptionReferenceNotFound
+		}
+		return err
+	}
+	if course == nil {
+		return ErrSubscriptionReferenceNotFound
+	}
+
+	branch, err := s.branchRepo.GetByID(ctx, subscription.HomeBranchID.Hex())
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return ErrSubscriptionReferenceNotFound
+		}
+		return err
+	}
+	if branch == nil {
+		return ErrSubscriptionReferenceNotFound
+	}
+
+	now := time.Now()
+	subscription.ID = primitive.NewObjectID()
+	subscription.Status = "active"
+	subscription.PaymentDate = now
+	subscription.UnitPrice = course.BasePrice
+	subscription.TotalSessions = course.SessionCount
+	subscription.Total_Amount_Paid = course.BasePrice * int64(course.SessionCount)
+	subscription.RemainingSessions = course.SessionCount
+
+	return s.subscriptionRepo.Create(ctx, subscription)
+}
+
+func (s *subscriptionServiceImpl) GetSubscriptionByID(ctx context.Context, id string) (*models.Subscription, error) {
+	subscription, err := s.subscriptionRepo.GetByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, ErrSubscriptionNotFound
+		}
+		return nil, err
+	}
+
+	return subscription, nil
+}
