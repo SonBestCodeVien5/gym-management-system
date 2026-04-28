@@ -13,6 +13,7 @@ import (
 var (
 	ErrMemberCCIDAlreadyExists = errors.New("member with this CCID already exists")
 	ErrInvalidMemberInput      = errors.New("invalid member input")
+	ErrMemberNotFound          = errors.New("member not found")
 )
 
 type MemberService interface {
@@ -55,5 +56,13 @@ func (s *memberServiceImpl) RegisterMember(ctx context.Context, member *models.M
 }
 
 func (s *memberServiceImpl) GetMemberByID(ctx context.Context, id string) (*models.Member, error) {
-	return s.repo.GetByID(ctx, id)
+	member, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, ErrMemberNotFound
+		}
+		return nil, err
+	}
+
+	return member, nil
 }

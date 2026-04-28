@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/SonBestCodeVien5/gym-management-system/internal/models"
-	"github.com/SonBestCodeVien5/gym-management-system/internal/repository"
 	"github.com/SonBestCodeVien5/gym-management-system/internal/service"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -69,25 +68,25 @@ func (h *MemberHandler) Register(c *gin.Context) {
 }
 
 func (h *MemberHandler) GetByID(c *gin.Context) {
-    id := c.Param("id")
-    if _, err := primitive.ObjectIDFromHex(id); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"message": "invalid member id"})
-        return
-    }
+	id := c.Param("id")
+	if _, err := primitive.ObjectIDFromHex(id); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid member id"})
+		return
+	}
 
-    member, err := h.memberService.GetMemberByID(c.Request.Context(), id)
-    if err != nil {
-        switch {
-        case errors.Is(err, repository.ErrNotFound):
-            c.JSON(http.StatusNotFound, gin.H{"message": "member not found"})
-        default:
-            c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
-        }
-        return
-    }
+	member, err := h.memberService.GetMemberByID(c.Request.Context(), id)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrMemberNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"message": "member not found"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+		}
+		return
+	}
 
-    c.JSON(http.StatusOK, gin.H{
-        "message": "member fetched successfully",
-        "data":    member,
-    })
+	c.JSON(http.StatusOK, gin.H{
+		"message": "member fetched successfully",
+		"data":    member,
+	})
 }

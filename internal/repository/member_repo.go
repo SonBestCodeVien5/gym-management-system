@@ -3,11 +3,13 @@ package repository
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/SonBestCodeVien5/gym-management-system/internal/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // MemberRepository defines the interface for member-related database operations
@@ -23,10 +25,23 @@ type memberRepoImpl struct {
 }
 
 // NewMemberRepository creates a new instance of MemberRepository
-func NewMemberRepository(db *mongo.Database) MemberRepository {
-	return &memberRepoImpl{
-		collection: db.Collection("members"),
+func NewMemberRepository(db *mongo.Database) (MemberRepository, error) {
+	collection := db.Collection("members")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	indexModel := mongo.IndexModel{
+		Keys:    bson.D{{Key: "ccid", Value: 1}},
+		Options: options.Index().SetUnique(true),
 	}
+
+	if _, err := collection.Indexes().CreateOne(ctx, indexModel); err != nil {
+		return nil, err
+	}
+
+	return &memberRepoImpl{
+		collection: collection,
+	}, nil
 }
 
 // --Start using database operations--
