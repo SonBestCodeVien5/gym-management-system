@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/SonBestCodeVien5/gym-management-system/internal/models"
 	"go.mongodb.org/mongo-driver/bson"
@@ -13,6 +14,7 @@ import (
 type SubscriptionRepository interface {
 	Create(ctx context.Context, subscription *models.Subscription) error
 	GetByID(ctx context.Context, id string) (*models.Subscription, error)
+	UpdateStatusAndPaymentDate(ctx context.Context, id string, status string, paymentDate time.Time) error
 }
 
 type subscriptionRepoImpl struct {
@@ -46,4 +48,25 @@ func (r *subscriptionRepoImpl) GetByID(ctx context.Context, id string) (*models.
 	}
 
 	return &subscription, nil
+}
+
+func (r *subscriptionRepoImpl) UpdateStatusAndPaymentDate(ctx context.Context, id string, status string, paymentDate time.Time) error {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	result, err := r.collection.UpdateOne(
+		ctx,
+		bson.M{"_id": objID},
+		bson.M{"$set": bson.M{"status": status, "payment_date": paymentDate}},
+	)
+	if err != nil {
+		return err
+	}
+	if result.MatchedCount == 0 {
+		return ErrNotFound
+	}
+
+	return nil
 }

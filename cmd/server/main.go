@@ -47,9 +47,9 @@ func main() {
 	courseRepo := repository.NewCourseRepository(db)
 	branchRepo := repository.NewBranchRepository(db)
 	subscriptionRepo := repository.NewSubscriptionRepository(db)
-	memberService := service.NewMemberService(memberRepo)
-	memberHandler := handlers.NewMemberHandler(memberService)
 	subscriptionService := service.NewSubscriptionService(subscriptionRepo, memberRepo, courseRepo, branchRepo)
+	memberService := service.NewMemberService(memberRepo)
+	memberHandler := handlers.NewMemberHandler(memberService, subscriptionService)
 	subscriptionHandler := handlers.NewSubscriptionHandler(subscriptionService)
 
 	// 3. Khởi tạo Gin Engine (Web framework)

@@ -14,11 +14,15 @@ var (
 	ErrInvalidSubscriptionInput      = errors.New("invalid subscription input")
 	ErrSubscriptionNotFound          = errors.New("subscription not found")
 	ErrSubscriptionReferenceNotFound = errors.New("subscription reference not found")
+	ErrSubscriptionAlreadyActive     = errors.New("subscription already active")
+	ErrInvalidSubscriptionStatus     = errors.New("invalid subscription status")
+	ErrSubscriptionMemberMismatch    = errors.New("subscription does not belong to member")
 )
 
 type SubscriptionService interface {
 	CreateSubscription(ctx context.Context, subscription *models.Subscription) error
 	GetSubscriptionByID(ctx context.Context, id string) (*models.Subscription, error)
+	ConfirmSubscriptionPayment(ctx context.Context, memberID string, subscriptionID string) error
 }
 
 type subscriptionServiceImpl struct {
@@ -86,10 +90,8 @@ func (s *subscriptionServiceImpl) CreateSubscription(ctx context.Context, subscr
 		return ErrSubscriptionReferenceNotFound
 	}
 
-	now := time.Now()
 	subscription.ID = primitive.NewObjectID()
-	subscription.Status = "active"
-	subscription.PaymentDate = now
+	subscription.Status = "pending"
 	subscription.UnitPrice = course.BasePrice
 	subscription.TotalSessions = course.SessionCount
 	subscription.Total_Amount_Paid = course.BasePrice * int64(course.SessionCount)
@@ -108,4 +110,35 @@ func (s *subscriptionServiceImpl) GetSubscriptionByID(ctx context.Context, id st
 	}
 
 	return subscription, nil
+}
+
+func (s *subscriptionServiceImpl) ConfirmSubscriptionPayment(ctx context.Context, memberID string, subscriptionID string) error {
+	subscription, err := s.subscriptionRepo.GetByID(ctx, subscriptionID)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return ErrSubscriptionNotFound
+		}
+		return err
+	}
+
+	if subscription.MemberID.Hex() != memberID {
+		return ErrSubscriptionMemberMismatch
+	}
+
+	if subscription.Status == "active" {
+		return ErrSubscriptionAlreadyActive
+	}
+	if subscription.Status != "pending" {
+		return ErrInvalidSubscriptionStatus
+	}
+
+	now := time.Now()
+	if err := s.subscriptionRepo.UpdateStatusAndPaymentDate(ctx, subscriptionID, "active", now); err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return ErrSubscriptionNotFound
+		}
+		return err
+	}
+
+	return nil
 }

@@ -11,12 +11,14 @@ import (
 )
 
 type MemberHandler struct {
-	memberService service.MemberService
+	memberService       service.MemberService
+	subscriptionService service.SubscriptionService
 }
 
-func NewMemberHandler(memberService service.MemberService) *MemberHandler {
+func NewMemberHandler(memberService service.MemberService, subscriptionService service.SubscriptionService) *MemberHandler {
 	return &MemberHandler{
-		memberService: memberService,
+		memberService:       memberService,
+		subscriptionService: subscriptionService,
 	}
 }
 
@@ -27,6 +29,10 @@ type registerMemberRequest struct {
 	Phone    string `json:"phone"`
 	Gender   string `json:"gender"`
 	Level    string `json:"level"`
+}
+
+type activateMemberRequest struct {
+	SubscriptionID string `json:"subscription_id"`
 }
 
 func (h *MemberHandler) Register(c *gin.Context) {
@@ -95,6 +101,37 @@ func (h *MemberHandler) Activate(c *gin.Context) {
 	id := c.Param("id")
 	if _, err := primitive.ObjectIDFromHex(id); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid member id"})
+		return
+	}
+
+	var req activateMemberRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "invalid request body",
+			"error":   err.Error(),
+		})
+		return
+	}
+	if req.SubscriptionID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "subscription_id is required"})
+		return
+	}
+	if _, err := primitive.ObjectIDFromHex(req.SubscriptionID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid subscription id"})
+		return
+	}
+
+	if err := h.subscriptionService.ConfirmSubscriptionPayment(c.Request.Context(), id, req.SubscriptionID); err != nil {
+		switch {
+		case errors.Is(err, service.ErrSubscriptionNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"message": "subscription not found"})
+		case errors.Is(err, service.ErrSubscriptionAlreadyActive), errors.Is(err, service.ErrInvalidSubscriptionStatus):
+			c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
+		case errors.Is(err, service.ErrSubscriptionMemberMismatch):
+			c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+		}
 		return
 	}
 
