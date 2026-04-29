@@ -90,3 +90,25 @@ func (h *MemberHandler) GetByID(c *gin.Context) {
 		"data":    member,
 	})
 }
+
+func (h *MemberHandler) Activate(c *gin.Context) {
+	id := c.Param("id")
+	if _, err := primitive.ObjectIDFromHex(id); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid member id"})
+		return
+	}
+
+	if err := h.memberService.ActivateMember(c.Request.Context(), id); err != nil {
+		switch {
+		case errors.Is(err, service.ErrMemberNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"message": "member not found"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "member activated successfully",
+	})
+}

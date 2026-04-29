@@ -17,6 +17,7 @@ type MemberRepository interface {
 	Create(ctx context.Context, member *models.Member) error
 	GetByID(ctx context.Context, id string) (*models.Member, error)
 	GetByCCID(ctx context.Context, ccid string) (*models.Member, error)
+	UpdateRegistrationStatus(ctx context.Context, id string, isRegistered bool) error
 }
 
 // memberRepoImpl implements the MemberRepository interface
@@ -85,4 +86,26 @@ func (r *memberRepoImpl) GetByCCID(ctx context.Context, ccid string) (*models.Me
 		return nil, err
 	}
 	return &member, nil
+}
+
+// 4. Update member registration status
+func (r *memberRepoImpl) UpdateRegistrationStatus(ctx context.Context, id string, isRegistered bool) error {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	result, err := r.collection.UpdateOne(
+		ctx,
+		bson.M{"_id": objID},
+		bson.M{"$set": bson.M{"is_registered": isRegistered, "updated_at": time.Now()}},
+	)
+	if err != nil {
+		return err
+	}
+	if result.MatchedCount == 0 {
+		return ErrNotFound
+	}
+
+	return nil
 }

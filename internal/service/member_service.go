@@ -19,6 +19,7 @@ var (
 type MemberService interface {
 	RegisterMember(ctx context.Context, member *models.Member) error
 	GetMemberByID(ctx context.Context, id string) (*models.Member, error)
+	ActivateMember(ctx context.Context, id string) error
 }
 
 type memberServiceImpl struct {
@@ -65,4 +66,16 @@ func (s *memberServiceImpl) GetMemberByID(ctx context.Context, id string) (*mode
 	}
 
 	return member, nil
+}
+
+func (s *memberServiceImpl) ActivateMember(ctx context.Context, id string) error {
+	err := s.repo.UpdateRegistrationStatus(ctx, id, true)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return ErrMemberNotFound
+		}
+		return err
+	}
+
+	return nil
 }
