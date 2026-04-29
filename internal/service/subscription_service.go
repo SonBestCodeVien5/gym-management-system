@@ -46,7 +46,9 @@ func NewSubscriptionService(
 	}
 }
 
+// CreateSubscription validates input and snapshots course pricing into subscription.
 func (s *subscriptionServiceImpl) CreateSubscription(ctx context.Context, subscription *models.Subscription) error {
+	// Basic input validation.
 	if subscription == nil || subscription.MemberID.IsZero() || subscription.CourseID.IsZero() || subscription.HomeBranchID.IsZero() {
 		return ErrInvalidSubscriptionInput
 	}
@@ -57,11 +59,13 @@ func (s *subscriptionServiceImpl) CreateSubscription(ctx context.Context, subscr
 		return ErrInvalidSubscriptionInput
 	}
 
+	// Validate reference IDs exist in database.
 	member, err := s.memberRepo.GetByID(ctx, subscription.MemberID.Hex())
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return ErrSubscriptionReferenceNotFound
 		}
+		// Bubble up unexpected storage errors.
 		return err
 	}
 	if member == nil {
@@ -73,6 +77,7 @@ func (s *subscriptionServiceImpl) CreateSubscription(ctx context.Context, subscr
 		if errors.Is(err, repository.ErrNotFound) {
 			return ErrSubscriptionReferenceNotFound
 		}
+		// Bubble up unexpected storage errors.
 		return err
 	}
 	if course == nil {
@@ -84,12 +89,14 @@ func (s *subscriptionServiceImpl) CreateSubscription(ctx context.Context, subscr
 		if errors.Is(err, repository.ErrNotFound) {
 			return ErrSubscriptionReferenceNotFound
 		}
+		// Bubble up unexpected storage errors.
 		return err
 	}
 	if branch == nil {
 		return ErrSubscriptionReferenceNotFound
 	}
 
+	// Snapshot course pricing into subscription at creation time.
 	subscription.ID = primitive.NewObjectID()
 	subscription.Status = "pending"
 	subscription.UnitPrice = course.BasePrice
@@ -97,12 +104,16 @@ func (s *subscriptionServiceImpl) CreateSubscription(ctx context.Context, subscr
 	subscription.Total_Amount_Paid = course.BasePrice * int64(course.SessionCount)
 	subscription.RemainingSessions = course.SessionCount
 
+	// Persist subscription record.
 	return s.subscriptionRepo.Create(ctx, subscription)
 }
 
+// GetSubscriptionByID returns subscription by ID or not-found error.
 func (s *subscriptionServiceImpl) GetSubscriptionByID(ctx context.Context, id string) (*models.Subscription, error) {
+	// Fetch subscription by ID.
 	subscription, err := s.subscriptionRepo.GetByID(ctx, id)
 	if err != nil {
+		// Map storage not-found into service-level error.
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, ErrSubscriptionNotFound
 		}
@@ -112,19 +123,24 @@ func (s *subscriptionServiceImpl) GetSubscriptionByID(ctx context.Context, id st
 	return subscription, nil
 }
 
+// ConfirmSubscriptionPayment activates a pending subscription tied to the member.
 func (s *subscriptionServiceImpl) ConfirmSubscriptionPayment(ctx context.Context, memberID string, subscriptionID string) error {
+	// Load subscription to verify ownership and status.
 	subscription, err := s.subscriptionRepo.GetByID(ctx, subscriptionID)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return ErrSubscriptionNotFound
 		}
+		// Bubble up unexpected storage errors.
 		return err
 	}
 
+	// Prevent confirming a subscription that belongs to another member.
 	if subscription.MemberID.Hex() != memberID {
 		return ErrSubscriptionMemberMismatch
 	}
 
+	// Only pending subscriptions can be activated.
 	if subscription.Status == "active" {
 		return ErrSubscriptionAlreadyActive
 	}
@@ -132,13 +148,16 @@ func (s *subscriptionServiceImpl) ConfirmSubscriptionPayment(ctx context.Context
 		return ErrInvalidSubscriptionStatus
 	}
 
+	// Update status and payment date in the database.
 	now := time.Now()
 	if err := s.subscriptionRepo.UpdateStatusAndPaymentDate(ctx, subscriptionID, "active", now); err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return ErrSubscriptionNotFound
 		}
+		// Bubble up unexpected storage errors.
 		return err
 	}
 
+	// No additional side effects for now.
 	return nil
 }

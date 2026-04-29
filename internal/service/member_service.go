@@ -32,19 +32,24 @@ func NewMemberService(repo repository.MemberRepository) MemberService {
 	}
 }
 
+// RegisterMember validates input, checks CCID uniqueness, and creates member.
 func (s *memberServiceImpl) RegisterMember(ctx context.Context, member *models.Member) error {
+	// Validate required fields before touching the database.
 	if member == nil || member.CCID == "" || member.FullName == "" {
 		return ErrInvalidMemberInput
 	}
 
+	// Ensure CCID is unique.
 	existing, err := s.repo.GetByCCID(ctx, member.CCID)
 	if err == nil && existing != nil {
 		return ErrMemberCCIDAlreadyExists
 	}
 	if err != nil && !errors.Is(err, repository.ErrNotFound) {
+		// Unexpected storage error should bubble up.
 		return err
 	}
 
+	// Initialize server-side defaults.
 	now := time.Now()
 	member.ID = primitive.NewObjectID()
 	member.IsRegistered = false
@@ -53,12 +58,16 @@ func (s *memberServiceImpl) RegisterMember(ctx context.Context, member *models.M
 	member.CreatedAt = now
 	member.UpdatedAt = now
 
+	// Persist member record.
 	return s.repo.Create(ctx, member)
 }
 
+// GetMemberByID loads a member or returns not-found error.
 func (s *memberServiceImpl) GetMemberByID(ctx context.Context, id string) (*models.Member, error) {
+	// Fetch member from repository.
 	member, err := s.repo.GetByID(ctx, id)
 	if err != nil {
+		// Map storage not-found into service-level error.
 		if errors.Is(err, repository.ErrNotFound) {
 			return nil, ErrMemberNotFound
 		}
@@ -68,14 +77,18 @@ func (s *memberServiceImpl) GetMemberByID(ctx context.Context, id string) (*mode
 	return member, nil
 }
 
+// ActivateMember sets is_registered=true for the member.
 func (s *memberServiceImpl) ActivateMember(ctx context.Context, id string) error {
+	// Flip is_registered to true in storage.
 	err := s.repo.UpdateRegistrationStatus(ctx, id, true)
 	if err != nil {
+		// Map storage not-found into service-level error.
 		if errors.Is(err, repository.ErrNotFound) {
 			return ErrMemberNotFound
 		}
 		return err
 	}
 
+	// No additional side effects for now.
 	return nil
 }

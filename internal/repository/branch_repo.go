@@ -18,12 +18,14 @@ type branchRepoImpl struct {
 	collection *mongo.Collection
 }
 
+// NewBranchRepository returns a repo bound to branches collection.
 func NewBranchRepository(db *mongo.Database) BranchRepository {
 	return &branchRepoImpl{
 		collection: db.Collection("branches"),
 	}
 }
 
+// GetByID loads a branch by ObjectID string.
 func (r *branchRepoImpl) GetByID(ctx context.Context, id string) (*models.Branch, error) {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -33,6 +35,7 @@ func (r *branchRepoImpl) GetByID(ctx context.Context, id string) (*models.Branch
 	var branch models.Branch
 	err = r.collection.FindOne(ctx, bson.M{"_id": objID}).Decode(&branch)
 	if err != nil {
+		// Normalize Mongo no-document error to ErrNotFound.
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil, ErrNotFound
 		}

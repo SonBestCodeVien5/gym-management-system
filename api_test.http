@@ -37,7 +37,12 @@ GET http://localhost:8080/api/v1/members/69e100da9359b4be784078df
 
 ###
 # Activate member after offline payment confirmation
-PATCH http://localhost:8080/api/v1/members/69e100da9359b4be784078df/activate
+PATCH http://localhost:8080/api/v1/members/69dfa3af8f14bfa54ed2509d/activate
+Content-Type: application/json
+
+{
+  "subscription_id": "69f20b22f79bb78cac99aa0a"
+}
 
 ###
 # Create subscription

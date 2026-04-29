@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// MemberRepository defines the interface for member-related database operations
+// MemberRepository defines member database operations.
 type MemberRepository interface {
 	Create(ctx context.Context, member *models.Member) error
 	GetByID(ctx context.Context, id string) (*models.Member, error)
@@ -20,12 +20,12 @@ type MemberRepository interface {
 	UpdateRegistrationStatus(ctx context.Context, id string, isRegistered bool) error
 }
 
-// memberRepoImpl implements the MemberRepository interface
+// memberRepoImpl implements the MemberRepository interface.
 type memberRepoImpl struct {
 	collection *mongo.Collection
 }
 
-// NewMemberRepository creates a new instance of MemberRepository
+// NewMemberRepository creates the repo and ensures CCID is unique.
 func NewMemberRepository(db *mongo.Database) (MemberRepository, error) {
 	collection := db.Collection("members")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -45,16 +45,15 @@ func NewMemberRepository(db *mongo.Database) (MemberRepository, error) {
 	}, nil
 }
 
-// --Start using database operations--
-// 1. Create a new member
+// Create inserts a new member document.
 func (r *memberRepoImpl) Create(ctx context.Context, member *models.Member) error {
 	_, err := r.collection.InsertOne(ctx, member)
 	return err
 }
 
-// 2. Get a member by ID
+// GetByID loads a member by ObjectID string.
 func (r *memberRepoImpl) GetByID(ctx context.Context, id string) (*models.Member, error) {
-	// Convert string ID to ObjectID
+	// Convert string ID to ObjectID.
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, err
@@ -73,7 +72,7 @@ func (r *memberRepoImpl) GetByID(ctx context.Context, id string) (*models.Member
 	return &member, nil
 }
 
-// 3. Get a member by CCID
+// GetByCCID loads a member by CCID.
 func (r *memberRepoImpl) GetByCCID(ctx context.Context, ccid string) (*models.Member, error) {
 	var member models.Member
 	filter := bson.M{"ccid": ccid}
@@ -88,7 +87,7 @@ func (r *memberRepoImpl) GetByCCID(ctx context.Context, ccid string) (*models.Me
 	return &member, nil
 }
 
-// 4. Update member registration status
+// UpdateRegistrationStatus toggles is_registered and updated_at.
 func (r *memberRepoImpl) UpdateRegistrationStatus(ctx context.Context, id string, isRegistered bool) error {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -103,6 +102,7 @@ func (r *memberRepoImpl) UpdateRegistrationStatus(ctx context.Context, id string
 	if err != nil {
 		return err
 	}
+	// No matched document means the member does not exist.
 	if result.MatchedCount == 0 {
 		return ErrNotFound
 	}

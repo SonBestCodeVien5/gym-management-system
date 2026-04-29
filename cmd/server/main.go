@@ -16,30 +16,29 @@ import (
 )
 
 func main() {
-	// 1. Tải file cấu hình .env
+	// Load env config.
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("Error: Not found .env file, using environment variables instead")
 	}
 
-	// 2. Kết nối Database
-	// Trong file .env của chúng ta, nó tên là MONGODB_URI (chứ không phải MONGO_URI)
+	// Connect to MongoDB using MONGODB_URI.
 	mongoURI := os.Getenv("MONGODB_URI")
 	if mongoURI == "" {
 		log.Fatal("Error: MONGODB_URI is not set in environment variables")
 	}
 
-	// Hàm ConnectMongoDB trả về 2 giá trị: client và err (phải hứng cả err)
+	// ConnectMongoDB returns client and error.
 	dbClient, err := database.ConnectMongoDB(mongoURI)
 	if err != nil {
 		log.Fatalf("Error: Failed to connect to MongoDB: %v", err)
 	}
-	// Đóng kết nối an toàn khi tắt server
+	// Close DB connection on shutdown.
 	defer dbClient.Disconnect(context.Background())
 
 	db := dbClient.Database("gym_management")
 
-	// 3. Khởi tạo Repository, Service, Handler
+	// Build repositories.
 	memberRepo, err := repository.NewMemberRepository(db)
 	if err != nil {
 		log.Fatalf("Error: Failed to initialize member repository: %v", err)
@@ -47,22 +46,26 @@ func main() {
 	courseRepo := repository.NewCourseRepository(db)
 	branchRepo := repository.NewBranchRepository(db)
 	subscriptionRepo := repository.NewSubscriptionRepository(db)
+
+	// Build services.
 	subscriptionService := service.NewSubscriptionService(subscriptionRepo, memberRepo, courseRepo, branchRepo)
 	memberService := service.NewMemberService(memberRepo)
+
+	// Build HTTP handlers.
 	memberHandler := handlers.NewMemberHandler(memberService, subscriptionService)
 	subscriptionHandler := handlers.NewSubscriptionHandler(subscriptionService)
 
-	// 3. Khởi tạo Gin Engine (Web framework)
+	// Initialize Gin engine.
 	r := gin.Default()
 
-	// 4. Định nghĩa Route đơn giản để test HTTP
+	// Health check.
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"message": "pong",
 			"status":  "Backend Go + MongoDB đã sẵn sàng và đang chờ lệnh!",
 		})
 	})
-	// Định nghĩa route cho member registration
+	// API routes.
 	api := r.Group("/api/v1")
 	{
 		api.POST("/registration", memberHandler.Register)
@@ -72,7 +75,7 @@ func main() {
 		api.GET("/subscriptions/:id", subscriptionHandler.GetByID)
 	}
 
-	// 5. Chạy Server
+	// Start HTTP server.
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
