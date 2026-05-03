@@ -17,6 +17,8 @@ Luong xu ly hien tai:
 5. `internal/handlers/member_handler.go` nhan request HTTP va tra JSON.
 6. `internal/repository/course_repo.go`, `branch_repo.go` query theo `_id` cho subscription.
 7. `internal/repository/subscription_repo.go`, `internal/service/subscription_service.go`, `internal/handlers/subscription_handler.go` phuc vu luong subscription.
+8. `internal/handlers/course_handler.go`, `branch_handler.go` xu ly CRUD course/branch.
+9. `internal/handlers/attendance_handler.go` xu ly check-in va history.
 
 Luot request dang ky:
 HTTP Request -> Handler -> Service -> Repository -> MongoDB -> JSON Response.
@@ -56,8 +58,24 @@ Neu thanh cong, log se co:
 - `GET /ping`
 - `POST /api/v1/registration`
 - `GET /api/v1/members/:id`
+- `PATCH /api/v1/members/:id/activate`
+- `POST /api/v1/courses`
+- `GET /api/v1/courses`
+- `GET /api/v1/courses/:id`
+- `PATCH /api/v1/courses/:id`
+- `DELETE /api/v1/courses/:id`
+- `POST /api/v1/branches`
+- `GET /api/v1/branches`
+- `GET /api/v1/branches/:id`
+- `PATCH /api/v1/branches/:id`
+- `DELETE /api/v1/branches/:id`
 - `POST /api/v1/subscriptions`
 - `GET /api/v1/subscriptions/:id`
+- `PATCH /api/v1/subscriptions/:id/suspend`
+- `PATCH /api/v1/subscriptions/:id/resume`
+- `PATCH /api/v1/subscriptions/:id/expire`
+- `POST /api/v1/attendances/check-in`
+- `GET /api/v1/subscriptions/:id/attendances`
 
 ## 4. Test API
 ### 4.1 File `api_test.http` dung format dung
@@ -101,6 +119,20 @@ Subscription test mau (RFC3339):
 curl -s -X POST http://localhost:8080/api/v1/subscriptions \
   -H 'Content-Type: application/json' \
   -d '{"member_id":"PUT_MEMBER_OBJECT_ID","course_id":"PUT_COURSE_OBJECT_ID","home_branch_id":"PUT_BRANCH_OBJECT_ID","start_date":"2026-04-28T10:00:00Z","end_date":"2026-05-28T10:00:00Z","session_per_week":3}'
+```
+
+Activate member (offline payment confirm):
+```bash
+curl -s -X PATCH http://localhost:8080/api/v1/members/PUT_MEMBER_OBJECT_ID/activate \
+  -H 'Content-Type: application/json' \
+  -d '{"subscription_id":"PUT_SUBSCRIPTION_OBJECT_ID"}'
+```
+
+Attendance check-in (attended/makeup):
+```bash
+curl -s -X POST http://localhost:8080/api/v1/attendances/check-in \
+  -H 'Content-Type: application/json' \
+  -d '{"subscription_id":"PUT_SUBSCRIPTION_OBJECT_ID","branch_id":"PUT_BRANCH_OBJECT_ID","date":"2026-05-10T08:00:00Z","status":"attended"}'
 ```
 
 ## 5. Xem record trong MongoDB

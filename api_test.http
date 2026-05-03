@@ -61,3 +61,123 @@ Content-Type: application/json
 ###
 # Get subscription by ID
 GET http://localhost:8080/api/v1/subscriptions/69f20b22f79bb78cac99aa0a
+
+###
+# Suspend subscription
+PATCH http://localhost:8080/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/suspend
+Content-Type: application/json
+
+{
+  "start_date": "2026-05-05T09:00:00Z",
+  "end_date": "2026-05-20T09:00:00Z",
+  "frozen_session": 4,
+  "reason": "Business trip"
+}
+
+###
+# Resume subscription
+PATCH http://localhost:8080/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/resume
+
+###
+# Expire subscription manually
+PATCH http://localhost:8080/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/expire
+
+###
+# Create course
+POST http://localhost:8080/api/v1/courses
+Content-Type: application/json
+
+{
+  "title": "Yoga for Beginners",
+  "level": "basic",
+  "base_price": 180000,
+  "session_count": 12,
+  "description": "Beginner yoga course"
+}
+
+###
+# List courses
+GET http://localhost:8080/api/v1/courses
+
+###
+# Get course by ID
+GET http://localhost:8080/api/v1/courses/69f20a180c4cd4cdf57684fd
+
+###
+# Update course
+PATCH http://localhost:8080/api/v1/courses/69f20a180c4cd4cdf57684fd
+Content-Type: application/json
+
+{
+  "title": "Yoga for Beginners - Updated",
+  "level": "basic",
+  "base_price": 200000,
+  "session_count": 14,
+  "description": "Updated beginner yoga course"
+}
+
+###
+# Delete course
+DELETE http://localhost:8080/api/v1/courses/69f20a180c4cd4cdf57684fd
+
+###
+# Create branch
+POST http://localhost:8080/api/v1/branches
+Content-Type: application/json
+
+{
+  "branch_code": "HCM01",
+  "name": "Ho Chi Minh Main Branch",
+  "address": "123 Nguyen Hue, District 1",
+  "province": "Ho Chi Minh",
+  "location": {
+    "type": "Point",
+    "coordinates": [106.7009, 10.7769]
+  },
+  "manager_id": ""
+}
+
+###
+# List branches
+GET http://localhost:8080/api/v1/branches
+
+###
+# Get branch by ID
+GET http://localhost:8080/api/v1/branches/69f20a180c4cd4cdf57684fe
+
+###
+# Update branch
+PATCH http://localhost:8080/api/v1/branches/69f20a180c4cd4cdf57684fe
+Content-Type: application/json
+
+{
+  "branch_code": "HCM01",
+  "name": "Ho Chi Minh Main Branch - Updated",
+  "address": "123 Nguyen Hue, District 1",
+  "province": "Ho Chi Minh",
+  "location": {
+    "type": "Point",
+    "coordinates": [106.7009, 10.7769]
+  },
+  "manager_id": ""
+}
+
+###
+# Delete branch
+DELETE http://localhost:8080/api/v1/branches/69f20a180c4cd4cdf57684fe
+
+###
+# Attendance check-in
+POST http://localhost:8080/api/v1/attendances/check-in
+Content-Type: application/json
+
+{
+  "subscription_id": "69f20b22f79bb78cac99aa0a",
+  "branch_id": "69f20a180c4cd4cdf57684fe",
+  "date": "2026-05-10T08:00:00Z",
+  "status": "attended"
+}
+
+###
+# List attendance by subscription
+GET http://localhost:8080/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/attendances

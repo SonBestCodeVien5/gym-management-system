@@ -20,11 +20,14 @@
 * **Lý do chọn:** Lược đồ động (Dynamic Schema) phù hợp với các cấu trúc lồng nhau (Embedded Documents) như lịch sử bảo lưu (`SuspensionHistory`).
 
 ## 4. Trang thai code hien tai
-* **Member flow:** da co repository, service, handler va route registration/get-by-id.
-* **Subscription flow:** da co repository, service, handler va route create/get-by-id.
+* **Member flow:** registration/get-by-id + activate offline payment.
+* **Subscription flow:** create/get-by-id + suspend/resume/expire.
+* **Course/Branch:** CRUD day du.
+* **Attendance:** check-in va history theo subscription.
 * **Validation:** `members.ccid` co unique index trong repository constructor de chong race condition.
-* **Time parsing:** subscription handler dung RFC3339 cho `start_date` va `end_date`.
+* **Time parsing:** subscription/attendance handler dung RFC3339.
 
 ## 5. Các module chuẩn bị tích hợp (Upcoming)
 * **Authentication:** JWT (JSON Web Token) - Tái sử dụng logic từ project Auth cũ để phân quyền Admin/Trainer/Member.
-* **Payment/Suspension:** xu ly hoan tien, bao luu, resume theo business rule Phase 2.
+* **Payment/Refund:** chi offline, can hoan thien rule refund/discount neu can.
+* **Analytics:** thong ke doanh thu, attendance, va utilization.

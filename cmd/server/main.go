@@ -46,14 +46,21 @@ func main() {
 	courseRepo := repository.NewCourseRepository(db)
 	branchRepo := repository.NewBranchRepository(db)
 	subscriptionRepo := repository.NewSubscriptionRepository(db)
+	attendanceRepo := repository.NewAttendanceRepository(db)
 
 	// Build services.
 	subscriptionService := service.NewSubscriptionService(subscriptionRepo, memberRepo, courseRepo, branchRepo)
 	memberService := service.NewMemberService(memberRepo)
+	courseService := service.NewCourseService(courseRepo)
+	branchService := service.NewBranchService(branchRepo)
+	attendanceService := service.NewAttendanceService(attendanceRepo, subscriptionRepo, memberRepo)
 
 	// Build HTTP handlers.
 	memberHandler := handlers.NewMemberHandler(memberService, subscriptionService)
 	subscriptionHandler := handlers.NewSubscriptionHandler(subscriptionService)
+	courseHandler := handlers.NewCourseHandler(courseService)
+	branchHandler := handlers.NewBranchHandler(branchService)
+	attendanceHandler := handlers.NewAttendanceHandler(attendanceService)
 
 	// Initialize Gin engine.
 	r := gin.Default()
@@ -71,8 +78,27 @@ func main() {
 		api.POST("/registration", memberHandler.Register)
 		api.GET("/members/:id", memberHandler.GetByID)
 		api.PATCH("/members/:id/activate", memberHandler.Activate)
+
+		api.POST("/courses", courseHandler.Create)
+		api.GET("/courses", courseHandler.List)
+		api.GET("/courses/:id", courseHandler.GetByID)
+		api.PATCH("/courses/:id", courseHandler.Update)
+		api.DELETE("/courses/:id", courseHandler.Delete)
+
+		api.POST("/branches", branchHandler.Create)
+		api.GET("/branches", branchHandler.List)
+		api.GET("/branches/:id", branchHandler.GetByID)
+		api.PATCH("/branches/:id", branchHandler.Update)
+		api.DELETE("/branches/:id", branchHandler.Delete)
+
 		api.POST("/subscriptions", subscriptionHandler.Create)
 		api.GET("/subscriptions/:id", subscriptionHandler.GetByID)
+		api.PATCH("/subscriptions/:id/suspend", subscriptionHandler.Suspend)
+		api.PATCH("/subscriptions/:id/resume", subscriptionHandler.Resume)
+		api.PATCH("/subscriptions/:id/expire", subscriptionHandler.Expire)
+
+		api.POST("/attendances/check-in", attendanceHandler.CheckIn)
+		api.GET("/subscriptions/:id/attendances", attendanceHandler.ListBySubscription)
 	}
 
 	// Start HTTP server.

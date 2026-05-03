@@ -33,6 +33,20 @@ Huong dan viet bao cao phan tich-thiet ke: [system_analysis_design_guide.md](sys
 6. `internal/handlers/subscription_handler.go`: them handler API cho subscription, parse `RFC3339`.
 7. `cmd/server/main.go`: wire day du member + subscription flow vao Gin routes.
 
+## 2.2. Tien do moi (2026-05-03)
+1. `internal/service/subscription_service.go`: them lifecycle `suspend`, `resume`, `expire` va rule status.
+2. `internal/handlers/subscription_handler.go`: them API `suspend/resume/expire`.
+3. `internal/handlers/member_handler.go`: activate member yeu cau `subscription_id` de confirm offline payment.
+4. `internal/repository/course_repo.go` va `branch_repo.go`: them CRUD va list.
+5. `internal/service/course_service.go` va `branch_service.go`: them validate va CRUD logic.
+6. `internal/handlers/course_handler.go` va `branch_handler.go`: them API CRUD.
+7. `internal/repository/attendance_repo.go`, `internal/service/attendance_service.go`, `internal/handlers/attendance_handler.go`: them check-in va history attendance.
+8. `internal/repository/subscription_repo.go`: bo sung update status/suspension/remaining_sessions.
+9. `internal/repository/member_repo.go`: them increment tong so buoi tap.
+10. `cmd/server/main.go`: wire tat ca routes moi.
+11. `api_test.http`: bo sung full request cho course/branch/subscription/attendance.
+12. `README.md`: cap nhat danh sach module va route.
+
 ## 3. Trang thai hien tai cua he thong
 Da hoan thanh:
 1. Chay duoc backend Go + Gin.
@@ -165,4 +179,4 @@ Con de sau (refactor nang):
 
 ---
 
-Cap nhat lan cuoi: theo trang thai code va commit den ngay 2026-04-28.
+Cap nhat lan cuoi: theo trang thai code va commit den ngay 2026-05-03.
