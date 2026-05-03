@@ -4,7 +4,7 @@ GET http://localhost:8080/ping
 ###
 
 # Member registration
-POST http://localhost:8080/api/v1/registration
+POST http://localhost:8080/api/v1/members
 Content-Type: application/json
 
 {
@@ -19,7 +19,7 @@ Content-Type: application/json
 ###
 
 # Member registration 2
-POST http://localhost:8080/api/v1/registration
+POST http://localhost:8080/api/v1/members
 Content-Type: application/json
 
 {
@@ -76,7 +76,7 @@ Content-Type: application/json
 
 ###
 # Resume subscription
-PATCH http://localhost:8080/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/resume
+PATCH http://localhost:8080/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/unsuspend
 
 ###
 # Expire subscription manually
@@ -168,7 +168,7 @@ DELETE http://localhost:8080/api/v1/branches/69f20a180c4cd4cdf57684fe
 
 ###
 # Attendance check-in
-POST http://localhost:8080/api/v1/attendances/check-in
+POST http://localhost:8080/api/v1/attendance/checkin
 Content-Type: application/json
 
 {
@@ -180,4 +180,4 @@ Content-Type: application/json
 
 ###
 # List attendance by subscription
-GET http://localhost:8080/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/attendances
+GET http://localhost:8080/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/attendance

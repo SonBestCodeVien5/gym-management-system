@@ -15,7 +15,7 @@ This project follows a simple layered structure:
 
 ### 1) Member Registration and Offline Activation
 
-- `POST /api/v1/registration`
+- `POST /api/v1/members`
 - `GET /api/v1/members/:id`
 - `PATCH /api/v1/members/:id/activate`
 
@@ -29,7 +29,7 @@ This project follows a simple layered structure:
 - `POST /api/v1/subscriptions`
 - `GET /api/v1/subscriptions/:id`
 - `PATCH /api/v1/subscriptions/:id/suspend`
-- `PATCH /api/v1/subscriptions/:id/resume`
+- `PATCH /api/v1/subscriptions/:id/unsuspend`
 - `PATCH /api/v1/subscriptions/:id/expire`
 
 Behavior:
@@ -56,8 +56,8 @@ Behavior:
 
 ### 5) Attendance
 
-- `POST /api/v1/attendances/check-in`
-- `GET /api/v1/subscriptions/:id/attendances`
+- `POST /api/v1/attendance/checkin`
+- `GET /api/v1/subscriptions/:id/attendance`
 
 Check-in effects (for `attended` or `makeup` status):
 

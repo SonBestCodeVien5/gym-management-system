@@ -75,7 +75,7 @@ func main() {
 	// API routes.
 	api := r.Group("/api/v1")
 	{
-		api.POST("/registration", memberHandler.Register)
+		api.POST("/members", memberHandler.Register)
 		api.GET("/members/:id", memberHandler.GetByID)
 		api.PATCH("/members/:id/activate", memberHandler.Activate)
 
@@ -94,11 +94,11 @@ func main() {
 		api.POST("/subscriptions", subscriptionHandler.Create)
 		api.GET("/subscriptions/:id", subscriptionHandler.GetByID)
 		api.PATCH("/subscriptions/:id/suspend", subscriptionHandler.Suspend)
-		api.PATCH("/subscriptions/:id/resume", subscriptionHandler.Resume)
+		api.PATCH("/subscriptions/:id/unsuspend", subscriptionHandler.Resume)
 		api.PATCH("/subscriptions/:id/expire", subscriptionHandler.Expire)
 
-		api.POST("/attendances/check-in", attendanceHandler.CheckIn)
-		api.GET("/subscriptions/:id/attendances", attendanceHandler.ListBySubscription)
+		api.POST("/attendance/checkin", attendanceHandler.CheckIn)
+		api.GET("/subscriptions/:id/attendance", attendanceHandler.ListBySubscription)
 	}
 
 	// Start HTTP server.

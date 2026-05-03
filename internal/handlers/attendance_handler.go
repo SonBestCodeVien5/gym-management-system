@@ -30,7 +30,7 @@ type checkInRequest struct {
 	IsMakeupFor    string `json:"is_makeup_for"`
 }
 
-// CheckIn handles POST /attendances/check-in.
+// CheckIn handles POST /attendance/checkin.
 func (h *AttendanceHandler) CheckIn(c *gin.Context) {
 	// 1) Parse JSON body.
 	var req checkInRequest
@@ -99,7 +99,7 @@ func (h *AttendanceHandler) CheckIn(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "attendance check-in recorded successfully", "data": attendance})
 }
 
-// ListBySubscription handles GET /subscriptions/:id/attendances.
+// ListBySubscription handles GET /subscriptions/:id/attendance.
 func (h *AttendanceHandler) ListBySubscription(c *gin.Context) {
 	// 1) Validate subscription ID in path.
 	subscriptionID := c.Param("id")

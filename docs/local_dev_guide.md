@@ -56,7 +56,7 @@ Neu thanh cong, log se co:
 
 ### 3.4 Route hien co
 - `GET /ping`
-- `POST /api/v1/registration`
+- `POST /api/v1/members`
 - `GET /api/v1/members/:id`
 - `PATCH /api/v1/members/:id/activate`
 - `POST /api/v1/courses`
@@ -72,10 +72,10 @@ Neu thanh cong, log se co:
 - `POST /api/v1/subscriptions`
 - `GET /api/v1/subscriptions/:id`
 - `PATCH /api/v1/subscriptions/:id/suspend`
-- `PATCH /api/v1/subscriptions/:id/resume`
+- `PATCH /api/v1/subscriptions/:id/unsuspend`
 - `PATCH /api/v1/subscriptions/:id/expire`
-- `POST /api/v1/attendances/check-in`
-- `GET /api/v1/subscriptions/:id/attendances`
+- `POST /api/v1/attendance/checkin`
+- `GET /api/v1/subscriptions/:id/attendance`
 
 ## 4. Test API
 ### 4.1 File `api_test.http` dung format dung
@@ -109,7 +109,7 @@ curl -s http://localhost:8080/ping
 ```
 
 ```bash
-curl -s -X POST http://localhost:8080/api/v1/registration \
+curl -s -X POST http://localhost:8080/api/v1/members \
   -H 'Content-Type: application/json' \
   -d '{"ccid":"012345678901","full_name":"Nguyen Van A","email":"a@example.com","phone":"0900000000","gender":"male","level":"basic"}'
 ```
@@ -130,7 +130,7 @@ curl -s -X PATCH http://localhost:8080/api/v1/members/PUT_MEMBER_OBJECT_ID/activ
 
 Attendance check-in (attended/makeup):
 ```bash
-curl -s -X POST http://localhost:8080/api/v1/attendances/check-in \
+curl -s -X POST http://localhost:8080/api/v1/attendance/checkin \
   -H 'Content-Type: application/json' \
   -d '{"subscription_id":"PUT_SUBSCRIPTION_OBJECT_ID","branch_id":"PUT_BRANCH_OBJECT_ID","date":"2026-05-10T08:00:00Z","status":"attended"}'
 ```
