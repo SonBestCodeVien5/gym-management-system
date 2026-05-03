@@ -32,6 +32,14 @@ type createSubscriptionRequest struct {
 	SessionPerWeek int    `json:"session_per_week"`
 }
 
+// suspendSubscriptionRequest is the JSON body for suspending a subscription.
+type suspendSubscriptionRequest struct {
+	StartDate     string `json:"start_date"`
+	EndDate       string `json:"end_date"`
+	FrozenSession int    `json:"frozen_session"`
+	Reason        string `json:"reason"`
+}
+
 // Create validates input and delegates to subscription service.
 func (h *SubscriptionHandler) Create(c *gin.Context) {
 	// 1) Parse JSON body into request struct.
@@ -135,6 +143,115 @@ func (h *SubscriptionHandler) GetByID(c *gin.Context) {
 		"message": "subscription fetched successfully",
 		"data":    subscription,
 	})
+}
+
+// Suspend moves subscription to suspended status with suspension details.
+func (h *SubscriptionHandler) Suspend(c *gin.Context) {
+	// 1) Validate subscription ID from URL.
+	id := c.Param("id")
+	if _, err := primitive.ObjectIDFromHex(id); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid subscription id"})
+		return
+	}
+
+	// 2) Parse JSON body for suspension details.
+	var req suspendSubscriptionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "invalid request body",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	startDate, err := parseTimeValue(req.StartDate)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid start_date format"})
+		return
+	}
+	endDate, err := parseTimeValue(req.EndDate)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid end_date format"})
+		return
+	}
+
+	// 3) Build suspension model and delegate to service.
+	suspension := &models.Suspension{
+		StartDate:     startDate,
+		EndDate:       endDate,
+		FrozenSession: req.FrozenSession,
+		Reason:        req.Reason,
+	}
+
+	if err := h.subscriptionService.SuspendSubscription(c.Request.Context(), id, suspension); err != nil {
+		// 4) Map service errors to HTTP status codes.
+		switch {
+		case errors.Is(err, service.ErrSubscriptionNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"message": "subscription not found"})
+		case errors.Is(err, service.ErrInvalidSuspensionPeriod):
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		case errors.Is(err, service.ErrSubscriptionAlreadySuspended), errors.Is(err, service.ErrSubscriptionNotActive), errors.Is(err, service.ErrSubscriptionExpired):
+			c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+		}
+		return
+	}
+
+	// 5) Success response.
+	c.JSON(http.StatusOK, gin.H{"message": "subscription suspended successfully"})
+}
+
+// Resume clears suspension and sets status back to active.
+func (h *SubscriptionHandler) Resume(c *gin.Context) {
+	// 1) Validate subscription ID from URL.
+	id := c.Param("id")
+	if _, err := primitive.ObjectIDFromHex(id); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid subscription id"})
+		return
+	}
+
+	// 2) Delegate to service.
+	if err := h.subscriptionService.ResumeSubscription(c.Request.Context(), id); err != nil {
+		// 3) Map service errors to HTTP status codes.
+		switch {
+		case errors.Is(err, service.ErrSubscriptionNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"message": "subscription not found"})
+		case errors.Is(err, service.ErrInvalidSubscriptionStatus), errors.Is(err, service.ErrSubscriptionExpired):
+			c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+		}
+		return
+	}
+
+	// 4) Success response.
+	c.JSON(http.StatusOK, gin.H{"message": "subscription resumed successfully"})
+}
+
+// Expire marks subscription as expired manually.
+func (h *SubscriptionHandler) Expire(c *gin.Context) {
+	// 1) Validate subscription ID from URL.
+	id := c.Param("id")
+	if _, err := primitive.ObjectIDFromHex(id); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid subscription id"})
+		return
+	}
+
+	// 2) Delegate to service.
+	if err := h.subscriptionService.ExpireSubscription(c.Request.Context(), id); err != nil {
+		// 3) Map service errors to HTTP status codes.
+		switch {
+		case errors.Is(err, service.ErrSubscriptionNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"message": "subscription not found"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+		}
+		return
+	}
+
+	// 4) Success response.
+	c.JSON(http.StatusOK, gin.H{"message": "subscription expired successfully"})
 }
 
 // parseTimeValue parses RFC3339 date input.

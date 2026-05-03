@@ -11,7 +11,11 @@ import (
 )
 
 type CourseRepository interface {
+	Create(ctx context.Context, course *models.Course) error
 	GetByID(ctx context.Context, id string) (*models.Course, error)
+	List(ctx context.Context) ([]models.Course, error)
+	UpdateByID(ctx context.Context, id string, course *models.Course) error
+	DeleteByID(ctx context.Context, id string) error
 }
 
 type courseRepoImpl struct {
@@ -23,6 +27,12 @@ func NewCourseRepository(db *mongo.Database) CourseRepository {
 	return &courseRepoImpl{
 		collection: db.Collection("courses"),
 	}
+}
+
+// Create inserts a course document.
+func (r *courseRepoImpl) Create(ctx context.Context, course *models.Course) error {
+	_, err := r.collection.InsertOne(ctx, course)
+	return err
 }
 
 // GetByID loads a course by ObjectID string.
@@ -43,4 +53,64 @@ func (r *courseRepoImpl) GetByID(ctx context.Context, id string) (*models.Course
 	}
 
 	return &course, nil
+}
+
+// List returns all courses in the collection.
+func (r *courseRepoImpl) List(ctx context.Context) ([]models.Course, error) {
+	cursor, err := r.collection.Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var courses []models.Course
+	if err := cursor.All(ctx, &courses); err != nil {
+		return nil, err
+	}
+
+	return courses, nil
+}
+
+// UpdateByID updates mutable fields for a course.
+func (r *courseRepoImpl) UpdateByID(ctx context.Context, id string, course *models.Course) error {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	update := bson.M{"$set": bson.M{
+		"title":         course.Title,
+		"level":         course.Level,
+		"base_price":    course.BasePrice,
+		"session_count": course.SessionCount,
+		"description":   course.Description,
+	}}
+
+	result, err := r.collection.UpdateOne(ctx, bson.M{"_id": objID}, update)
+	if err != nil {
+		return err
+	}
+	if result.MatchedCount == 0 {
+		return ErrNotFound
+	}
+
+	return nil
+}
+
+// DeleteByID removes a course by ID.
+func (r *courseRepoImpl) DeleteByID(ctx context.Context, id string) error {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": objID})
+	if err != nil {
+		return err
+	}
+	if result.DeletedCount == 0 {
+		return ErrNotFound
+	}
+
+	return nil
 }

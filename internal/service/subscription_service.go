@@ -17,12 +17,19 @@ var (
 	ErrSubscriptionAlreadyActive     = errors.New("subscription already active")
 	ErrInvalidSubscriptionStatus     = errors.New("invalid subscription status")
 	ErrSubscriptionMemberMismatch    = errors.New("subscription does not belong to member")
+	ErrSubscriptionAlreadySuspended  = errors.New("subscription already suspended")
+	ErrSubscriptionNotActive         = errors.New("subscription is not active")
+	ErrSubscriptionExpired           = errors.New("subscription is expired")
+	ErrInvalidSuspensionPeriod       = errors.New("invalid suspension period")
 )
 
 type SubscriptionService interface {
 	CreateSubscription(ctx context.Context, subscription *models.Subscription) error
 	GetSubscriptionByID(ctx context.Context, id string) (*models.Subscription, error)
 	ConfirmSubscriptionPayment(ctx context.Context, memberID string, subscriptionID string) error
+	SuspendSubscription(ctx context.Context, id string, suspension *models.Suspension) error
+	ResumeSubscription(ctx context.Context, id string) error
+	ExpireSubscription(ctx context.Context, id string) error
 }
 
 type subscriptionServiceImpl struct {
@@ -159,5 +166,88 @@ func (s *subscriptionServiceImpl) ConfirmSubscriptionPayment(ctx context.Context
 	}
 
 	// No additional side effects for now.
+	return nil
+}
+
+// SuspendSubscription sets suspension details and marks subscription as suspended.
+func (s *subscriptionServiceImpl) SuspendSubscription(ctx context.Context, id string, suspension *models.Suspension) error {
+	// Validate suspension payload.
+	if suspension == nil || suspension.StartDate.IsZero() || suspension.EndDate.IsZero() {
+		return ErrInvalidSuspensionPeriod
+	}
+	if suspension.StartDate.After(suspension.EndDate) {
+		return ErrInvalidSuspensionPeriod
+	}
+	if suspension.FrozenSession < 0 {
+		return ErrInvalidSuspensionPeriod
+	}
+
+	// Load subscription to validate current status.
+	subscription, err := s.subscriptionRepo.GetByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return ErrSubscriptionNotFound
+		}
+		return err
+	}
+
+	if subscription.Status == "suspended" {
+		return ErrSubscriptionAlreadySuspended
+	}
+	if subscription.Status != "active" {
+		return ErrSubscriptionNotActive
+	}
+	if subscription.EndDate.Before(time.Now()) {
+		return ErrSubscriptionExpired
+	}
+
+	// Persist suspension details and status.
+	if err := s.subscriptionRepo.UpdateSuspension(ctx, id, suspension, "suspended"); err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return ErrSubscriptionNotFound
+		}
+		return err
+	}
+
+	return nil
+}
+
+// ResumeSubscription clears suspension and sets status back to active.
+func (s *subscriptionServiceImpl) ResumeSubscription(ctx context.Context, id string) error {
+	// Load subscription to validate current status.
+	subscription, err := s.subscriptionRepo.GetByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return ErrSubscriptionNotFound
+		}
+		return err
+	}
+
+	if subscription.Status != "suspended" {
+		return ErrInvalidSubscriptionStatus
+	}
+	if subscription.EndDate.Before(time.Now()) {
+		return ErrSubscriptionExpired
+	}
+
+	if err := s.subscriptionRepo.ClearSuspension(ctx, id, "active"); err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return ErrSubscriptionNotFound
+		}
+		return err
+	}
+
+	return nil
+}
+
+// ExpireSubscription marks subscription as expired regardless of remaining sessions.
+func (s *subscriptionServiceImpl) ExpireSubscription(ctx context.Context, id string) error {
+	if err := s.subscriptionRepo.UpdateStatus(ctx, id, "expired"); err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return ErrSubscriptionNotFound
+		}
+		return err
+	}
+
 	return nil
 }

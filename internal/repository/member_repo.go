@@ -18,6 +18,7 @@ type MemberRepository interface {
 	GetByID(ctx context.Context, id string) (*models.Member, error)
 	GetByCCID(ctx context.Context, ccid string) (*models.Member, error)
 	UpdateRegistrationStatus(ctx context.Context, id string, isRegistered bool) error
+	IncrementSessionsAttended(ctx context.Context, id string, delta int) error
 }
 
 // memberRepoImpl implements the MemberRepository interface.
@@ -103,6 +104,28 @@ func (r *memberRepoImpl) UpdateRegistrationStatus(ctx context.Context, id string
 		return err
 	}
 	// No matched document means the member does not exist.
+	if result.MatchedCount == 0 {
+		return ErrNotFound
+	}
+
+	return nil
+}
+
+// IncrementSessionsAttended updates total_sessions_attended by delta.
+func (r *memberRepoImpl) IncrementSessionsAttended(ctx context.Context, id string, delta int) error {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	result, err := r.collection.UpdateOne(
+		ctx,
+		bson.M{"_id": objID},
+		bson.M{"$inc": bson.M{"total_sessions_attended": delta}, "$set": bson.M{"updated_at": time.Now()}},
+	)
+	if err != nil {
+		return err
+	}
 	if result.MatchedCount == 0 {
 		return ErrNotFound
 	}
