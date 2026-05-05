@@ -145,9 +145,15 @@ Doc ham CheckIn:
 Doc service CheckIn:
 1. Validate input.
 2. Load subscription, check status active.
-3. Tao attendance record.
-4. Neu attended/makeup: tru remaining_sessions, cong total_sessions_attended.
-5. Neu remaining = 0 -> set expired.
+3. Neu status = `attended` hoac `makeup`, kiem tra quota theo tuan (`sessionPerWeek`).
+4. Tao attendance record.
+5. Neu attended/makeup: tru remaining_sessions, cong total_sessions_attended.
+6. Neu remaining = 0 -> set expired.
+
+Luu y hien tai:
+- `attended` va `makeup` deu tinh vao quota tuan va lam giam buoi con lai.
+- `absent` va `reported_missed` chi luu record, khong tru buoi va khong tang count.
+- Phan luat `reported_missed` -> `makeup` chua duoc tach rieng trong code.
 
 Doc ham ListBySubscriptionID de thay cach lay history.
 
@@ -220,6 +226,8 @@ member_service.ActivateMember -> member_repo.UpdateRegistrationStatus -> Respons
 Request -> attendance_handler.CheckIn -> attendance_service.CheckIn ->
 subscription_repo.GetByID -> attendance_repo.Create ->
 subscription_repo.UpdateRemainingSessions(AndStatus) + member_repo.IncrementSessionsAttended -> Response
+
+Neu status la `attended`/`makeup`, service se kiem tra them quota theo tuan truoc khi tao record.
 
 ---
 

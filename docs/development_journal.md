@@ -59,14 +59,14 @@ Da hoan thanh:
 8. Attendance check-in va history da hoat dong.
 9. Da giam coupling nhe o service bang cach dung `repository.ErrNotFound` thay vi check loi Mongo truc tiep.
 10. Da them unique index `ccid` de chong race condition trung member.
+11. Attendance check-in da enforce `sessionPerWeek` cho `attended` va `makeup`.
 
 Dang co:
-1. Chua co `attendance/report` va `attendance/makeup` (rule 30 ngay / 7 ngay).
-2. Chua enforce `sessionPerWeek` khi check-in.
-3. Chua co refund rule (72h/50%).
-4. Chua co `branches/nearby` (geo-query).
-5. Chua co auth/role/branch-scope middleware.
-6. Chua co `members/:id/subscriptions` va `subscriptions/:id/refund`.
+1. Chua co `attendance/report` va `attendance/makeup` dung nghiep vu day du (rule 30 ngay / 7 ngay).
+2. Chua co refund rule (72h/50%).
+3. Chua co `branches/nearby` (geo-query).
+4. Chua co auth/role/branch-scope middleware.
+5. Chua co `members/:id/subscriptions` va `subscriptions/:id/refund`.
 
 ## 4. Nhat ky van de da gap va cach xu ly
 

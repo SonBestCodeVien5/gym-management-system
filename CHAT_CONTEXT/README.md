@@ -43,6 +43,12 @@ Read this first when continuing the project in a new chat.
   - copies price and session count from `Course`
   - does NOT apply discounts/refunds yet.
 - Offline payment is handled by a separate member activation endpoint, not inside subscription creation.
+- Attendance check-in now enforces `sessionPerWeek` for `attended` and `makeup` records.
+- `absent` and `reported_missed` currently only persist attendance state; the full report/makeup rule is still pending.
+
+## Docs alignment
+- Current vs planned API contract snapshot: see [docs/api_contract.md](docs/api_contract.md).
+- Phase 2 design docs aligned to the current contract (including auth/refund/nearby placeholders).
 
 ## Testing notes
 - `api_test.http` contains sample requests for ping, member registration, member activation, subscription, course/branch CRUD, and attendance.
@@ -50,7 +56,17 @@ Read this first when continuing the project in a new chat.
 - `go build ./...` was last verified to pass.
 
 ## Recommended next step
-- Implement remaining Phase 2 rules: `sessionPerWeek`, attendance report/makeup, refund rules, and branches/nearby.
+- Implement remaining Phase 2 rules: attendance report/makeup, refund rules, and branches/nearby.
+
+## Todo list (current)
+- [x] Chuan hoa API contract & docs
+- [x] Enforce sessionPerWeek rule
+- [ ] Report/Makeup attendance rules
+- [ ] Refund flow & pricing rules
+- [ ] Branch nearby geo query
+- [ ] Subscriptions list by member
+- [ ] Auth/role guard (neu can)
+- [ ] Integration tests & fixtures
 
 ## Quick resume prompt
 - "Read `CHAT_CONTEXT/README.md` first, then continue from the current project state."

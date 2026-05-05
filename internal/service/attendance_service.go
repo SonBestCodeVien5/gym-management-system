@@ -14,6 +14,7 @@ var (
 	ErrInvalidAttendanceInput      = errors.New("invalid attendance input")
 	ErrAttendanceCheckInNotAllowed = errors.New("attendance check-in is not allowed for current subscription status")
 	ErrNoRemainingSessions         = errors.New("no remaining sessions")
+	ErrWeeklySessionLimitReached   = errors.New("weekly session limit reached")
 )
 
 // AttendanceService defines check-in and attendance history operations.
@@ -65,19 +66,30 @@ func (s *attendanceServiceImpl) CheckIn(ctx context.Context, attendance *models.
 		return ErrSubscriptionExpired
 	}
 
-	// 3) Only these statuses are accepted for this initial version.
+	// 3) Enforce weekly quota for attended/makeup records.
+	if attendance.Status == "attended" || attendance.Status == "makeup" {
+		weeklyCount, err := s.countWeeklySessions(ctx, attendance.SubID.Hex(), attendance.Date)
+		if err != nil {
+			return err
+		}
+		if weeklyCount >= subscription.SessionPerWeek {
+			return ErrWeeklySessionLimitReached
+		}
+	}
+
+	// 4) Only these statuses are accepted for this initial version.
 	validStatus := attendance.Status == "attended" || attendance.Status == "makeup" || attendance.Status == "absent" || attendance.Status == "reported_missed"
 	if !validStatus {
 		return ErrInvalidAttendanceInput
 	}
 
-	// 4) Create attendance record first.
+	// 5) Create attendance record first.
 	attendance.ID = primitive.NewObjectID()
 	if err := s.attendanceRepo.Create(ctx, attendance); err != nil {
 		return err
 	}
 
-	// 5) For attended/makeup, decrease remaining_sessions and increase member attended count.
+	// 6) For attended/makeup, decrease remaining_sessions and increase member attended count.
 	if attendance.Status == "attended" || attendance.Status == "makeup" {
 		if subscription.RemainingSessions <= 0 {
 			return ErrNoRemainingSessions
@@ -100,6 +112,37 @@ func (s *attendanceServiceImpl) CheckIn(ctx context.Context, attendance *models.
 	}
 
 	return nil
+}
+
+// countWeeklySessions counts attended and makeup records within the current Monday-Sunday window.
+func (s *attendanceServiceImpl) countWeeklySessions(ctx context.Context, subscriptionID string, at time.Time) (int, error) {
+	records, err := s.attendanceRepo.ListBySubscriptionID(ctx, subscriptionID)
+	if err != nil {
+		return 0, err
+	}
+
+	startOfWeek := beginningOfISOWeek(at)
+	endOfWeek := startOfWeek.AddDate(0, 0, 7)
+
+	count := 0
+	for _, record := range records {
+		if record.Date.Before(startOfWeek) || !record.Date.Before(endOfWeek) {
+			continue
+		}
+		if record.Status == "attended" || record.Status == "makeup" {
+			count++
+		}
+	}
+
+	return count, nil
+}
+
+// beginningOfISOWeek returns Monday 00:00:00 in the same location as the input time.
+func beginningOfISOWeek(at time.Time) time.Time {
+	loc := at.Location()
+	dayStart := time.Date(at.Year(), at.Month(), at.Day(), 0, 0, 0, 0, loc)
+	offset := (int(dayStart.Weekday()) + 6) % 7
+	return dayStart.AddDate(0, 0, -offset)
 }
 
 // ListBySubscriptionID returns attendance history for a subscription.
