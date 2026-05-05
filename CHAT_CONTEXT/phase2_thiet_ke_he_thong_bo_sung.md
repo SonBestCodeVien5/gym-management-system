@@ -58,65 +58,77 @@ Request → [AuthMiddleware] → [RoleGuard] → [BranchScopeGuard] → Handler
 
 ## II. API ENDPOINTS - BỔ SUNG ĐẦY ĐỦ
 
+Ghi chu:
+- Implemented: da co trong code hien tai.
+- Planned: dung cho dinh huong, chua co trong code.
+
 ### Auth
 
 | Method | Endpoint | Mô tả |
 |--------|----------|-------|
-| POST | /api/v1/auth/login | Đăng nhập, trả về Access Token + Refresh Token. |
-| POST | /api/v1/auth/refresh | Cấp lại Access Token bằng Refresh Token. |
-| POST | /api/v1/auth/logout | Hủy Refresh Token. |
+| POST | /api/v1/auth/login | Đăng nhập, trả về Access Token + Refresh Token (planned). |
+| POST | /api/v1/auth/refresh | Cấp lại Access Token bằng Refresh Token (planned). |
+| POST | /api/v1/auth/logout | Hủy Refresh Token (planned). |
 
 ### Members
 
 | Method | Endpoint | Mô tả |
 |--------|----------|-------|
-| POST | /api/v1/members | Đăng ký hồ sơ học viên mới (Check CCID). |
-| GET | /api/v1/members/:id | Xem hồ sơ học viên. |
-| PATCH | /api/v1/members/:id | Cập nhật thông tin học viên. |
+| POST | /api/v1/members | Đăng ký hồ sơ học viên mới (Check CCID). (implemented) |
+| GET | /api/v1/members/:id | Xem hồ sơ học viên. (implemented) |
+| PATCH | /api/v1/members/:id/activate | Confirm offline payment cho subscription. (implemented) |
+| PATCH | /api/v1/members/:id | Cập nhật thông tin học viên. (planned) |
 
 ### Subscriptions
 
 | Method | Endpoint | Mô tả |
 |--------|----------|-------|
-| POST | /api/v1/subscriptions | Tạo thẻ tập & kích hoạt thanh toán. |
-| GET | /api/v1/subscriptions/:id | Xem chi tiết thẻ tập (trạng thái, số buổi còn lại). |
-| GET | /api/v1/members/:id/subscriptions | Lịch sử toàn bộ thẻ tập của học viên. |
-| PATCH | /api/v1/subscriptions/:id/suspend | Gửi yêu cầu bảo lưu. |
-| PATCH | /api/v1/subscriptions/:id/unsuspend | Kích hoạt lại thẻ sau bảo lưu (thủ công). |
-| POST | /api/v1/subscriptions/:id/refund | Yêu cầu hoàn tiền (áp dụng rule 72h/50%). |
+| POST | /api/v1/subscriptions | Tạo thẻ tập (status = pending). (implemented) |
+| GET | /api/v1/subscriptions/:id | Xem chi tiết thẻ tập (trạng thái, số buổi còn lại). (implemented) |
+| GET | /api/v1/members/:id/subscriptions | Lịch sử toàn bộ thẻ tập của học viên. (planned) |
+| PATCH | /api/v1/subscriptions/:id/suspend | Gửi yêu cầu bảo lưu. (implemented) |
+| PATCH | /api/v1/subscriptions/:id/unsuspend | Kích hoạt lại thẻ sau bảo lưu (thủ công). (implemented) |
+| PATCH | /api/v1/subscriptions/:id/expire | Hết hạn thu cong. (implemented) |
+| POST | /api/v1/subscriptions/:id/refund | Yêu cầu hoàn tiền (áp dụng rule 72h/50%). (planned) |
 
 ### Attendance
 
 | Method | Endpoint | Mô tả |
 |--------|----------|-------|
-| POST | /api/v1/attendance/checkin | Điểm danh (trừ remainingSessions, kiểm tra quota tuần). |
-| POST | /api/v1/attendance/report | Báo nghỉ có phép (kiểm tra luật 30 ngày). |
-| POST | /api/v1/attendance/makeup | Đăng ký buổi tập bù (kiểm tra Reported_Missed 7 ngày). |
-| GET | /api/v1/subscriptions/:id/attendance | Lịch sử điểm danh của một thẻ tập. |
+| POST | /api/v1/attendance/checkin | Điểm danh (trừ remainingSessions, kiểm tra quota tuần). (implemented) |
+| POST | /api/v1/attendance/report | Báo nghỉ có phép (kiểm tra luật 30 ngày). (planned) |
+| POST | /api/v1/attendance/makeup | Đăng ký buổi tập bù (kiểm tra Reported_Missed 7 ngày). (planned) |
+| GET | /api/v1/subscriptions/:id/attendance | Lịch sử điểm danh của một thẻ tập. (implemented) |
 
 ### Branches
 
 | Method | Endpoint | Mô tả |
 |--------|----------|-------|
-| GET | /api/v1/branches/nearby | Tìm chi nhánh gần nhất theo tọa độ GPS. |
-| GET | /api/v1/branches/:id | Xem thông tin chi nhánh. |
-| GET | /api/v1/branches/:id/stats | Thống kê check-in, học viên active (Manager only). |
+| GET | /api/v1/branches/nearby | Tìm chi nhánh gần nhất theo tọa độ GPS. (planned) |
+| GET | /api/v1/branches | Danh sach chi nhanh. (implemented) |
+| GET | /api/v1/branches/:id | Xem thông tin chi nhánh. (implemented) |
+| POST | /api/v1/branches | Tao chi nhanh. (implemented) |
+| PATCH | /api/v1/branches/:id | Cap nhat chi nhanh. (implemented) |
+| DELETE | /api/v1/branches/:id | Xoa chi nhanh. (implemented) |
+| GET | /api/v1/branches/:id/stats | Thống kê check-in, học viên active (Manager only). (planned) |
 
 ### Employees
 
 | Method | Endpoint | Mô tả |
 |--------|----------|-------|
-| POST | /api/v1/employees | Tạo hồ sơ nhân viên mới. |
-| GET | /api/v1/employees/:id | Xem thông tin nhân viên. |
-| PATCH | /api/v1/employees/:id | Cập nhật vai trò / chi nhánh của nhân viên. |
+| POST | /api/v1/employees | Tạo hồ sơ nhân viên mới. (planned) |
+| GET | /api/v1/employees/:id | Xem thông tin nhân viên. (planned) |
+| PATCH | /api/v1/employees/:id | Cập nhật vai trò / chi nhánh của nhân viên. (planned) |
 
 ### Courses
 
 | Method | Endpoint | Mô tả |
 |--------|----------|-------|
-| GET | /api/v1/courses | Danh sách gói tập (có filter theo level). |
-| POST | /api/v1/courses | Tạo gói tập mới (Manager only). |
-| PATCH | /api/v1/courses/:id | Cập nhật gói tập. |
+| GET | /api/v1/courses | Danh sách gói tập (có filter theo level). (implemented) |
+| GET | /api/v1/courses/:id | Xem chi tiet goi tap. (implemented) |
+| POST | /api/v1/courses | Tạo gói tập mới (Manager only). (implemented) |
+| PATCH | /api/v1/courses/:id | Cập nhật gói tập. (implemented) |
+| DELETE | /api/v1/courses/:id | Xoa goi tap. (implemented) |
 
 ---
 

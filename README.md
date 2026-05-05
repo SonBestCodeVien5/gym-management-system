@@ -11,6 +11,8 @@ This project follows a simple layered structure:
 - `repository`: data access to MongoDB.
 - `models`: domain data models.
 
+API contract (current vs planned): see [docs/api_contract.md](docs/api_contract.md).
+
 ## Implemented Features
 
 ### 1) Member Registration and Offline Activation

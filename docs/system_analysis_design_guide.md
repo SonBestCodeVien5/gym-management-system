@@ -114,7 +114,7 @@ Nguyen tac trinh bay:
 
 Mau endpoint hien co:
 1. `GET /ping`
-2. `POST /api/v1/registration`
+2. `POST /api/v1/members`
 3. `GET /api/v1/members/:id`
 4. `POST /api/v1/subscriptions`
 5. `GET /api/v1/subscriptions/:id`
@@ -124,8 +124,8 @@ Mau endpoint hien co:
 ### 5.1 Mau bang truy vet de chen vao bao cao
 | Req ID | Use Case | API | Du lieu lien quan | Test Case |
 |---|---|---|---|---|
-| FR-01 | Dang ky member | POST /api/v1/registration | members.ccid, full_name | TC-REG-001 |
-| FR-02 | Kiem tra trung CCCD | POST /api/v1/registration | members.ccid | TC-REG-002 |
+| FR-01 | Dang ky member | POST /api/v1/members | members.ccid, full_name | TC-REG-001 |
+| FR-02 | Kiem tra trung CCCD | POST /api/v1/members | members.ccid | TC-REG-002 |
 | FR-03 | Tao subscription | POST /api/v1/subscriptions | subscriptions.member_id, course_id, home_branch_id | TC-SUB-001 |
 
 ### 5.2 Loi ich

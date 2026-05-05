@@ -3,10 +3,12 @@
 ## 1. Muc tieu tai lieu
 Tai lieu nay tong hop toan bo quy trinh da lam de ban co the:
 - Chay backend Go + MongoDB local
-- Test API (`/ping`, `/api/v1/registration`)
+- Test API (`/ping`, `/api/v1/members`)
 - Xem record trong MongoDB nhanh
 - Ket noi MongoDB Compass dung cau hinh
 - Xu ly cac loi thuong gap
+
+Tai lieu API contract hien tai: [docs/api_contract.md](docs/api_contract.md)
 
 ## 2. Kien truc dang dung (ban rut gon)
 Luong xu ly hien tai:
@@ -78,7 +80,7 @@ Neu thanh cong, log se co:
 - `GET /api/v1/subscriptions/:id/attendance`
 
 ## 4. Test API
-### 4.1 File `api_test.http` dung format dung
+### 4.1 File [api_test.http](api_test.http) dung format dung
 ```http
 # Health check
 GET http://localhost:8080/ping
@@ -86,7 +88,7 @@ GET http://localhost:8080/ping
 ###
 
 # Member registration
-POST http://localhost:8080/api/v1/registration
+POST http://localhost:8080/api/v1/members
 Content-Type: application/json
 
 {
@@ -206,7 +208,7 @@ Cach sua:
 ## 8. Checkpoint da hoan thanh
 1. Ket noi MongoDB thanh cong.
 2. Route `GET /ping` hoat dong.
-3. Route `POST /api/v1/registration` hoat dong.
+3. Route `POST /api/v1/members` hoat dong.
 4. Member duoc insert vao `gym_management.members`.
 5. Da giam coupling nhe: service khong check `mongo.ErrNoDocuments` truc tiep, su dung loi trung lap tu repository.
 6. Da co unique index `ccid`.

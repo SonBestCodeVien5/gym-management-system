@@ -225,7 +225,7 @@ Cach viet vao bao cao:
 5. Test case xac nhan.
 
 Vi du:
-* FR-01 Dang ky hoc vien -> UC-Registration -> `POST /api/v1/registration` -> `members.ccid` -> TC-REG-001.
+* FR-01 Dang ky hoc vien -> UC-Registration -> `POST /api/v1/members` -> `members.ccid` -> TC-REG-001.
 * FR-03 Tao subscription -> UC-SubscriptionCreate -> `POST /api/v1/subscriptions` -> `subscriptions.member_id`, `course_id`, `home_branch_id` -> TC-SUB-001.
 
 <a id="faq-analysis-uml"></a>
