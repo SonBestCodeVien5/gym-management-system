@@ -52,16 +52,21 @@ Da hoan thanh:
 1. Chay duoc backend Go + Gin.
 2. Ket noi MongoDB local qua Docker.
 3. Route `GET /ping` hoat dong.
-4. Route `POST /api/v1/registration` hoat dong.
+4. Route `POST /api/v1/members` hoat dong (thay the `/registration`).
 5. Da co 3 tang cho module member: repository, service, handler.
-6. Da co block subscription ban dau: repository, service, handler, wire vao main.
-7. Da giam coupling nhe o service bang cach dung `repository.ErrNotFound` thay vi check loi Mongo truc tiep.
-8. Da them unique index `ccid` de chong race condition trung member.
+6. Subscription da co flow `pending -> active` (offline) va lifecycle `suspend/unsuspend/expire`.
+7. Course/Branch CRUD day du.
+8. Attendance check-in va history da hoat dong.
+9. Da giam coupling nhe o service bang cach dung `repository.ErrNotFound` thay vi check loi Mongo truc tiep.
+10. Da them unique index `ccid` de chong race condition trung member.
 
 Dang co:
-1. Member moi co registration va get-by-id.
-2. Subscription moi co create va get-by-id.
-3. Chua trien khai day du payment/suspension/resume/attendance theo Phase 2.
+1. Chua co `attendance/report` va `attendance/makeup` (rule 30 ngay / 7 ngay).
+2. Chua enforce `sessionPerWeek` khi check-in.
+3. Chua co refund rule (72h/50%).
+4. Chua co `branches/nearby` (geo-query).
+5. Chua co auth/role/branch-scope middleware.
+6. Chua co `members/:id/subscriptions` va `subscriptions/:id/refund`.
 
 ## 4. Nhat ky van de da gap va cach xu ly
 
@@ -167,15 +172,18 @@ Con de sau (refactor nang):
 ## 6. Checklist truoc khi tiep tuc buoc lon tiep theo
 1. `go build ./...` pass.
 2. `GET /ping` pass.
-3. `POST /api/v1/registration` pass.
+3. `POST /api/v1/members` pass.
 4. Query trong `gym_management.members` thay record vua tao.
 5. URI trong `.env` da on dinh voi local (`127.0.0.1`).
-6. `POST /api/v1/subscriptions` co the chuan bi test sau khi chot payload mau.
+6. `POST /api/v1/subscriptions` co the test voi course/branch da tao.
+7. `POST /api/v1/attendance/checkin` pass.
 
 ## 7. De xuat buoc tiep theo
-1. Hoan thien test API cho `GET /api/v1/members/:id` va `GET /api/v1/subscriptions/:id`.
-2. Chot payload mau cho `POST /api/v1/subscriptions`.
-3. Bat dau module `payment` / `suspension` theo business rule Phase 2.
+1. Bo sung rule `sessionPerWeek` trong check-in.
+2. Them `attendance/report` va `attendance/makeup` theo sliding window.
+3. Them `subscriptions/:id/refund` theo rule 72h/50%.
+4. Them `branches/nearby` va index 2dsphere.
+5. Can nhac auth/role guard neu can bieu dien day du theo thiet ke.
 
 ---
 
