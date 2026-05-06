@@ -61,12 +61,14 @@ Da hoan thanh:
 10. Da them unique index `ccid` de chong race condition trung member.
 11. Attendance check-in da enforce `sessionPerWeek` cho `attended` va `makeup`.
 12. Attendance da co rule `reported_missed` 30 ngay va `makeup` phai tham chieu report goc trong 7 ngay.
+13. Da bat dau Sessions MVP: create/list/get + attendance `session_id` nullable groundwork.
 
 Dang co:
-1. Chua co refund rule (72h/50%).
-2. Chua co `branches/nearby` (geo-query).
-3. Chua co auth/role/branch-scope middleware.
-4. Chua co `members/:id/subscriptions` va `subscriptions/:id/refund`.
+1. Chua co session enroll/checkin workflow.
+2. Chua co refund rule (72h/50%).
+3. Chua co `branches/nearby` (geo-query).
+4. Chua co auth/role/branch-scope middleware.
+5. Chua co `members/:id/subscriptions` va `subscriptions/:id/refund`.
 
 ## 4. Nhat ky van de da gap va cach xu ly
 

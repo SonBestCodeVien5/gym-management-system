@@ -47,6 +47,7 @@ func main() {
 	branchRepo := repository.NewBranchRepository(db)
 	subscriptionRepo := repository.NewSubscriptionRepository(db)
 	attendanceRepo := repository.NewAttendanceRepository(db)
+	sessionRepo := repository.NewSessionRepository(db)
 
 	// Build services.
 	subscriptionService := service.NewSubscriptionService(subscriptionRepo, memberRepo, courseRepo, branchRepo)
@@ -54,6 +55,7 @@ func main() {
 	courseService := service.NewCourseService(courseRepo)
 	branchService := service.NewBranchService(branchRepo)
 	attendanceService := service.NewAttendanceService(attendanceRepo, subscriptionRepo, memberRepo)
+	sessionService := service.NewSessionService(sessionRepo)
 
 	// Build HTTP handlers.
 	memberHandler := handlers.NewMemberHandler(memberService, subscriptionService)
@@ -61,6 +63,7 @@ func main() {
 	courseHandler := handlers.NewCourseHandler(courseService)
 	branchHandler := handlers.NewBranchHandler(branchService)
 	attendanceHandler := handlers.NewAttendanceHandler(attendanceService)
+	sessionHandler := handlers.NewSessionHandler(sessionService)
 
 	// Initialize Gin engine.
 	r := gin.Default()
@@ -99,6 +102,10 @@ func main() {
 
 		api.POST("/attendance/checkin", attendanceHandler.CheckIn)
 		api.GET("/subscriptions/:id/attendance", attendanceHandler.ListBySubscription)
+
+		api.POST("/sessions", sessionHandler.Create)
+		api.GET("/sessions", sessionHandler.List)
+		api.GET("/sessions/:id", sessionHandler.GetByID)
 	}
 
 	// Start HTTP server.

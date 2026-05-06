@@ -25,6 +25,7 @@ func NewAttendanceHandler(attendanceService service.AttendanceService) *Attendan
 type checkInRequest struct {
 	SubscriptionID string `json:"subscription_id"`
 	BranchID       string `json:"branch_id"`
+	SessionID      string `json:"session_id"`
 	Date           string `json:"date"`
 	Status         string `json:"status"`
 	IsMakeupFor    string `json:"is_makeup_for"`
@@ -72,10 +73,21 @@ func (h *AttendanceHandler) CheckIn(c *gin.Context) {
 		makeupFor = &parsed
 	}
 
+	var sessionID *primitive.ObjectID
+	if req.SessionID != "" {
+		parsed, err := primitive.ObjectIDFromHex(req.SessionID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid session id"})
+			return
+		}
+		sessionID = &parsed
+	}
+
 	// 4) Build attendance model and call service.
 	attendance := &models.Attendance{
 		SubID:       subID,
 		BranchID:    branchID,
+		SessionID:   sessionID,
 		Date:        attendanceDate,
 		Status:      req.Status,
 		IsMakeupFor: makeupFor,

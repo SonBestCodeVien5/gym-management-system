@@ -29,6 +29,10 @@ Read this first when continuing the project in a new chat.
 - Attendance flow implemented:
   - `POST /api/v1/attendance/checkin`
   - `GET /api/v1/subscriptions/:id/attendance`
+- Sessions MVP started:
+  - `POST /api/v1/sessions`
+  - `GET /api/v1/sessions`
+  - `GET /api/v1/sessions/:id`
 - Repositories exist for:
   - member
   - course
@@ -54,15 +58,17 @@ Read this first when continuing the project in a new chat.
 ## Testing notes
 - `api_test.http` contains sample requests for ping, member registration, member activation, subscription, course/branch CRUD, and attendance.
 - Subscription testing needs real `course_id` and `branch_id`, but now there are create APIs for both.
+- Sessions MVP currently covers create/list/get; enroll/checkin will be the next slice.
 - `go build ./...` was last verified to pass.
 
 ## Recommended next step
-- Implement remaining Phase 2 rules: refund rules and branches/nearby.
+- Implement session enroll/checkin workflow, then refund rules and branches/nearby.
 
 ## Todo list (current)
 - [x] Chuan hoa API contract & docs
 - [x] Enforce sessionPerWeek rule
 - [x] Report/Makeup attendance rules
+- [ ] Sessions enroll/checkin workflow
 - [ ] Refund flow & pricing rules
 - [ ] Branch nearby geo query
 - [ ] Subscriptions list by member

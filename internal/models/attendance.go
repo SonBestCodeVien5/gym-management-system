@@ -1,15 +1,17 @@
 package models
 
 import (
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type Attendance struct {
-	ID       primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	SubID    primitive.ObjectID `json:"sub_id" bson:"sub_id"`
-	BranchID primitive.ObjectID `json:"branch_id" bson:"branch_id"`
-	Date     time.Time          `json:"date" bson:"date"`
+	ID        primitive.ObjectID  `json:"id" bson:"_id,omitempty"`
+	SubID     primitive.ObjectID  `json:"sub_id" bson:"sub_id"`
+	BranchID  primitive.ObjectID  `json:"branch_id" bson:"branch_id"`
+	SessionID *primitive.ObjectID `json:"session_id,omitempty" bson:"session_id,omitempty"`
+	Date      time.Time           `json:"date" bson:"date"`
 
 	// atended, absent, reported_missed, makeup
 	Status string `json:"status" bson:"status"`
