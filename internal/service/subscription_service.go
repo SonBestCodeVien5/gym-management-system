@@ -106,6 +106,7 @@ func (s *subscriptionServiceImpl) CreateSubscription(ctx context.Context, subscr
 	// Snapshot course pricing into subscription at creation time.
 	subscription.ID = primitive.NewObjectID()
 	subscription.Status = "pending"
+	subscription.AllowedTags = course.AllowedTags
 	subscription.UnitPrice = course.BasePrice
 	subscription.TotalSessions = course.SessionCount
 	subscription.Total_Amount_Paid = course.BasePrice * int64(course.SessionCount)

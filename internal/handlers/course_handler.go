@@ -22,11 +22,12 @@ func NewCourseHandler(courseService service.CourseService) *CourseHandler {
 
 // createCourseRequest is JSON body for creating/updating a course.
 type createCourseRequest struct {
-	Title        string `json:"title"`
-	Level        string `json:"level"`
-	BasePrice    int64  `json:"base_price"`
-	SessionCount int    `json:"session_count"`
-	Description  string `json:"description"`
+	Title        string   `json:"title"`
+	Level        string   `json:"level"`
+	AllowedTags  []string `json:"allowed_tags"`
+	BasePrice    int64    `json:"base_price"`
+	SessionCount int      `json:"session_count"`
+	Description  string   `json:"description"`
 }
 
 // Create handles POST /courses.
@@ -42,6 +43,7 @@ func (h *CourseHandler) Create(c *gin.Context) {
 	course := &models.Course{
 		Title:        req.Title,
 		Level:        req.Level,
+		AllowedTags:  req.AllowedTags,
 		BasePrice:    req.BasePrice,
 		SessionCount: req.SessionCount,
 		Description:  req.Description,
@@ -118,6 +120,7 @@ func (h *CourseHandler) Update(c *gin.Context) {
 	course := &models.Course{
 		Title:        req.Title,
 		Level:        req.Level,
+		AllowedTags:  req.AllowedTags,
 		BasePrice:    req.BasePrice,
 		SessionCount: req.SessionCount,
 		Description:  req.Description,

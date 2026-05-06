@@ -81,6 +81,7 @@ func (r *courseRepoImpl) UpdateByID(ctx context.Context, id string, course *mode
 	update := bson.M{"$set": bson.M{
 		"title":         course.Title,
 		"level":         course.Level,
+		"allowed_tags":  course.AllowedTags,
 		"base_price":    course.BasePrice,
 		"session_count": course.SessionCount,
 		"description":   course.Description,

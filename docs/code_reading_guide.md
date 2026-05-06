@@ -274,7 +274,7 @@ Neu status la `makeup`, service se can `is_makeup_for` va report goc phai nam tr
 
 ### 12.3 Courses
 - POST /api/v1/courses
-	- Input: title, level, base_price, session_count, description
+	- Input: title, level, allowed_tags, base_price, session_count, description
 	- Output: course object
 
 - GET /api/v1/courses
@@ -286,7 +286,7 @@ Neu status la `makeup`, service se can `is_makeup_for` va report goc phai nam tr
 	- Output: course object
 
 - PATCH /api/v1/courses/:id
-	- Input: title, level, base_price, session_count, description
+	- Input: title, level, allowed_tags, base_price, session_count, description
 	- Output: message only
 
 - DELETE /api/v1/courses/:id
@@ -316,8 +316,21 @@ Neu status la `makeup`, service se can `is_makeup_for` va report goc phai nam tr
 
 ### 12.5 Attendance
 - POST /api/v1/attendance/checkin
-	- Input: subscription_id, branch_id, date (optional), status, is_makeup_for (optional)
+	- Input: subscription_id, branch_id, session_id (optional), date (optional), status, is_makeup_for (optional)
 	- Output: attendance object
+
+### 12.6 Sessions
+- POST /api/v1/sessions
+	- Input: branch_id, trainer_id, course_level, scheduled_at, duration_min, capacity, tags
+	- Output: session object
+
+- GET /api/v1/sessions
+	- Input: branchId, level, date query params
+	- Output: list session
+
+- GET /api/v1/sessions/:id
+	- Input: path id
+	- Output: session object
 
 - GET /api/v1/subscriptions/:id/attendance
 	- Input: subscription id

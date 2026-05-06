@@ -13,6 +13,8 @@ type Course struct {
 	// basic, advanced, professional
 	Level string `json:"level" bson:"level"`
 
+	AllowedTags []string `json:"allowed_tags" bson:"allowed_tags"`
+
 	BasePrice    int64  `json:"base_price" bson:"base_price"` // price per session without discount
 	SessionCount int    `json:"session_count" bson:"session_count"`
 	Description  string `json:"description" bson:"description"`

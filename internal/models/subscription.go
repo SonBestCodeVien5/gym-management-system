@@ -18,6 +18,7 @@ type Subscription struct {
 	MemberID     primitive.ObjectID `bson:"member_id" json:"member_id"`
 	CourseID     primitive.ObjectID `bson:"course_id" json:"course_id"`
 	HomeBranchID primitive.ObjectID `bson:"home_branch_id" json:"home_branch_id"`
+	AllowedTags  []string           `bson:"allowed_tags" json:"allowed_tags"`
 	Status       string             `bson:"status" json:"status"` // pending, active, suspended, expired, refunded
 
 	// fiancial details
