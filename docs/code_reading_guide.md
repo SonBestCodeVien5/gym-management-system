@@ -146,14 +146,17 @@ Doc service CheckIn:
 1. Validate input.
 2. Load subscription, check status active.
 3. Neu status = `attended` hoac `makeup`, kiem tra quota theo tuan (`sessionPerWeek`).
-4. Tao attendance record.
-5. Neu attended/makeup: tru remaining_sessions, cong total_sessions_attended.
-6. Neu remaining = 0 -> set expired.
+4. Neu `reported_missed`, kiem tra sliding window 30 ngay.
+5. Neu `makeup`, kiem tra report goc trong 7 ngay va chua dung.
+6. Tao attendance record.
+7. Neu attended/makeup: tru remaining_sessions, cong total_sessions_attended.
+8. Neu remaining = 0 -> set expired.
 
 Luu y hien tai:
 - `attended` va `makeup` deu tinh vao quota tuan va lam giam buoi con lai.
-- `absent` va `reported_missed` chi luu record, khong tru buoi va khong tang count.
-- Phan luat `reported_missed` -> `makeup` chua duoc tach rieng trong code.
+- `absent` chi luu record, khong tru buoi va khong tang count.
+- `reported_missed` khong tru buoi nhung bi gioi han 1 lan / 30 ngay.
+- `makeup` phai tham chieu den `reported_missed` hop le trong 7 ngay va khong duoc dung lai report do.
 
 Doc ham ListBySubscriptionID de thay cach lay history.
 
@@ -228,6 +231,8 @@ subscription_repo.GetByID -> attendance_repo.Create ->
 subscription_repo.UpdateRemainingSessions(AndStatus) + member_repo.IncrementSessionsAttended -> Response
 
 Neu status la `attended`/`makeup`, service se kiem tra them quota theo tuan truoc khi tao record.
+Neu status la `reported_missed`, service se chan neu da co report trong vong 30 ngay.
+Neu status la `makeup`, service se can `is_makeup_for` va report goc phai nam trong 7 ngay.
 
 ---
 

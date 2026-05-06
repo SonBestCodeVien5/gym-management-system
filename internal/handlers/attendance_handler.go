@@ -91,6 +91,8 @@ func (h *AttendanceHandler) CheckIn(c *gin.Context) {
 			c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
 		case errors.Is(err, service.ErrWeeklySessionLimitReached):
 			c.JSON(http.StatusConflict, gin.H{"message": "weekly session limit reached"})
+		case errors.Is(err, service.ErrReportedMissedLimitReached), errors.Is(err, service.ErrMakeupReferenceInvalid), errors.Is(err, service.ErrMakeupReferenceNotFound), errors.Is(err, service.ErrMakeupAlreadyUsed):
+			c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
 		default:
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
 		}

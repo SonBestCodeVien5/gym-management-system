@@ -44,7 +44,8 @@ Read this first when continuing the project in a new chat.
   - does NOT apply discounts/refunds yet.
 - Offline payment is handled by a separate member activation endpoint, not inside subscription creation.
 - Attendance check-in now enforces `sessionPerWeek` for `attended` and `makeup` records.
-- `absent` and `reported_missed` currently only persist attendance state; the full report/makeup rule is still pending.
+- `reported_missed` now enforces a 30-day sliding window.
+- `makeup` now requires a valid `reported_missed` reference within 7 days and cannot reuse the same report twice.
 
 ## Docs alignment
 - Current vs planned API contract snapshot: see [docs/api_contract.md](docs/api_contract.md).
@@ -56,12 +57,12 @@ Read this first when continuing the project in a new chat.
 - `go build ./...` was last verified to pass.
 
 ## Recommended next step
-- Implement remaining Phase 2 rules: attendance report/makeup, refund rules, and branches/nearby.
+- Implement remaining Phase 2 rules: refund rules and branches/nearby.
 
 ## Todo list (current)
 - [x] Chuan hoa API contract & docs
 - [x] Enforce sessionPerWeek rule
-- [ ] Report/Makeup attendance rules
+- [x] Report/Makeup attendance rules
 - [ ] Refund flow & pricing rules
 - [ ] Branch nearby geo query
 - [ ] Subscriptions list by member

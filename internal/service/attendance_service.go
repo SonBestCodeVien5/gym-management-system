@@ -15,6 +15,10 @@ var (
 	ErrAttendanceCheckInNotAllowed = errors.New("attendance check-in is not allowed for current subscription status")
 	ErrNoRemainingSessions         = errors.New("no remaining sessions")
 	ErrWeeklySessionLimitReached   = errors.New("weekly session limit reached")
+	ErrReportedMissedLimitReached  = errors.New("reported missed limit reached within 30 days")
+	ErrMakeupReferenceInvalid      = errors.New("invalid makeup reference")
+	ErrMakeupReferenceNotFound     = errors.New("makeup reference not found")
+	ErrMakeupAlreadyUsed           = errors.New("makeup reference already used")
 )
 
 // AttendanceService defines check-in and attendance history operations.
@@ -83,6 +87,18 @@ func (s *attendanceServiceImpl) CheckIn(ctx context.Context, attendance *models.
 		return ErrInvalidAttendanceInput
 	}
 
+	// 4.1) Enforce report/makeup-specific rules.
+	if attendance.Status == "reported_missed" {
+		if err := s.validateReportedMissedWindow(ctx, attendance.SubID.Hex(), attendance.Date); err != nil {
+			return err
+		}
+	}
+	if attendance.Status == "makeup" {
+		if err := s.validateMakeupRequest(ctx, attendance.SubID.Hex(), attendance.Date, attendance.IsMakeupFor); err != nil {
+			return err
+		}
+	}
+
 	// 5) Create attendance record first.
 	attendance.ID = primitive.NewObjectID()
 	if err := s.attendanceRepo.Create(ctx, attendance); err != nil {
@@ -108,6 +124,67 @@ func (s *attendanceServiceImpl) CheckIn(ctx context.Context, attendance *models.
 
 		if err := s.memberRepo.IncrementSessionsAttended(ctx, subscription.MemberID.Hex(), 1); err != nil {
 			return err
+		}
+	}
+
+	return nil
+}
+
+// validateReportedMissedWindow enforces one reported_missed record per 30-day sliding window.
+func (s *attendanceServiceImpl) validateReportedMissedWindow(ctx context.Context, subscriptionID string, at time.Time) error {
+	records, err := s.attendanceRepo.ListBySubscriptionID(ctx, subscriptionID)
+	if err != nil {
+		return err
+	}
+
+	windowStart := at.AddDate(0, 0, -30)
+	for _, record := range records {
+		if record.Status != "reported_missed" {
+			continue
+		}
+		if !record.Date.Before(windowStart) && !record.Date.After(at) {
+			return ErrReportedMissedLimitReached
+		}
+	}
+
+	return nil
+}
+
+// validateMakeupRequest checks that makeup references a recent reported_missed record and has not been used.
+func (s *attendanceServiceImpl) validateMakeupRequest(ctx context.Context, subscriptionID string, makeupAt time.Time, makeupFor *time.Time) error {
+	if makeupFor == nil || makeupFor.IsZero() {
+		return ErrMakeupReferenceInvalid
+	}
+	if makeupFor.After(makeupAt) {
+		return ErrMakeupReferenceInvalid
+	}
+	if makeupAt.Sub(*makeupFor) > 7*24*time.Hour {
+		return ErrMakeupReferenceInvalid
+	}
+
+	records, err := s.attendanceRepo.ListBySubscriptionID(ctx, subscriptionID)
+	if err != nil {
+		return err
+	}
+
+	var sourceReport *models.Attendance
+	for _, record := range records {
+		if record.Status == "reported_missed" && record.Date.Equal(*makeupFor) {
+			recordCopy := record
+			sourceReport = &recordCopy
+			break
+		}
+	}
+	if sourceReport == nil {
+		return ErrMakeupReferenceNotFound
+	}
+
+	for _, record := range records {
+		if record.Status != "makeup" || record.IsMakeupFor == nil {
+			continue
+		}
+		if record.IsMakeupFor.Equal(*makeupFor) {
+			return ErrMakeupAlreadyUsed
 		}
 	}
 
