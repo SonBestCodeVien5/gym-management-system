@@ -55,7 +55,7 @@ func main() {
 	courseService := service.NewCourseService(courseRepo)
 	branchService := service.NewBranchService(branchRepo)
 	attendanceService := service.NewAttendanceService(attendanceRepo, subscriptionRepo, memberRepo)
-	sessionService := service.NewSessionService(sessionRepo)
+	sessionService := service.NewSessionService(sessionRepo, subscriptionRepo, attendanceRepo, attendanceService)
 
 	// Build HTTP handlers.
 	memberHandler := handlers.NewMemberHandler(memberService, subscriptionService)
@@ -106,6 +106,8 @@ func main() {
 		api.POST("/sessions", sessionHandler.Create)
 		api.GET("/sessions", sessionHandler.List)
 		api.GET("/sessions/:id", sessionHandler.GetByID)
+		api.POST("/sessions/:id/enroll", sessionHandler.Enroll)
+		api.POST("/sessions/:id/checkin", sessionHandler.CheckIn)
 	}
 
 	// Start HTTP server.

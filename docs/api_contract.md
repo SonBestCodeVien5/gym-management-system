@@ -59,8 +59,8 @@ Muc tieu: chot ten endpoint + request/response co ban de FE va BE dung chung.
 | POST | /api/v1/sessions | Tạo lịch lớp do trainer/manager phụ trách. | Implemented |
 | GET | /api/v1/sessions | Tìm và lọc lịch lớp theo branch/level/date. | Implemented |
 | GET | /api/v1/sessions/:id | Xem chi tiết một session. | Implemented |
-| POST | /api/v1/sessions/:id/enroll | Học viên đăng ký chỗ trong session. | Planned |
-| POST | /api/v1/sessions/:id/checkin | Check-in theo session đã đăng ký. | Planned |
+| POST | /api/v1/sessions/:id/enroll | Học viên đăng ký chỗ trong session. | Implemented |
+| POST | /api/v1/sessions/:id/checkin | Check-in theo session đã đăng ký. | Implemented |
 
 ### Auth
 | Method | Endpoint | Code làm gì | Trạng thái |
@@ -88,5 +88,5 @@ Muc tieu: chot ten endpoint + request/response co ban de FE va BE dung chung.
 |---|---|
 | Offline payment | Confirm qua PATCH /members/:id/activate + `subscription_id`. |
 | Subscription | Tạo mới ở trạng thái `pending`, sau đó activate khi confirm payment. |
-| Sessions MVP | Hiện đã có create/list/get; enroll/checkin sẽ làm tiếp ở bước sau. |
+| Sessions MVP | Đã có create/list/get/enroll/checkin; enrollment lưu trên session và check-in tạo attendance có `session_id`. |
 | Course tags | `allowed_tags` của course là tập tag được phép dùng để ràng buộc session. |

@@ -21,6 +21,7 @@ type SessionListFilter struct {
 type SessionRepository interface {
 	Create(ctx context.Context, session *models.Session) error
 	GetByID(ctx context.Context, id string) (*models.Session, error)
+	UpdateByID(ctx context.Context, id string, session *models.Session) error
 	List(ctx context.Context, filter SessionListFilter) ([]models.Session, error)
 }
 
@@ -53,6 +54,36 @@ func (r *sessionRepoImpl) GetByID(ctx context.Context, id string) (*models.Sessi
 	}
 
 	return &session, nil
+}
+
+// UpdateByID updates mutable fields for a session.
+func (r *sessionRepoImpl) UpdateByID(ctx context.Context, id string, session *models.Session) error {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	update := bson.M{
+		"branch_id":                 session.BranchID,
+		"trainer_id":                session.TrainerID,
+		"course_level":              session.CourseLevel,
+		"scheduled_at":              session.ScheduledAt,
+		"duration_min":              session.DurationMin,
+		"capacity":                  session.Capacity,
+		"enrolled_count":            session.EnrolledCount,
+		"enrolled_subscription_ids": session.EnrolledSubscriptionIDs,
+		"tags":                      session.Tags,
+	}
+
+	result, err := r.collection.UpdateOne(ctx, bson.M{"_id": objID}, bson.M{"$set": update})
+	if err != nil {
+		return err
+	}
+	if result.MatchedCount == 0 {
+		return ErrNotFound
+	}
+
+	return nil
 }
 
 func (r *sessionRepoImpl) List(ctx context.Context, filter SessionListFilter) ([]models.Session, error) {

@@ -30,6 +30,10 @@ type sessionRequest struct {
 	Tags        []string `json:"tags"`
 }
 
+type sessionEnrollRequest struct {
+	SubscriptionID string `json:"subscription_id"`
+}
+
 func (h *SessionHandler) Create(c *gin.Context) {
 	var req sessionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -124,4 +128,70 @@ func (h *SessionHandler) List(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "sessions fetched successfully", "data": sessions})
+}
+
+// Enroll handles POST /sessions/:id/enroll.
+func (h *SessionHandler) Enroll(c *gin.Context) {
+	sessionID := c.Param("id")
+	if _, err := primitive.ObjectIDFromHex(sessionID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid session id"})
+		return
+	}
+
+	var req sessionEnrollRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid request body", "error": err.Error()})
+		return
+	}
+
+	session, err := h.sessionService.EnrollSubscription(c.Request.Context(), sessionID, req.SubscriptionID)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrInvalidSessionInput):
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		case errors.Is(err, service.ErrSessionNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"message": "session not found"})
+		case errors.Is(err, service.ErrSessionAlreadyEnrolled), errors.Is(err, service.ErrSessionAlreadyFull):
+			c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "session enrolled successfully", "data": session})
+}
+
+// CheckIn handles POST /sessions/:id/checkin.
+func (h *SessionHandler) CheckIn(c *gin.Context) {
+	sessionID := c.Param("id")
+	if _, err := primitive.ObjectIDFromHex(sessionID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid session id"})
+		return
+	}
+
+	var req sessionEnrollRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid request body", "error": err.Error()})
+		return
+	}
+
+	attendance, err := h.sessionService.CheckInSubscription(c.Request.Context(), sessionID, req.SubscriptionID)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrInvalidSessionInput):
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		case errors.Is(err, service.ErrSessionNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"message": "session not found"})
+		case errors.Is(err, service.ErrSessionNotEnrolled), errors.Is(err, service.ErrSessionCheckInClosed):
+			c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
+		case errors.Is(err, service.ErrAttendanceCheckInNotAllowed), errors.Is(err, service.ErrSubscriptionExpired), errors.Is(err, service.ErrNoRemainingSessions), errors.Is(err, service.ErrWeeklySessionLimitReached):
+			c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": "session check-in recorded successfully", "data": attendance})
 }

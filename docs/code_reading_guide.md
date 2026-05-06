@@ -332,6 +332,14 @@ Neu status la `makeup`, service se can `is_makeup_for` va report goc phai nam tr
 	- Input: path id
 	- Output: session object
 
+- POST /api/v1/sessions/:id/enroll
+	- Input: subscription_id
+	- Output: session object
+
+- POST /api/v1/sessions/:id/checkin
+	- Input: subscription_id
+	- Output: attendance object
+
 - GET /api/v1/subscriptions/:id/attendance
 	- Input: subscription id
 	- Output: list attendance
