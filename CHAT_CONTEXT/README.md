@@ -58,17 +58,18 @@ Read this first when continuing the project in a new chat.
 ## Testing notes
 - `api_test.http` contains sample requests for ping, member registration, member activation, subscription, course/branch CRUD, and attendance.
 - Subscription testing needs real `course_id` and `branch_id`, but now there are create APIs for both.
-- Sessions MVP currently covers create/list/get; enroll/checkin will be the next slice.
+- Sessions MVP currently covers create/list/get/enroll/checkin; enroll now validates subscription tag allow-list against session tags.
 - `go build ./...` was last verified to pass.
 
 ## Recommended next step
 - Implement session enroll/checkin workflow, then refund rules and branches/nearby.
+- Session workflow is already in place; next is refund rules and branches/nearby.
 
 ## Todo list (current)
 - [x] Chuan hoa API contract & docs
 - [x] Enforce sessionPerWeek rule
 - [x] Report/Makeup attendance rules
-- [ ] Sessions enroll/checkin workflow
+- [x] Sessions enroll/checkin workflow
 - [ ] Refund flow & pricing rules
 - [ ] Branch nearby geo query
 - [ ] Subscriptions list by member

@@ -14,6 +14,7 @@ import (
 var (
 	ErrSessionNotFound        = errors.New("session not found")
 	ErrInvalidSessionInput    = errors.New("invalid session input")
+	ErrSessionTagNotAllowed   = errors.New("session tags are not allowed for this subscription")
 	ErrSessionAlreadyFull     = errors.New("session is full")
 	ErrSessionAlreadyEnrolled = errors.New("subscription already enrolled in session")
 	ErrSessionNotEnrolled     = errors.New("subscription is not enrolled in session")
@@ -110,6 +111,9 @@ func (s *sessionServiceImpl) EnrollSubscription(ctx context.Context, sessionID s
 	if subscription.Status != "active" || subscription.EndDate.Before(time.Now()) {
 		return nil, ErrInvalidSessionInput
 	}
+	if len(session.Tags) > 0 && !allTagsAllowed(session.Tags, subscription.AllowedTags) {
+		return nil, ErrSessionTagNotAllowed
+	}
 
 	for _, enrolledID := range session.EnrolledSubscriptionIDs {
 		if enrolledID == subscription.ID {
@@ -199,4 +203,17 @@ func isAllowedCourseLevel(level string) bool {
 	default:
 		return false
 	}
+}
+
+func allTagsAllowed(tags []string, allowedTags []string) bool {
+	allowed := make(map[string]struct{}, len(allowedTags))
+	for _, tag := range allowedTags {
+		allowed[strings.ToLower(tag)] = struct{}{}
+	}
+	for _, tag := range tags {
+		if _, ok := allowed[strings.ToLower(tag)]; !ok {
+			return false
+		}
+	}
+	return true
 }

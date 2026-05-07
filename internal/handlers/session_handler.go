@@ -151,7 +151,7 @@ func (h *SessionHandler) Enroll(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		case errors.Is(err, service.ErrSessionNotFound):
 			c.JSON(http.StatusNotFound, gin.H{"message": "session not found"})
-		case errors.Is(err, service.ErrSessionAlreadyEnrolled), errors.Is(err, service.ErrSessionAlreadyFull):
+		case errors.Is(err, service.ErrSessionTagNotAllowed), errors.Is(err, service.ErrSessionAlreadyEnrolled), errors.Is(err, service.ErrSessionAlreadyFull):
 			c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
 		default:
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})

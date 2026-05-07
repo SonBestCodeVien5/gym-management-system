@@ -62,6 +62,7 @@ Da hoan thanh:
 11. Attendance check-in da enforce `sessionPerWeek` cho `attended` va `makeup`.
 12. Attendance da co rule `reported_missed` 30 ngay va `makeup` phai tham chieu report goc trong 7 ngay.
 13. Da xong Sessions MVP: create/list/get/enroll/checkin + attendance `session_id` nullable groundwork.
+14. Enroll session co rule check `session.tags` nam trong `subscription.allowed_tags`.
 
 Dang co:
 1. Chua co refund rule (72h/50%).
