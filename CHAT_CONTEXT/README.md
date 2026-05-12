@@ -6,9 +6,10 @@ Read this first when continuing the project in a new chat.
 - Stack: Go + Gin + MongoDB, Clean Architecture.
 - Current focus: backend feature completion, with Sessions now implemented and the next work centered on refund/pricing and branch nearby search.
 - Member flow implemented:
-  - `POST /api/v1/members`
-  - `GET /api/v1/members/:id`
-  - `PATCH /api/v1/members/:id/activate` for offline payment confirmation.
+   - `POST /api/v1/members`
+   - `GET /api/v1/members/:id`
+   - `GET /api/v1/members/:id/subscriptions` to list member subscriptions.
+   - `PATCH /api/v1/members/:id/activate` for offline payment confirmation.
 - Subscription flow implemented:
   - `POST /api/v1/subscriptions`
   - `GET /api/v1/subscriptions/:id`
@@ -79,17 +80,19 @@ Read this first when continuing the project in a new chat.
 
 ## Recommended next step
 - Implement refund flow and pricing rules next.
-- After that: branch nearby geo query, subscriptions list by member, auth/role guard if needed, then integration tests and fixtures.
+- After that: branch nearby geo query, auth/login + role guard, validation/error consistency, indexes/data integrity, then integration tests and fixtures.
 
 ## Todo list (current)
 - [x] Chuan hoa API contract & docs
 - [x] Enforce sessionPerWeek rule
 - [x] Report/Makeup attendance rules
 - [x] Sessions enroll/checkin workflow
+- [x] Subscriptions list by member
 - [ ] Refund flow & pricing rules
 - [ ] Branch nearby geo query
-- [ ] Subscriptions list by member
-- [ ] Auth/role guard (neu can)
+- [ ] Auth/login + role guard
+- [ ] Validation hardening & error consistency
+- [ ] Indexes and data integrity
 - [ ] Integration tests & fixtures
 
 ## Quick resume prompt

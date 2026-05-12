@@ -14,7 +14,7 @@ Muc tieu: chot ten endpoint + request/response co ban de FE va BE dung chung.
 | POST | /api/v1/members | Tạo hồ sơ học viên mới, check `ccid` unique. | Implemented |
 | GET | /api/v1/members/:id | Xem chi tiết hồ sơ học viên. | Implemented |
 | PATCH | /api/v1/members/:id/activate | Confirm thanh toán offline và kích hoạt member. | Implemented |
-| GET | /api/v1/members/:id/subscriptions | Xem toàn bộ thẻ tập của member. | Planned |
+| GET | /api/v1/members/:id/subscriptions | Xem toàn bộ thẻ tập của member. | Implemented |
 
 ### Subscriptions
 | Method | Endpoint | Code làm gì | Trạng thái |

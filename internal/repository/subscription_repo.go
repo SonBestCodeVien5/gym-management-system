@@ -20,6 +20,7 @@ type SubscriptionRepository interface {
 	UpdateRemainingSessionsAndStatus(ctx context.Context, id string, remaining int, status string) error
 	UpdateSuspension(ctx context.Context, id string, suspension *models.Suspension, status string) error
 	ClearSuspension(ctx context.Context, id string, status string) error
+	ListByMemberID(ctx context.Context, memberID string) ([]models.Subscription, error)
 }
 
 type subscriptionRepoImpl struct {
@@ -56,6 +57,27 @@ func (r *subscriptionRepoImpl) GetByID(ctx context.Context, id string) (*models.
 	}
 
 	return &subscription, nil
+}
+
+// ListByMemberID returns all subscriptions belonging to a member.
+func (r *subscriptionRepoImpl) ListByMemberID(ctx context.Context, memberID string) ([]models.Subscription, error) {
+	objID, err := primitive.ObjectIDFromHex(memberID)
+	if err != nil {
+		return nil, err
+	}
+
+	cursor, err := r.collection.Find(ctx, bson.M{"member_id": objID})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var subs []models.Subscription
+	if err := cursor.All(ctx, &subs); err != nil {
+		return nil, err
+	}
+
+	return subs, nil
 }
 
 // UpdateStatusAndPaymentDate sets status and payment_date for a subscription.

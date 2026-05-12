@@ -21,11 +21,13 @@ var (
 	ErrSubscriptionNotActive         = errors.New("subscription is not active")
 	ErrSubscriptionExpired           = errors.New("subscription is expired")
 	ErrInvalidSuspensionPeriod       = errors.New("invalid suspension period")
+	ErrSubscriptionMemberNotFound    = errors.New("member not found")
 )
 
 type SubscriptionService interface {
 	CreateSubscription(ctx context.Context, subscription *models.Subscription) error
 	GetSubscriptionByID(ctx context.Context, id string) (*models.Subscription, error)
+	ListSubscriptionsByMemberID(ctx context.Context, memberID string) ([]models.Subscription, error)
 	ConfirmSubscriptionPayment(ctx context.Context, memberID string, subscriptionID string) error
 	SuspendSubscription(ctx context.Context, id string, suspension *models.Suspension) error
 	ResumeSubscription(ctx context.Context, id string) error
@@ -129,6 +131,30 @@ func (s *subscriptionServiceImpl) GetSubscriptionByID(ctx context.Context, id st
 	}
 
 	return subscription, nil
+}
+
+// ListSubscriptionsByMemberID returns all subscriptions that belong to a member.
+func (s *subscriptionServiceImpl) ListSubscriptionsByMemberID(ctx context.Context, memberID string) ([]models.Subscription, error) {
+	if _, err := primitive.ObjectIDFromHex(memberID); err != nil {
+		return nil, ErrInvalidSubscriptionInput
+	}
+
+	if _, err := s.memberRepo.GetByID(ctx, memberID); err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, ErrSubscriptionMemberNotFound
+		}
+		return nil, err
+	}
+
+	subscriptions, err := s.subscriptionRepo.ListByMemberID(ctx, memberID)
+	if err != nil {
+		return nil, err
+	}
+
+	if subscriptions == nil {
+		return []models.Subscription{}, nil
+	}
+	return subscriptions, nil
 }
 
 // ConfirmSubscriptionPayment activates a pending subscription tied to the member.

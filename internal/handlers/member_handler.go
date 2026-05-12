@@ -111,6 +111,33 @@ func (h *MemberHandler) GetByID(c *gin.Context) {
 	})
 }
 
+// ListSubscriptions fetches all subscriptions that belong to a member.
+func (h *MemberHandler) ListSubscriptions(c *gin.Context) {
+	id := c.Param("id")
+	if _, err := primitive.ObjectIDFromHex(id); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid member id"})
+		return
+	}
+
+	subscriptions, err := h.subscriptionService.ListSubscriptionsByMemberID(c.Request.Context(), id)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrInvalidSubscriptionInput):
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		case errors.Is(err, service.ErrSubscriptionMemberNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"message": "member not found"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "member subscriptions fetched successfully",
+		"data":    subscriptions,
+	})
+}
+
 // Activate confirms subscription payment then marks member as registered.
 func (h *MemberHandler) Activate(c *gin.Context) {
 	// Validate member ID from path param.

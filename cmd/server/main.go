@@ -80,6 +80,7 @@ func main() {
 	{
 		api.POST("/members", memberHandler.Register)
 		api.GET("/members/:id", memberHandler.GetByID)
+		api.GET("/members/:id/subscriptions", memberHandler.ListSubscriptions)
 		api.PATCH("/members/:id/activate", memberHandler.Activate)
 
 		api.POST("/courses", courseHandler.Create)
