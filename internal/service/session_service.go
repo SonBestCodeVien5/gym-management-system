@@ -111,29 +111,34 @@ func (s *sessionServiceImpl) EnrollSubscription(ctx context.Context, sessionID s
 	if subscription.Status != "active" || subscription.EndDate.Before(time.Now()) {
 		return nil, ErrInvalidSessionInput
 	}
-	if len(session.Tags) > 0 && !allTagsAllowed(session.Tags, subscription.AllowedTags) {
+	if len(session.Tags) > 0 && !anyTagAllowed(session.Tags, subscription.AllowedTags) {
 		return nil, ErrSessionTagNotAllowed
 	}
 
-	for _, enrolledID := range session.EnrolledSubscriptionIDs {
-		if enrolledID == subscription.ID {
-			return nil, ErrSessionAlreadyEnrolled
-		}
-	}
-	if session.EnrolledCount >= session.Capacity {
-		return nil, ErrSessionAlreadyFull
-	}
-
-	session.EnrolledSubscriptionIDs = append(session.EnrolledSubscriptionIDs, subscription.ID)
-	session.EnrolledCount++
-	if err := s.repo.UpdateByID(ctx, sessionID, session); err != nil {
+	updatedSession, err := s.repo.ReserveEnrollment(ctx, sessionID, subscription.ID)
+	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			return nil, ErrSessionNotFound
+			currentSession, loadErr := s.repo.GetByID(ctx, sessionID)
+			if loadErr != nil {
+				if errors.Is(loadErr, repository.ErrNotFound) {
+					return nil, ErrSessionNotFound
+				}
+				return nil, loadErr
+			}
+			for _, enrolledID := range currentSession.EnrolledSubscriptionIDs {
+				if enrolledID == subscription.ID {
+					return nil, ErrSessionAlreadyEnrolled
+				}
+			}
+			if currentSession.EnrolledCount >= currentSession.Capacity {
+				return nil, ErrSessionAlreadyFull
+			}
+			return nil, ErrSessionAlreadyFull
 		}
 		return nil, err
 	}
 
-	return session, nil
+	return updatedSession, nil
 }
 
 // CheckInSubscription records an attendance against an enrolled session.
@@ -205,15 +210,16 @@ func isAllowedCourseLevel(level string) bool {
 	}
 }
 
-func allTagsAllowed(tags []string, allowedTags []string) bool {
+func anyTagAllowed(tags []string, allowedTags []string) bool {
 	allowed := make(map[string]struct{}, len(allowedTags))
 	for _, tag := range allowedTags {
 		allowed[strings.ToLower(tag)] = struct{}{}
 	}
 	for _, tag := range tags {
 		if _, ok := allowed[strings.ToLower(tag)]; !ok {
-			return false
+			continue
 		}
+		return true
 	}
-	return true
+	return len(tags) == 0
 }

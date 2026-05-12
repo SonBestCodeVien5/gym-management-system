@@ -22,6 +22,7 @@ type SessionRepository interface {
 	Create(ctx context.Context, session *models.Session) error
 	GetByID(ctx context.Context, id string) (*models.Session, error)
 	UpdateByID(ctx context.Context, id string, session *models.Session) error
+	ReserveEnrollment(ctx context.Context, id string, subscriptionID primitive.ObjectID) (*models.Session, error)
 	List(ctx context.Context, filter SessionListFilter) ([]models.Session, error)
 }
 
@@ -84,6 +85,36 @@ func (r *sessionRepoImpl) UpdateByID(ctx context.Context, id string, session *mo
 	}
 
 	return nil
+}
+
+// ReserveEnrollment atomically adds a subscription to a session if a slot is still available.
+func (r *sessionRepoImpl) ReserveEnrollment(ctx context.Context, id string, subscriptionID primitive.ObjectID) (*models.Session, error) {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+
+	filter := bson.M{
+		"_id":                       objID,
+		"enrolled_subscription_ids": bson.M{"$ne": subscriptionID},
+		"$expr":                     bson.M{"$lt": []any{"$enrolled_count", "$capacity"}},
+	}
+	update := bson.M{
+		"$addToSet": bson.M{"enrolled_subscription_ids": subscriptionID},
+		"$inc":      bson.M{"enrolled_count": 1},
+	}
+
+	var session models.Session
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+	err = r.collection.FindOneAndUpdate(ctx, filter, update, opts).Decode(&session)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+
+	return &session, nil
 }
 
 func (r *sessionRepoImpl) List(ctx context.Context, filter SessionListFilter) ([]models.Session, error) {
