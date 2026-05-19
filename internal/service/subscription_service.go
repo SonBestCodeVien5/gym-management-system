@@ -330,7 +330,7 @@ func (s *subscriptionServiceImpl) RefundSubscription(ctx context.Context, id str
 		return nil, err
 	}
 
-	if subscription.Status != "active" && subscription.Status != "suspended" {
+	if subscription.Status != "active" {
 		return nil, ErrSubscriptionCannotRefund
 	}
 	if subscription.TotalSessions <= 0 {

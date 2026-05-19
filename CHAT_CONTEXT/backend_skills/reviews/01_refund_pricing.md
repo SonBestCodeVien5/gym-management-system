@@ -35,12 +35,12 @@
   - `percent` requires `0..100`
   - `fixed` requires `0..subtotal`
 - `Subscription.Total_Amount_Paid` was refactored to idiomatic `TotalAmountPaid`.
-- Refund service blocks `pending`, `expired`, and `refunded` via status validation.
+- Refund service blocks `pending`, `suspended`, `expired`, and `refunded` via status validation.
 - Refund service blocks no remaining sessions and invalid session data.
 - Refund amount uses planned formula:
   - `total_amount_paid * remaining_sessions / total_sessions`
 - Repository refund update is atomic for status/session transition:
-  - status must be `active` or `suspended`
+  - status must be `active`
   - `remaining_sessions > 0`
   - update sets `status = refunded`, `remaining_sessions = 0`
 - Refund audit record includes subscription/member/session/money/reason/status/timestamps.
@@ -58,7 +58,10 @@
 
 ## Fixes applied during review
 
-- None. Review only; no code changes required.
+- Review after latest status-rule update confirmed refund eligibility now matches plan:
+  - service allows only `active`
+  - repository atomic filter allows only `active`
+  - service test expects `suspended` to return `ErrSubscriptionCannotRefund`
 
 ## Remaining risks
 
@@ -90,6 +93,7 @@
   - invalid ObjectID
   - missing subscription
   - `pending`
+  - `suspended`
   - `expired`
   - already `refunded`
   - `remaining_sessions = 0`

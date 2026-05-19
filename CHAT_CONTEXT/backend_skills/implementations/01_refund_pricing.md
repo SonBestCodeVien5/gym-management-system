@@ -34,9 +34,10 @@
 
 - Server calculates subscription pricing from course snapshot.
 - Discount supports `none`, empty, `percent`, and `fixed`.
-- Refund only allows `active` and `suspended` subscriptions with remaining sessions.
+- Refund only allows `active` subscriptions with remaining sessions.
+- Refund rejects `suspended` subscriptions because bảo lưu thẻ không áp dụng hoàn tiền.
 - Refund amount uses integer formula: `total_amount_paid * remaining_sessions / total_sessions`.
-- Subscription refund uses atomic update from active/suspended with remaining sessions to `refunded` and `remaining_sessions = 0`.
+- Subscription refund uses atomic update from active with remaining sessions to `refunded` and `remaining_sessions = 0`.
 - Refund audit record saved in `refunds` collection.
 
 ## Implementation notes
@@ -46,6 +47,7 @@
 - Added `Refund` model with processed status.
 - Added `RefundRepository` with create and lookup by subscription ID.
 - Added `POST /api/v1/subscriptions/:id/refund`.
+- Updated refund rule to match latest plan: `suspended` cannot refund; only `active` can refund.
 - No transaction wrapper exists; refund flow can still become partial if refund insert fails after subscription update.
 
 ## Commands run

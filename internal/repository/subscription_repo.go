@@ -170,7 +170,7 @@ func (r *subscriptionRepoImpl) UpdateRemainingSessionsAndStatus(ctx context.Cont
 	return nil
 }
 
-// RefundSubscription atomically marks an active or suspended subscription as refunded.
+// RefundSubscription atomically marks an active subscription as refunded.
 func (r *subscriptionRepoImpl) RefundSubscription(ctx context.Context, id string) error {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -181,7 +181,7 @@ func (r *subscriptionRepoImpl) RefundSubscription(ctx context.Context, id string
 		ctx,
 		bson.M{
 			"_id":                objID,
-			"status":             bson.M{"$in": []string{"active", "suspended"}},
+			"status":             "active",
 			"remaining_sessions": bson.M{"$gt": 0},
 		},
 		bson.M{"$set": bson.M{"status": "refunded", "remaining_sessions": 0}},

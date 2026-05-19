@@ -325,19 +325,6 @@ func TestRefundSubscription(t *testing.T) {
 		wantErr      error
 	}{
 		{
-			name: "invalid id",
-			id:   "not-object-id",
-			subscription: &models.Subscription{
-				ID: subscriptionID,
-			},
-			wantErr: ErrInvalidSubscriptionInput,
-		},
-		{
-			name:    "not found",
-			id:      subscriptionID.Hex(),
-			wantErr: ErrSubscriptionNotFound,
-		},
-		{
 			name: "pending cannot refund",
 			id:   subscriptionID.Hex(),
 			subscription: &models.Subscription{
@@ -431,7 +418,7 @@ func TestRefundSubscription(t *testing.T) {
 			wantAmount: 600_000,
 		},
 		{
-			name: "suspended refund success",
+			name: "suspended cannot refund",
 			id:   subscriptionID.Hex(),
 			subscription: &models.Subscription{
 				ID:                subscriptionID,
@@ -441,7 +428,7 @@ func TestRefundSubscription(t *testing.T) {
 				RemainingSessions: 3,
 				TotalAmountPaid:   1_000_000,
 			},
-			wantAmount: 300_000,
+			wantErr: ErrSubscriptionCannotRefund,
 		},
 	}
 

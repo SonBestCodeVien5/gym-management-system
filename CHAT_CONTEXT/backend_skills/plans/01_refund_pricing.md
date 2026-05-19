@@ -151,9 +151,9 @@ Success response:
 
 - Only allow refund status:
   - `active`
-  - `suspended`
 - Reject refund status:
   - `pending`
+  - `suspended`
   - `expired`
   - `refunded`
 - `total_sessions > 0`
@@ -166,7 +166,7 @@ Success response:
   - subscription `remaining_sessions = 0`
   - refund record inserted
 - Double refund prevention:
-  - atomic update status active/suspended → refunded
+  - atomic update status active → refunded
   - unique index `refunds.subscription_id`
 
 ## Data model plan
@@ -227,7 +227,7 @@ Atomic filter:
 ```go
 bson.M{
   "_id": objID,
-  "status": bson.M{"$in": []string{"active", "suspended"}},
+  "status": "active",
   "remaining_sessions": bson.M{"$gt": 0},
 }
 ```

@@ -7,15 +7,14 @@
 - Plan file: `CHAT_CONTEXT/backend_skills/plans/01_refund_pricing.md`
 - Implementation file: `CHAT_CONTEXT/backend_skills/implementations/01_refund_pricing.md`
 - Review file: `CHAT_CONTEXT/backend_skills/reviews/01_refund_pricing.md`
-- Tested at: 2026-05-19 22:26 +07
+- Tested at: 2026-05-19 22:58 +07
 
 ## Commands
 
-- `gofmt -w internal/service/subscription_service_test.go` — pass
+- `go build ./...` — pass
 - `go test ./...` — pass
   - `internal/service` tests pass.
   - other packages have no test files.
-- `go build ./...` — pass
 
 ## Automated tests added
 
@@ -42,7 +41,7 @@ Coverage added:
   - remaining sessions greater than total sessions data conflict
   - atomic update conflict maps to cannot refund
   - active refund success
-  - suspended refund success
+  - suspended cannot refund
   - refund amount formula
   - reason trimming
   - refund audit creation
@@ -86,6 +85,7 @@ Coverage added:
 
 - [x] Covered by automated service tests:
   - pending refund rejected
+  - suspended refund rejected
   - expired refund rejected
   - duplicate refund audit rejected
   - no remaining sessions rejected
@@ -97,8 +97,9 @@ Coverage added:
 - [x] Live Docker MongoDB/API test used running `gym_mongodb` container.
 - [x] Refund audit was inserted and returned with id `6a0c80617f52ee27b625c986`.
 - [x] Refunded subscription id `6a0c80617f52ee27b625c985`.
-- [x] Repository atomic filter was previously reviewed.
+- [x] Repository atomic filter was reviewed again after latest status change: refund update only matches `status = active`.
 - [x] Service tests verify refund audit creation call and subscription refund update call.
+- [x] Service tests verify `suspended` subscriptions return `ErrSubscriptionCannotRefund`.
 
 ## Issues found
 
@@ -109,5 +110,6 @@ Coverage added:
 
 ## Final result
 
-- Result: pass for automated backend test phase and live Docker MongoDB/API verification.
+- Result: pass for latest automated backend test phase after refund status rule change.
+- Previous live Docker MongoDB/API verification remains recorded; not rerun in this pass because latest change is covered by service tests and atomic filter review.
 - Ready to update docs/context: yes.
