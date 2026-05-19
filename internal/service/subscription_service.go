@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/SonBestCodeVien5/gym-management-system/internal/models"
@@ -22,6 +23,10 @@ var (
 	ErrSubscriptionExpired           = errors.New("subscription is expired")
 	ErrInvalidSuspensionPeriod       = errors.New("invalid suspension period")
 	ErrSubscriptionMemberNotFound    = errors.New("member not found")
+	ErrInvalidDiscount               = errors.New("invalid discount")
+	ErrSubscriptionCannotRefund      = errors.New("subscription cannot be refunded")
+	ErrSubscriptionNoRemaining       = errors.New("subscription has no remaining sessions")
+	ErrRefundAlreadyExists           = errors.New("refund already exists")
 )
 
 type SubscriptionService interface {
@@ -32,10 +37,12 @@ type SubscriptionService interface {
 	SuspendSubscription(ctx context.Context, id string, suspension *models.Suspension) error
 	ResumeSubscription(ctx context.Context, id string) error
 	ExpireSubscription(ctx context.Context, id string) error
+	RefundSubscription(ctx context.Context, id string, reason string) (*models.Refund, error)
 }
 
 type subscriptionServiceImpl struct {
 	subscriptionRepo repository.SubscriptionRepository
+	refundRepo       repository.RefundRepository
 	memberRepo       repository.MemberRepository
 	courseRepo       repository.CourseRepository
 	branchRepo       repository.BranchRepository
@@ -43,12 +50,14 @@ type subscriptionServiceImpl struct {
 
 func NewSubscriptionService(
 	subscriptionRepo repository.SubscriptionRepository,
+	refundRepo repository.RefundRepository,
 	memberRepo repository.MemberRepository,
 	courseRepo repository.CourseRepository,
 	branchRepo repository.BranchRepository,
 ) SubscriptionService {
 	return &subscriptionServiceImpl{
 		subscriptionRepo: subscriptionRepo,
+		refundRepo:       refundRepo,
 		memberRepo:       memberRepo,
 		courseRepo:       courseRepo,
 		branchRepo:       branchRepo,
@@ -105,14 +114,32 @@ func (s *subscriptionServiceImpl) CreateSubscription(ctx context.Context, subscr
 		return ErrSubscriptionReferenceNotFound
 	}
 
+	subtotal := course.BasePrice * int64(course.SessionCount)
+	discountType := normalizeDiscountType(subscription.DiscountType)
+	discountValue := subscription.DiscountValue
+	discountAmount, err := calculateDiscountAmount(subtotal, discountType, discountValue)
+	if err != nil {
+		return err
+	}
+
 	// Snapshot course pricing into subscription at creation time.
 	subscription.ID = primitive.NewObjectID()
 	subscription.Status = "pending"
 	subscription.AllowedTags = course.AllowedTags
 	subscription.UnitPrice = course.BasePrice
 	subscription.TotalSessions = course.SessionCount
-	subscription.Total_Amount_Paid = course.BasePrice * int64(course.SessionCount)
 	subscription.RemainingSessions = course.SessionCount
+	subscription.SubtotalAmount = subtotal
+	subscription.DiscountType = discountType
+	subscription.DiscountValue = discountValue
+	subscription.DiscountAmount = discountAmount
+	subscription.TotalAmountPaid = subtotal - discountAmount
+
+	if discountType == "none" {
+		subscription.DiscountValue = 0
+		subscription.DiscountAmount = 0
+		subscription.PromoCode = ""
+	}
 
 	// Persist subscription record.
 	return s.subscriptionRepo.Create(ctx, subscription)
@@ -277,4 +304,99 @@ func (s *subscriptionServiceImpl) ExpireSubscription(ctx context.Context, id str
 	}
 
 	return nil
+}
+
+// RefundSubscription calculates refund, atomically closes subscription, and writes audit record.
+func (s *subscriptionServiceImpl) RefundSubscription(ctx context.Context, id string, reason string) (*models.Refund, error) {
+	if _, err := primitive.ObjectIDFromHex(id); err != nil {
+		return nil, ErrInvalidSubscriptionInput
+	}
+
+	if s.refundRepo == nil {
+		return nil, errors.New("refund repository is not configured")
+	}
+
+	if _, err := s.refundRepo.GetBySubscriptionID(ctx, id); err == nil {
+		return nil, ErrRefundAlreadyExists
+	} else if err != nil && !errors.Is(err, repository.ErrNotFound) {
+		return nil, err
+	}
+
+	subscription, err := s.subscriptionRepo.GetByID(ctx, id)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, ErrSubscriptionNotFound
+		}
+		return nil, err
+	}
+
+	if subscription.Status != "active" && subscription.Status != "suspended" {
+		return nil, ErrSubscriptionCannotRefund
+	}
+	if subscription.TotalSessions <= 0 {
+		return nil, ErrSubscriptionCannotRefund
+	}
+	if subscription.RemainingSessions <= 0 {
+		return nil, ErrSubscriptionNoRemaining
+	}
+
+	usedSessions := subscription.TotalSessions - subscription.RemainingSessions
+	if usedSessions < 0 {
+		return nil, ErrSubscriptionCannotRefund
+	}
+
+	refundAmount := subscription.TotalAmountPaid * int64(subscription.RemainingSessions) / int64(subscription.TotalSessions)
+	now := time.Now()
+	refund := &models.Refund{
+		ID:                primitive.NewObjectID(),
+		SubscriptionID:    subscription.ID,
+		MemberID:          subscription.MemberID,
+		UsedSessions:      usedSessions,
+		RemainingSessions: subscription.RemainingSessions,
+		RefundAmount:      refundAmount,
+		Reason:            strings.TrimSpace(reason),
+		Status:            models.RefundStatusProcessed,
+		CreatedAt:         now,
+		ProcessedAt:       now,
+	}
+
+	if err := s.subscriptionRepo.RefundSubscription(ctx, id); err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, ErrSubscriptionCannotRefund
+		}
+		return nil, err
+	}
+
+	if err := s.refundRepo.Create(ctx, refund); err != nil {
+		return nil, err
+	}
+
+	return refund, nil
+}
+
+func normalizeDiscountType(discountType string) string {
+	value := strings.TrimSpace(strings.ToLower(discountType))
+	if value == "" {
+		return "none"
+	}
+	return value
+}
+
+func calculateDiscountAmount(subtotal int64, discountType string, discountValue int64) (int64, error) {
+	switch discountType {
+	case "none":
+		return 0, nil
+	case "percent":
+		if discountValue < 0 || discountValue > 100 {
+			return 0, ErrInvalidDiscount
+		}
+		return subtotal * discountValue / 100, nil
+	case "fixed":
+		if discountValue < 0 || discountValue > subtotal {
+			return 0, ErrInvalidDiscount
+		}
+		return discountValue, nil
+	default:
+		return 0, ErrInvalidDiscount
+	}
 }

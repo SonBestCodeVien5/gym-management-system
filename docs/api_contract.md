@@ -19,12 +19,12 @@ Muc tieu: chot ten endpoint + request/response co ban de FE va BE dung chung.
 ### Subscriptions
 | Method | Endpoint | Code làm gì | Trạng thái |
 |---|---|---|---|
-| POST | /api/v1/subscriptions | Tạo thẻ tập mới ở trạng thái `pending`, snapshot quyền từ course. | Implemented |
+| POST | /api/v1/subscriptions | Tạo thẻ tập mới ở trạng thái `pending`, snapshot quyền + pricing/discount từ course. | Implemented |
 | GET | /api/v1/subscriptions/:id | Xem thông tin thẻ tập và số buổi còn lại. | Implemented |
 | PATCH | /api/v1/subscriptions/:id/suspend | Bảo lưu thẻ tập theo khoảng thời gian. | Implemented |
 | PATCH | /api/v1/subscriptions/:id/unsuspend | Kích hoạt lại thẻ sau bảo lưu. | Implemented |
 | PATCH | /api/v1/subscriptions/:id/expire | Hết hạn thẻ tập thủ công. | Implemented |
-| POST | /api/v1/subscriptions/:id/refund | Tính và xử lý hoàn tiền. | Planned |
+| POST | /api/v1/subscriptions/:id/refund | Tính và xử lý hoàn tiền theo số buổi còn lại. | Implemented |
 
 ### Courses
 | Method | Endpoint | Code làm gì | Trạng thái |
@@ -87,6 +87,7 @@ Muc tieu: chot ten endpoint + request/response co ban de FE va BE dung chung.
 | Ghi chú | Nội dung |
 |---|---|
 | Offline payment | Confirm qua PATCH /members/:id/activate + `subscription_id`. |
-| Subscription | Tạo mới ở trạng thái `pending`, sau đó activate khi confirm payment. |
+| Subscription | Tạo mới ở trạng thái `pending`, server tính `subtotal_amount`, `discount_amount`, `total_amount_paid`, sau đó activate khi confirm payment. |
+| Refund | `POST /api/v1/subscriptions/:id/refund` chỉ áp dụng cho `active`/`suspended`, tính `refund_amount = total_amount_paid * remaining_sessions / total_sessions`, sau đó set subscription `refunded` và `remaining_sessions = 0`. |
 | Sessions MVP | Đã có create/list/get/enroll/checkin; enrollment lưu trên session và check-in tạo attendance có `session_id`. |
 | Course tags | `allowed_tags` của course là tập tag được phép dùng để ràng buộc session. |

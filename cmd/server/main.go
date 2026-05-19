@@ -46,11 +46,12 @@ func main() {
 	courseRepo := repository.NewCourseRepository(db)
 	branchRepo := repository.NewBranchRepository(db)
 	subscriptionRepo := repository.NewSubscriptionRepository(db)
+	refundRepo := repository.NewRefundRepository(db)
 	attendanceRepo := repository.NewAttendanceRepository(db)
 	sessionRepo := repository.NewSessionRepository(db)
 
 	// Build services.
-	subscriptionService := service.NewSubscriptionService(subscriptionRepo, memberRepo, courseRepo, branchRepo)
+	subscriptionService := service.NewSubscriptionService(subscriptionRepo, refundRepo, memberRepo, courseRepo, branchRepo)
 	memberService := service.NewMemberService(memberRepo)
 	courseService := service.NewCourseService(courseRepo)
 	branchService := service.NewBranchService(branchRepo)
@@ -96,6 +97,7 @@ func main() {
 		api.DELETE("/branches/:id", branchHandler.Delete)
 
 		api.POST("/subscriptions", subscriptionHandler.Create)
+		api.POST("/subscriptions/:id/refund", subscriptionHandler.Refund)
 		api.GET("/subscriptions/:id", subscriptionHandler.GetByID)
 		api.PATCH("/subscriptions/:id/suspend", subscriptionHandler.Suspend)
 		api.PATCH("/subscriptions/:id/unsuspend", subscriptionHandler.Resume)

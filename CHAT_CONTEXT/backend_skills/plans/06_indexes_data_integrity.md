@@ -50,6 +50,10 @@ Already noted:
 ### Refunds
 
 - unique `subscription_id`
+  - Source risk: `01_refund_pricing` review.
+  - Impact if missing: duplicate refund audit records can exist if manual DB writes or future code bypass current service guard.
+  - Priority: soon, before production or before adding more refund/payment flows.
+  - Expected behavior: second refund record for same `subscription_id` must fail with conflict-safe error mapping.
 
 ### Employees/Auth
 
@@ -78,6 +82,14 @@ Call from `cmd/server/main.go` after DB selection.
 - Unique fields return conflict, not raw Mongo error.
 - Geo query index must exist before nearby endpoint.
 - Refund double-submit guarded by unique index and atomic update.
+- Refund audit integrity:
+  - Ensure `refunds.subscription_id` unique index.
+  - Add duplicate-key detection in refund repository/service and map to conflict.
+  - Keep subscription atomic status update as first guard.
+- Refund transaction risk:
+  - Current refund flow can update subscription to `refunded` before refund audit insert fails.
+  - For MVP this can remain recorded limitation.
+  - Before real payment/accounting integration, consider Mongo transaction/session around subscription update + refund insert.
 - Attendance makeup reuse guarded by query/index if possible.
 - Auth refresh tokens expire via TTL index if persisted.
 
@@ -97,6 +109,7 @@ go test ./...
 Manual:
 - start app, verify no index creation error.
 - create duplicate ccid/branch_code/refund to confirm conflict behavior.
+- verify duplicate refund returns `409`/domain conflict, not raw Mongo error.
 
 ## Risks
 

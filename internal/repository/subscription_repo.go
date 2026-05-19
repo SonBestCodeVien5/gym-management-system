@@ -18,6 +18,7 @@ type SubscriptionRepository interface {
 	UpdateStatus(ctx context.Context, id string, status string) error
 	UpdateRemainingSessions(ctx context.Context, id string, remaining int) error
 	UpdateRemainingSessionsAndStatus(ctx context.Context, id string, remaining int, status string) error
+	RefundSubscription(ctx context.Context, id string) error
 	UpdateSuspension(ctx context.Context, id string, suspension *models.Suspension, status string) error
 	ClearSuspension(ctx context.Context, id string, status string) error
 	ListByMemberID(ctx context.Context, memberID string) ([]models.Subscription, error)
@@ -158,6 +159,32 @@ func (r *subscriptionRepoImpl) UpdateRemainingSessionsAndStatus(ctx context.Cont
 		ctx,
 		bson.M{"_id": objID},
 		bson.M{"$set": bson.M{"remaining_sessions": remaining, "status": status}},
+	)
+	if err != nil {
+		return err
+	}
+	if result.MatchedCount == 0 {
+		return ErrNotFound
+	}
+
+	return nil
+}
+
+// RefundSubscription atomically marks an active or suspended subscription as refunded.
+func (r *subscriptionRepoImpl) RefundSubscription(ctx context.Context, id string) error {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	result, err := r.collection.UpdateOne(
+		ctx,
+		bson.M{
+			"_id":                objID,
+			"status":             bson.M{"$in": []string{"active", "suspended"}},
+			"remaining_sessions": bson.M{"$gt": 0},
+		},
+		bson.M{"$set": bson.M{"status": "refunded", "remaining_sessions": 0}},
 	)
 	if err != nil {
 		return err

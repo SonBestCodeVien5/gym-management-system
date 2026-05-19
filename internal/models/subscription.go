@@ -21,9 +21,14 @@ type Subscription struct {
 	AllowedTags  []string           `bson:"allowed_tags" json:"allowed_tags"`
 	Status       string             `bson:"status" json:"status"` // pending, active, suspended, expired, refunded
 
-	// fiancial details
+	// financial details
 	PaymentDate       *time.Time `bson:"payment_date,omitempty" json:"payment_date,omitempty"`
-	Total_Amount_Paid int64      `bson:"total_amount_paid" json:"total_amount_paid"`
+	SubtotalAmount    int64      `bson:"subtotal_amount" json:"subtotal_amount"`
+	DiscountType      string     `bson:"discount_type" json:"discount_type"`
+	DiscountValue     int64      `bson:"discount_value" json:"discount_value"`
+	DiscountAmount    int64      `bson:"discount_amount" json:"discount_amount"`
+	PromoCode         string     `bson:"promo_code,omitempty" json:"promo_code,omitempty"`
+	TotalAmountPaid   int64      `bson:"total_amount_paid" json:"total_amount_paid"`
 	UnitPrice         int64      `bson:"unit_price" json:"unit_price"` // price per session
 	TotalSessions     int        `bson:"total_sessions" json:"total_sessions"`
 	RemainingSessions int        `bson:"remaining_sessions" json:"remaining_sessions"`

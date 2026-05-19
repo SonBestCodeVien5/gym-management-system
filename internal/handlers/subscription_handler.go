@@ -30,6 +30,9 @@ type createSubscriptionRequest struct {
 	StartDate      string `json:"start_date"`
 	EndDate        string `json:"end_date"`
 	SessionPerWeek int    `json:"session_per_week"`
+	DiscountType   string `json:"discount_type"`
+	DiscountValue  int64  `json:"discount_value"`
+	PromoCode      string `json:"promo_code"`
 }
 
 // suspendSubscriptionRequest is the JSON body for suspending a subscription.
@@ -38,6 +41,11 @@ type suspendSubscriptionRequest struct {
 	EndDate       string `json:"end_date"`
 	FrozenSession int    `json:"frozen_session"`
 	Reason        string `json:"reason"`
+}
+
+// refundSubscriptionRequest is the JSON body for refunding a subscription.
+type refundSubscriptionRequest struct {
+	Reason string `json:"reason"`
 }
 
 // Create validates input and delegates to subscription service.
@@ -92,6 +100,9 @@ func (h *SubscriptionHandler) Create(c *gin.Context) {
 		StartDate:      startDate,
 		EndDate:        endDate,
 		SessionPerWeek: req.SessionPerWeek,
+		DiscountType:   req.DiscountType,
+		DiscountValue:  req.DiscountValue,
+		PromoCode:      req.PromoCode,
 	}
 
 	// 5) Delegate create logic to service.
@@ -99,7 +110,7 @@ func (h *SubscriptionHandler) Create(c *gin.Context) {
 	if err != nil {
 		// 6) Map service validation/reference errors to HTTP status codes.
 		switch {
-		case errors.Is(err, service.ErrInvalidSubscriptionInput):
+		case errors.Is(err, service.ErrInvalidSubscriptionInput), errors.Is(err, service.ErrInvalidDiscount):
 			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		case errors.Is(err, service.ErrSubscriptionReferenceNotFound):
 			c.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
@@ -252,6 +263,46 @@ func (h *SubscriptionHandler) Expire(c *gin.Context) {
 
 	// 4) Success response.
 	c.JSON(http.StatusOK, gin.H{"message": "subscription expired successfully"})
+}
+
+// Refund refunds an active or suspended subscription by remaining sessions.
+func (h *SubscriptionHandler) Refund(c *gin.Context) {
+	// 1) Validate subscription ID from URL.
+	id := c.Param("id")
+	if _, err := primitive.ObjectIDFromHex(id); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid subscription id"})
+		return
+	}
+
+	// 2) Parse optional JSON body.
+	var req refundSubscriptionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "invalid request body",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	refund, err := h.subscriptionService.RefundSubscription(c.Request.Context(), id, req.Reason)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrInvalidSubscriptionInput):
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		case errors.Is(err, service.ErrSubscriptionNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"message": "subscription not found"})
+		case errors.Is(err, service.ErrSubscriptionCannotRefund), errors.Is(err, service.ErrSubscriptionNoRemaining), errors.Is(err, service.ErrRefundAlreadyExists):
+			c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "subscription refunded successfully",
+		"refund":  refund,
+	})
 }
 
 // parseTimeValue parses RFC3339 date input.

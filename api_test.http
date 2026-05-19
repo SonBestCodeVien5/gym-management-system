@@ -59,7 +59,10 @@ Content-Type: application/json
   "home_branch_id": "69f20a180c4cd4cdf57684fe",
   "start_date": "2026-04-28T10:00:00Z",
   "end_date": "2026-05-28T10:00:00Z",
-  "session_per_week": 3
+  "session_per_week": 3,
+  "discount_type": "percent",
+  "discount_value": 10,
+  "promo_code": "SUMMER10"
 }
 
 ###
@@ -85,6 +88,15 @@ PATCH http://localhost:8080/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/unsusp
 ###
 # Expire subscription manually
 PATCH http://localhost:8080/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/expire
+
+###
+# Refund subscription
+POST http://localhost:8080/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/refund
+Content-Type: application/json
+
+{
+  "reason": "member requested cancellation"
+}
 
 ###
 # Create course

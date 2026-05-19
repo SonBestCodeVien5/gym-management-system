@@ -64,6 +64,21 @@ Responsibilities:
 2. Use one session via attendance.
 3. Refund subscription.
 4. Verify status/refund amount/remaining sessions.
+5. Verify refund audit document exists.
+6. Verify double refund returns conflict.
+7. Verify pricing/discount edge cases:
+   - no discount / empty type
+   - `discount_type = percent`, valid `0..100`
+   - invalid percent `<0` or `>100`
+   - `discount_type = fixed`, valid `0..subtotal`
+   - invalid fixed `<0` or `>subtotal`
+8. Verify refund rejection cases:
+   - invalid ObjectID
+   - missing subscription
+   - `pending`
+   - `expired`
+   - already `refunded`
+   - `remaining_sessions = 0`
 
 ### Branch nearby flow
 
@@ -117,3 +132,5 @@ Update:
 - Tests need MongoDB running.
 - Test DB cleanup must not touch dev DB.
 - Time-based rules need deterministic timestamps.
+- Refund/pricing has money math and double-submit risk; add tests soon because manual `api_test.http` coverage is not enough.
+- Refund audit verification should confirm subscription state and refund document stay consistent.
