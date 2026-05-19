@@ -1,3 +1,9 @@
 .env
 bin/
 vendor/
+
+# Backend skill local scratch/session noise
+CHAT_CONTEXT/backend_skills/.scratch/
+CHAT_CONTEXT/backend_skills/tmp/
+CHAT_CONTEXT/backend_skills/session_*.md
+CHAT_CONTEXT/backend_skills/local_notes.md
