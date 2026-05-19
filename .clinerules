@@ -1,0 +1,302 @@
+# Cline Project Rules — Gym Management System
+
+## Slash command routing
+
+Slash commands are project commands, not shell commands.
+
+Never execute slash commands in terminal.
+
+Feature aliases:
+- `01` = `01_refund_pricing`
+- `01_latest` = `01_refund_pricing`
+- `02` = `02_branch_nearby`
+- `03` = `03_attendance_report_makeup`
+- `04` = `04_auth_role_guard`
+- `05` = `05_validation_error_consistency`
+- `06` = `06_indexes_data_integrity`
+- `07` = `07_integration_tests_fixtures`
+
+## Backend command boundaries
+
+### `/backend-plan <feature>`
+
+Role: Architect / Planner.
+
+Required read:
+1. `CHAT_CONTEXT/README.md`
+2. `CHAT_CONTEXT/backend_skills/README.md`
+3. `CHAT_CONTEXT/backend_skills/SKILL.md`
+4. `CHAT_CONTEXT/backend_skills/context_loading.md`
+5. `CHAT_CONTEXT/backend_skills/agent_skills/backend_architect.md`
+6. `CHAT_CONTEXT/backend_skills/01_plan.md`
+7. `docs/api_contract.md`
+8. `CHAT_CONTEXT/backend_skills/plans/<feature>.md`
+
+Allowed:
+- Read context/source files.
+- Update plan docs if asked.
+
+Forbidden:
+- Do not edit source code.
+- Do not run build/test unless asked.
+- Do not implement.
+
+### `/backend-implement <feature>`
+
+Role: Implementer.
+
+Required read:
+1. `CHAT_CONTEXT/README.md`
+2. `CHAT_CONTEXT/backend_skills/README.md`
+3. `CHAT_CONTEXT/backend_skills/SKILL.md`
+4. `CHAT_CONTEXT/backend_skills/context_loading.md`
+5. `CHAT_CONTEXT/backend_skills/agent_skills/backend_implementer.md`
+6. `CHAT_CONTEXT/backend_skills/02_implement.md`
+7. `CHAT_CONTEXT/backend_skills/plans/<feature>.md`
+8. `CHAT_CONTEXT/backend_skills/implementations/<feature>.md`
+
+Allowed:
+- Edit source code according to plan.
+- Update implementation notes.
+- Run `gofmt`.
+- Run `go build ./...`.
+
+Forbidden:
+- Do not start review/test unless asked.
+- Do not expand scope beyond plan.
+
+### `/backend-review <feature>`
+
+Role: Reviewer.
+
+Required read:
+1. `CHAT_CONTEXT/README.md`
+2. `CHAT_CONTEXT/backend_skills/SKILL.md`
+3. `CHAT_CONTEXT/backend_skills/context_loading.md`
+4. `CHAT_CONTEXT/backend_skills/agent_skills/backend_reviewer.md`
+5. `CHAT_CONTEXT/backend_skills/03_code_review.md`
+6. `CHAT_CONTEXT/backend_skills/plans/<feature>.md`
+7. `CHAT_CONTEXT/backend_skills/implementations/<feature>.md`
+8. `CHAT_CONTEXT/backend_skills/reviews/<feature>.md`
+
+Allowed:
+- Inspect changed files.
+- Update review report.
+
+Forbidden:
+- Do not edit implementation unless user explicitly asks.
+- Do not run full test phase unless asked.
+
+### `/backend-test <feature>`
+
+Role: Tester.
+
+Required read:
+1. `CHAT_CONTEXT/README.md`
+2. `CHAT_CONTEXT/backend_skills/SKILL.md`
+3. `CHAT_CONTEXT/backend_skills/context_loading.md`
+4. `CHAT_CONTEXT/backend_skills/agent_skills/backend_tester.md`
+5. `CHAT_CONTEXT/backend_skills/04_test.md`
+6. `CHAT_CONTEXT/backend_skills/plans/<feature>.md`
+7. `CHAT_CONTEXT/backend_skills/implementations/<feature>.md`
+8. `CHAT_CONTEXT/backend_skills/reviews/<feature>.md`
+9. `CHAT_CONTEXT/backend_skills/tests/<feature>.md`
+
+Allowed:
+- Run `go build ./...`.
+- Run `go test ./...`.
+- Update test report.
+
+Forbidden:
+- Do not change business rules unless tests expose bug and user approves fix.
+- Do not silently skip verification.
+
+### `/backend-complete <feature>`
+
+Role: Context Maintainer + API Contract Keeper.
+
+Required read:
+1. `CHAT_CONTEXT/README.md`
+2. `CHAT_CONTEXT/backend_skills/SKILL.md`
+3. `CHAT_CONTEXT/backend_skills/agent_skills/api_contract_keeper.md`
+4. `CHAT_CONTEXT/backend_skills/agent_skills/context_maintainer.md`
+5. `CHAT_CONTEXT/backend_skills/worklog.md`
+6. all phase files for `<feature>`
+
+Allowed:
+- Update `CHAT_CONTEXT/README.md`.
+- Update `CHAT_CONTEXT/backend_skills/worklog.md`.
+- Update `docs/api_contract.md`.
+- Update `api_test.http`.
+
+Forbidden:
+- Do not introduce feature code changes.
+
+### `/backend-status`
+
+Role: Context Maintainer.
+
+Required read:
+1. `CHAT_CONTEXT/README.md`
+2. `CHAT_CONTEXT/backend_skills/README.md`
+3. `CHAT_CONTEXT/backend_skills/01_plan.md`
+4. `CHAT_CONTEXT/backend_skills/worklog.md`
+
+Allowed:
+- Summarize feature statuses.
+
+Forbidden:
+- Do not edit files unless asked.
+
+## Generic role catalog
+
+### Architect / Planner
+Use for requirements, design, API contract, data model, migration plan, and feature breakdown. Do not implement unless explicitly requested.
+
+### Implementer
+Use for coding, refactor, wiring, migrations, and configuration. Follow existing architecture. Run formatter/build.
+
+### Reviewer
+Use for code review, architecture review, security review, and regression risk. Do not fix unless asked.
+
+### Tester
+Use for build/test/manual verification/test report. Run existing tests first. Do not weaken assertions.
+
+### Debugger
+Use for runtime errors, failing tests, panics, and broken behavior. Reproduce first, isolate root cause, fix smallest cause, verify.
+
+### Refactorer
+Use for cleanup and structure improvements. Preserve behavior. Run tests.
+
+### API Contract Keeper
+Use for endpoint shape, request/response, status codes, docs alignment. Docs must match code.
+
+### Security Reviewer
+Use for auth, role guard, secrets, injection, sensitive data, and payments. Never expose secrets.
+
+### Data / DB Specialist
+Use for schema, indexes, migrations, transactions, and consistency. Handle race/concurrency.
+
+### DevOps / Environment Agent
+Use for Docker, CI, env vars, deployment, and build scripts. Do not change system/global config without approval.
+
+### Context Maintainer
+Use for resume docs, worklog, current state, and handoff. Keep summaries concise.
+
+## Architecture rules
+
+Stack:
+- Go
+- Gin
+- MongoDB
+- Clean Architecture
+
+Layer boundaries:
+- `internal/models`: DB/JSON structs only.
+- `internal/repository`: MongoDB access only.
+- `internal/service`: business rules and orchestration.
+- `internal/handlers`: HTTP parsing/response/error mapping only.
+- `cmd/server/main.go`: dependency wiring and routes.
+- `docs/api_contract.md`: FE/BE API contract.
+- `api_test.http`: manual API samples.
+
+Rules:
+- Do not put business rules in handlers.
+- Do not put DB query logic in services.
+- Do not trust client input for money, status, role, or computed counts.
+- Use `int64` for money.
+- Use atomic DB updates for double-submit/race-risk flows.
+- Keep context files concise.
+- Respect command phase boundary.
+
+## Context loading policy
+
+Do not read whole project unless needed.
+
+Order:
+1. Project README or context summary.
+2. Skill/command registry if exists.
+3. Relevant phase/role docs.
+4. Target feature docs.
+5. Source files directly involved.
+6. Tests/docs only if relevant.
+
+Prefer project context files:
+- `CHAT_CONTEXT/README.md`
+- `CHAT_CONTEXT/backend_skills/SKILL.md`
+- `CHAT_CONTEXT/backend_skills/context_loading.md`
+- `CHAT_CONTEXT/backend_skills/agent_skills/*.md`
+
+Avoid context bloat:
+- Read targeted files.
+- Summarize findings.
+- Do not paste large source unless needed.
+
+## Tool safety
+
+Use one tool at a time.
+Wait for tool result before next tool.
+Use `git --no-pager` for git diff/log/status.
+Do not commit unless user asks.
+Do not rewrite history unless user explicitly asks.
+Do not rollback files without listing affected files and asking.
+
+Do not run destructive commands without explicit approval:
+- delete files
+- reset/checkout files
+- database wipe
+- migration against real DB
+- install/uninstall packages
+- modify global config
+
+## File editing rules
+
+Prefer targeted edits.
+Use precise search/replace for small changes.
+Rewrite whole file only if simpler and safe.
+After tool edit, use returned final content as baseline.
+Do not edit unrelated files.
+Do not update tests to hide broken implementation.
+
+## Verification rules
+
+After code changes:
+- Run formatter if project uses one.
+- Run build if available.
+- Run relevant tests.
+- If no tests, record limitation.
+
+If user asked only plan/review:
+- Do not run verification unless asked.
+
+## Reporting format
+
+Final response should include:
+- What changed
+- Files changed
+- Commands run
+- Results
+- Known risks
+- Next phase handoff
+
+Keep concise.
+
+## Override priority
+
+1. User explicit instruction wins.
+2. Project command/skill docs win.
+3. `.clinerules` apply.
+4. Default engineering best practices fill gaps.
+
+If unclear, ask before acting.
+
+## Boundary confirmation
+
+At start of any slash-command task, internally determine:
+- command
+- phase
+- role/subagent
+- allowed actions
+- forbidden actions
+
+Then proceed accordingly.
