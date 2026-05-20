@@ -178,6 +178,10 @@ func (r *stubBranchRepo) DeleteByID(ctx context.Context, id string) error {
 	return nil
 }
 
+func (r *stubBranchRepo) Nearby(ctx context.Context, lng float64, lat float64, maxDistance int64, limit int64) ([]models.BranchNearbyResult, error) {
+	return nil, nil
+}
+
 func TestCreateSubscriptionPricingRules(t *testing.T) {
 	memberID := primitive.NewObjectID()
 	courseID := primitive.NewObjectID()

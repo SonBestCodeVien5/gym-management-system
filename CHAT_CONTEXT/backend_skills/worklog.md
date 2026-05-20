@@ -4,8 +4,8 @@ Dùng file này để ghi lại plan, implement, code review, test cho từng fe
 
 ## Current backend roadmap
 
-- [ ] Refund flow & pricing rules
-- [ ] Branch nearby geo query
+- [x] Refund flow & pricing rules
+- [x] Branch nearby geo query
 - [ ] Attendance report/makeup endpoints nếu route còn thiếu
 - [ ] Auth/login + role guard
 - [ ] Validation hardening & error consistency
@@ -111,10 +111,10 @@ Copy block này cho mỗi feature.
 
 ## Status
 - Planned: yes
-- Implemented: no
-- Reviewed: no
-- Tested: no
-- Docs updated: no
+- Implemented: yes
+- Reviewed: yes
+- Tested: yes
+- Docs updated: yes
 
 ## Plan summary
 
@@ -132,8 +132,8 @@ Implement `POST /api/v1/subscriptions/:id/refund` and pricing discount rules for
 - Response should include refund record or refund summary.
 
 ### Business rules
-- Only `active` or `suspended` subscription can be refunded.
-- Cannot refund `pending`, `expired`, `refunded`.
+- Only `active` subscription can be refunded.
+- Cannot refund `pending`, `suspended`, `expired`, `refunded`.
 - Cannot refund if `remaining_sessions <= 0`.
 - `used_sessions = total_sessions - remaining_sessions`.
 - `refund_amount = total_amount_paid * remaining_sessions / total_sessions`.
@@ -164,16 +164,45 @@ Implement `POST /api/v1/subscriptions/:id/refund` and pricing discount rules for
 - `docs/api_contract.md`
 - `api_test.http`
 
+## Completion — 2026-05-20
+
+### Result
+- `POST /api/v1/subscriptions` pricing/discount implemented, reviewed, tested, and documented.
+- `POST /api/v1/subscriptions/:id/refund` implemented, reviewed, tested, and documented.
+- Pricing is server-calculated from course snapshot:
+  - `subtotal_amount`
+  - `discount_amount`
+  - `total_amount_paid`
+- Refund allows only `active` subscriptions with valid remaining sessions.
+- Refund atomically changes subscription to `refunded` and `remaining_sessions = 0`, then inserts refund audit record.
+
+### Verification
+- `go build ./...` — pass in test phase.
+- `go test ./...` — pass in test phase.
+- Automated service tests — pass for pricing, invalid discount inputs, refund conflict cases, duplicate prevention, and success.
+- Manual API — pass for create subscription pricing, activation, refund success, and post-refund subscription state.
+
+### Docs updated
+- [x] `docs/api_contract.md`
+- [x] `api_test.http`
+- [x] `CHAT_CONTEXT/README.md`
+
+### Remaining risks
+- `refunds.subscription_id` unique index is not bootstrapped yet; track under `06_indexes_data_integrity`.
+- No Mongo transaction around subscription update + refund audit insert; partial failure risk remains accepted for MVP.
+- Rare delete/race case may return `409` instead of `404`.
+- Refund handler requires JSON body; empty body returns `400`.
+
 ---
 
 # Feature — Branch nearby geo query
 
 ## Status
 - Planned: yes
-- Implemented: no
-- Reviewed: no
-- Tested: no
-- Docs updated: no
+- Implemented: yes
+- Reviewed: yes
+- Tested: yes
+- Docs updated: yes
 
 ## Plan summary
 
@@ -201,3 +230,26 @@ Implement `GET /api/v1/branches/nearby`.
 - Mongo index bootstrap location
 - `docs/api_contract.md`
 - `api_test.http`
+
+## Completion — 2026-05-20
+
+### Result
+- `GET /api/v1/branches/nearby` implemented, reviewed, tested, and documented.
+- Query uses required `lng`, `lat`; optional `max_distance`, `limit`.
+- Response includes `distance_meters`.
+- MongoDB `branches.location` 2dsphere index created at repository init.
+- Route order verified: `/branches/nearby` before `/branches/:id`.
+
+### Verification
+- `go build ./...` — pass in test phase.
+- `go test ./...` — pass in test phase.
+- Manual API — pass for happy path, default query, invalid inputs, route order.
+- Manual DB cleanup — done.
+
+### Docs updated
+- [x] `docs/api_contract.md`
+- [x] `api_test.http`
+- [x] `CHAT_CONTEXT/README.md`
+
+### Remaining risks
+- Existing malformed `branches.location` documents can fail index creation or be excluded from geo results.

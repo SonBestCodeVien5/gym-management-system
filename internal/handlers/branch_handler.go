@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/SonBestCodeVien5/gym-management-system/internal/models"
 	"github.com/SonBestCodeVien5/gym-management-system/internal/service"
@@ -112,6 +113,55 @@ func (h *BranchHandler) List(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "branches fetched successfully", "data": branches})
+}
+
+// Nearby handles GET /branches/nearby.
+func (h *BranchHandler) Nearby(c *gin.Context) {
+	lng, err := strconv.ParseFloat(c.Query("lng"), 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid branch input"})
+		return
+	}
+
+	lat, err := strconv.ParseFloat(c.Query("lat"), 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid branch input"})
+		return
+	}
+
+	var maxDistance int64
+	if c.Query("max_distance") != "" {
+		maxDistance, err = strconv.ParseInt(c.Query("max_distance"), 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid branch input"})
+			return
+		}
+		if maxDistance <= 0 {
+			maxDistance = -1
+		}
+	}
+
+	var limit int64
+	if c.Query("limit") != "" {
+		limit, err = strconv.ParseInt(c.Query("limit"), 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid branch input"})
+			return
+		}
+	}
+
+	branches, err := h.branchService.NearbyBranches(c.Request.Context(), lng, lat, maxDistance, limit)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrInvalidBranchInput):
+			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "nearby branches fetched successfully", "data": branches})
 }
 
 // Update handles PATCH /branches/:id.

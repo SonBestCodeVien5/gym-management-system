@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type BranchRepository interface {
@@ -16,6 +17,7 @@ type BranchRepository interface {
 	List(ctx context.Context) ([]models.Branch, error)
 	UpdateByID(ctx context.Context, id string, branch *models.Branch) error
 	DeleteByID(ctx context.Context, id string) error
+	Nearby(ctx context.Context, lng float64, lat float64, maxDistance int64, limit int64) ([]models.BranchNearbyResult, error)
 }
 
 type branchRepoImpl struct {
@@ -23,10 +25,21 @@ type branchRepoImpl struct {
 }
 
 // NewBranchRepository returns a repo bound to branches collection.
-func NewBranchRepository(db *mongo.Database) BranchRepository {
-	return &branchRepoImpl{
-		collection: db.Collection("branches"),
+func NewBranchRepository(db *mongo.Database) (BranchRepository, error) {
+	collection := db.Collection("branches")
+	indexModel := mongo.IndexModel{
+		Keys: bson.D{{Key: "location", Value: "2dsphere"}},
+		Options: options.Index().
+			SetName("location_2dsphere"),
 	}
+
+	if _, err := collection.Indexes().CreateOne(context.Background(), indexModel); err != nil {
+		return nil, err
+	}
+
+	return &branchRepoImpl{
+		collection: collection,
+	}, nil
 }
 
 // Create inserts a branch document.
@@ -114,4 +127,39 @@ func (r *branchRepoImpl) DeleteByID(ctx context.Context, id string) error {
 	}
 
 	return nil
+}
+
+// Nearby returns branches ordered by distance from the provided coordinates.
+func (r *branchRepoImpl) Nearby(ctx context.Context, lng float64, lat float64, maxDistance int64, limit int64) ([]models.BranchNearbyResult, error) {
+	pipeline := mongo.Pipeline{
+		{{
+			Key: "$geoNear",
+			Value: bson.D{
+				{Key: "near", Value: bson.D{
+					{Key: "type", Value: "Point"},
+					{Key: "coordinates", Value: bson.A{lng, lat}},
+				}},
+				{Key: "distanceField", Value: "distance_meters"},
+				{Key: "maxDistance", Value: maxDistance},
+				{Key: "spherical", Value: true},
+			},
+		}},
+		{{
+			Key:   "$limit",
+			Value: limit,
+		}},
+	}
+
+	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var branches []models.BranchNearbyResult
+	if err := cursor.All(ctx, &branches); err != nil {
+		return nil, err
+	}
+
+	return branches, nil
 }

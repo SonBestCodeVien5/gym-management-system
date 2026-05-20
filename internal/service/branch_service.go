@@ -21,6 +21,7 @@ type BranchService interface {
 	ListBranches(ctx context.Context) ([]models.Branch, error)
 	UpdateBranch(ctx context.Context, id string, branch *models.Branch) error
 	DeleteBranch(ctx context.Context, id string) error
+	NearbyBranches(ctx context.Context, lng float64, lat float64, maxDistance int64, limit int64) ([]models.BranchNearbyResult, error)
 }
 
 type branchServiceImpl struct {
@@ -37,7 +38,7 @@ func (s *branchServiceImpl) CreateBranch(ctx context.Context, branch *models.Bra
 	if branch == nil || branch.BranchCode == "" || branch.Name == "" || branch.Address == "" || branch.Province == "" {
 		return ErrInvalidBranchInput
 	}
-	if branch.Location.Type == "" || len(branch.Location.Coordinates) != 2 {
+	if !isValidBranchLocation(branch.Location) {
 		return ErrInvalidBranchInput
 	}
 
@@ -67,7 +68,7 @@ func (s *branchServiceImpl) UpdateBranch(ctx context.Context, id string, branch 
 	if branch == nil || branch.BranchCode == "" || branch.Name == "" || branch.Address == "" || branch.Province == "" {
 		return ErrInvalidBranchInput
 	}
-	if branch.Location.Type == "" || len(branch.Location.Coordinates) != 2 {
+	if !isValidBranchLocation(branch.Location) {
 		return ErrInvalidBranchInput
 	}
 
@@ -90,4 +91,39 @@ func (s *branchServiceImpl) DeleteBranch(ctx context.Context, id string) error {
 		return err
 	}
 	return nil
+}
+
+// NearbyBranches validates query values and returns nearby branches.
+func (s *branchServiceImpl) NearbyBranches(ctx context.Context, lng float64, lat float64, maxDistance int64, limit int64) ([]models.BranchNearbyResult, error) {
+	if !isValidLngLat(lng, lat) {
+		return nil, ErrInvalidBranchInput
+	}
+
+	if maxDistance == 0 {
+		maxDistance = 5000
+	}
+	if maxDistance < 1 {
+		return nil, ErrInvalidBranchInput
+	}
+
+	if limit == 0 {
+		limit = 10
+	}
+	if limit < 1 || limit > 100 {
+		return nil, ErrInvalidBranchInput
+	}
+
+	return s.repo.Nearby(ctx, lng, lat, maxDistance, limit)
+}
+
+func isValidBranchLocation(location models.GeoLocation) bool {
+	if location.Type != "Point" || len(location.Coordinates) != 2 {
+		return false
+	}
+
+	return isValidLngLat(location.Coordinates[0], location.Coordinates[1])
+}
+
+func isValidLngLat(lng float64, lat float64) bool {
+	return lng >= -180 && lng <= 180 && lat >= -90 && lat <= 90
 }

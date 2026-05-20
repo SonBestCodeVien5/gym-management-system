@@ -44,7 +44,10 @@ func main() {
 		log.Fatalf("Error: Failed to initialize member repository: %v", err)
 	}
 	courseRepo := repository.NewCourseRepository(db)
-	branchRepo := repository.NewBranchRepository(db)
+	branchRepo, err := repository.NewBranchRepository(db)
+	if err != nil {
+		log.Fatalf("Error: Failed to initialize branch repository: %v", err)
+	}
 	subscriptionRepo := repository.NewSubscriptionRepository(db)
 	refundRepo := repository.NewRefundRepository(db)
 	attendanceRepo := repository.NewAttendanceRepository(db)
@@ -92,6 +95,7 @@ func main() {
 
 		api.POST("/branches", branchHandler.Create)
 		api.GET("/branches", branchHandler.List)
+		api.GET("/branches/nearby", branchHandler.Nearby)
 		api.GET("/branches/:id", branchHandler.GetByID)
 		api.PATCH("/branches/:id", branchHandler.Update)
 		api.DELETE("/branches/:id", branchHandler.Delete)

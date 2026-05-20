@@ -18,3 +18,14 @@ type Branch struct {
 	Location   GeoLocation        `json:"location" bson:"location"`
 	ManagerID  primitive.ObjectID `json:"manager_id" bson:"manager_id"`
 }
+
+type BranchNearbyResult struct {
+	ID             primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	BranchCode     string             `json:"branch_code" bson:"branch_code"`
+	Name           string             `json:"name" bson:"name"`
+	Address        string             `json:"address" bson:"address"`
+	Province       string             `json:"province" bson:"province"`
+	Location       GeoLocation        `json:"location" bson:"location"`
+	ManagerID      primitive.ObjectID `json:"manager_id" bson:"manager_id"`
+	DistanceMeters float64            `json:"distance_meters" bson:"distance_meters"`
+}

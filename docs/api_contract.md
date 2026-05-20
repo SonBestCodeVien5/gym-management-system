@@ -1,6 +1,6 @@
 # API Contract (Current)
 
-Cap nhat: 2026-05-05
+Cap nhat: 2026-05-20
 
 Muc tieu: chot ten endpoint + request/response co ban de FE va BE dung chung.
 
@@ -43,7 +43,7 @@ Muc tieu: chot ten endpoint + request/response co ban de FE va BE dung chung.
 | GET | /api/v1/branches/:id | Xem chi tiết một chi nhánh. | Implemented |
 | PATCH | /api/v1/branches/:id | Cập nhật thông tin chi nhánh. | Implemented |
 | DELETE | /api/v1/branches/:id | Xóa chi nhánh. | Implemented |
-| GET | /api/v1/branches/nearby | Tìm chi nhánh gần vị trí hiện tại. | Planned |
+| GET | /api/v1/branches/nearby | Tìm chi nhánh gần vị trí hiện tại bằng GeoJSON 2dsphere. | Implemented |
 
 ### Attendance
 | Method | Endpoint | Code làm gì | Trạng thái |
@@ -71,6 +71,59 @@ Muc tieu: chot ten endpoint + request/response co ban de FE va BE dung chung.
 
 ---
 
+## Endpoint details
+
+### Branch nearby
+
+`GET /api/v1/branches/nearby`
+
+Query:
+
+| Field | Type | Required | Rule |
+|---|---|---:|---|
+| `lng` | number | yes | Longitude, range `-180..180`. |
+| `lat` | number | yes | Latitude, range `-90..90`. |
+| `max_distance` | integer | no | Meter distance. Default `5000`. Explicit `<= 0` returns `400`. |
+| `limit` | integer | no | Default `10`. `0` means default. Valid final range `1..100`; `>100` returns `400`. |
+
+Response `200`:
+
+```json
+{
+  "message": "nearby branches fetched successfully",
+  "data": [
+    {
+      "id": "69f20a180c4cd4cdf57684fe",
+      "branch_code": "HCM01",
+      "name": "Ho Chi Minh Main Branch",
+      "address": "123 Nguyen Hue, District 1",
+      "province": "Ho Chi Minh",
+      "location": {
+        "type": "Point",
+        "coordinates": [106.7009, 10.7769]
+      },
+      "manager_id": "000000000000000000000000",
+      "distance_meters": 123.45
+    }
+  ]
+}
+```
+
+Status codes:
+
+- `200`: success, including empty `data`.
+- `400`: missing/invalid query, out-of-range coordinates, invalid `max_distance`, invalid `limit`.
+- `500`: internal server error or geo query/index failure.
+
+Notes:
+
+- Coordinates use GeoJSON order `[lng, lat]`.
+- Route is registered before `/api/v1/branches/:id`.
+- Branch create/update require `location.type = "Point"` and valid coordinates.
+- Startup creates MongoDB `branches.location` 2dsphere index.
+
+---
+
 ## Status code mac dinh
 
 - 200: OK
@@ -88,6 +141,7 @@ Muc tieu: chot ten endpoint + request/response co ban de FE va BE dung chung.
 |---|---|
 | Offline payment | Confirm qua PATCH /members/:id/activate + `subscription_id`. |
 | Subscription | Tạo mới ở trạng thái `pending`, server tính `subtotal_amount`, `discount_amount`, `total_amount_paid`, sau đó activate khi confirm payment. |
-| Refund | `POST /api/v1/subscriptions/:id/refund` chỉ áp dụng cho `active`/`suspended`, tính `refund_amount = total_amount_paid * remaining_sessions / total_sessions`, sau đó set subscription `refunded` và `remaining_sessions = 0`. |
+| Refund | `POST /api/v1/subscriptions/:id/refund` chỉ áp dụng cho `active`, reject `pending`/`suspended`/`expired`/`refunded`, tính `refund_amount = total_amount_paid * remaining_sessions / total_sessions`, sau đó set subscription `refunded` và `remaining_sessions = 0`. |
 | Sessions MVP | Đã có create/list/get/enroll/checkin; enrollment lưu trên session và check-in tạo attendance có `session_id`. |
+| Branch nearby | `GET /api/v1/branches/nearby` dùng `lng`, `lat`, optional `max_distance`, `limit`; trả thêm `distance_meters`. |
 | Course tags | `allowed_tags` của course là tập tag được phép dùng để ràng buộc session. |
