@@ -8,6 +8,7 @@ Dùng file này để giữ roadmap và completion summary ngắn cho feature ba
 - [x] Branch nearby geo query
 - [x] Attendance report/makeup endpoints nếu route còn thiếu
 - [ ] Auth/login + role guard
+- [ ] Employee management
 - [ ] Validation hardening & error consistency
 - [ ] Indexes and data integrity
 - [ ] Integration tests & fixtures
@@ -95,7 +96,7 @@ Implement `POST /api/v1/subscriptions/:id/refund` and pricing discount rules for
 - [x] `CHAT_CONTEXT/README.md`
 
 ### Remaining risks
-- `refunds.subscription_id` unique index is not bootstrapped yet; track under `06_indexes_data_integrity`.
+- `refunds.subscription_id` unique index is not bootstrapped yet; track under `07_indexes_data_integrity`.
 - No Mongo transaction around subscription update + refund audit insert; partial failure risk remains accepted for MVP.
 - Rare delete/race case may return `409` instead of `404`.
 - Refund handler requires JSON body; empty body returns `400`.
@@ -207,7 +208,7 @@ Expose dedicated attendance report/makeup routes without exposing client-control
 - [x] `CHAT_CONTEXT/README.md`
 
 ### Remaining risks
-- Duplicate makeup protection is not DB-enforced yet; track under `06_indexes_data_integrity`.
+- Duplicate makeup protection is not DB-enforced yet; track under `07_indexes_data_integrity`.
 - Attendance insert, subscription decrement, and member attended-count increment are not atomic as one unit.
 - Makeup still references the exact reported-missed RFC3339 instant instead of a stable report ID.
-- Feature-specific integration coverage remains for `07_integration_tests_fixtures`.
+- Feature-specific integration coverage remains for `08_integration_tests_fixtures`.

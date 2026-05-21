@@ -1,12 +1,12 @@
-# Test — validation error consistency
+# Test — integration tests fixtures
 
 ## Status
 
 - Status: not started
-- Feature: validation error consistency
-- Plan file: `CHAT_CONTEXT/backend_skills/plans/05_validation_error_consistency.md`
-- Implementation file: `CHAT_CONTEXT/backend_skills/implementations/05_validation_error_consistency.md`
-- Review file: `CHAT_CONTEXT/backend_skills/reviews/05_validation_error_consistency.md`
+- Feature: integration tests fixtures
+- Plan file: `CHAT_CONTEXT/backend_skills/plans/08_integration_tests_fixtures.md`
+- Implementation file: `CHAT_CONTEXT/backend_skills/implementations/08_integration_tests_fixtures.md`
+- Review file: `CHAT_CONTEXT/backend_skills/reviews/08_integration_tests_fixtures.md`
 - Tested at:
 
 ## Commands

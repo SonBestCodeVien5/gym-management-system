@@ -4,8 +4,8 @@
 
 - Status: not started
 - Feature: integration tests fixtures
-- Plan file: `CHAT_CONTEXT/backend_skills/plans/07_integration_tests_fixtures.md`
-- Implementation file: `CHAT_CONTEXT/backend_skills/implementations/07_integration_tests_fixtures.md`
+- Plan file: `CHAT_CONTEXT/backend_skills/plans/08_integration_tests_fixtures.md`
+- Implementation file: `CHAT_CONTEXT/backend_skills/implementations/08_integration_tests_fixtures.md`
 - Reviewed at:
 
 ## Review summary

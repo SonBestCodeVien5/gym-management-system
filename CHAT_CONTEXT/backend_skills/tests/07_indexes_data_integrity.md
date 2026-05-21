@@ -1,12 +1,12 @@
-# Test — integration tests fixtures
+# Test — indexes data integrity
 
 ## Status
 
 - Status: not started
-- Feature: integration tests fixtures
-- Plan file: `CHAT_CONTEXT/backend_skills/plans/07_integration_tests_fixtures.md`
-- Implementation file: `CHAT_CONTEXT/backend_skills/implementations/07_integration_tests_fixtures.md`
-- Review file: `CHAT_CONTEXT/backend_skills/reviews/07_integration_tests_fixtures.md`
+- Feature: indexes data integrity
+- Plan file: `CHAT_CONTEXT/backend_skills/plans/07_indexes_data_integrity.md`
+- Implementation file: `CHAT_CONTEXT/backend_skills/implementations/07_indexes_data_integrity.md`
+- Review file: `CHAT_CONTEXT/backend_skills/reviews/07_indexes_data_integrity.md`
 - Tested at:
 
 ## Commands

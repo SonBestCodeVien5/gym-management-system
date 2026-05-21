@@ -72,7 +72,7 @@
 ## Completion Recommendation
 
 - Complete Cycle 03 for the minimal endpoint-exposure scope already planned and tested.
-- Carry the concurrency/data-integrity risks into Cycle 06 index/data-integrity work:
+- Carry the concurrency/data-integrity risks into Cycle 07 index/data-integrity work:
   - DB-enforced duplicate makeup protection or a stable report reference strategy
   - atomic remaining-session consumption and side-effect consistency
-- Carry endpoint integration coverage into Cycle 07 integration tests/fixtures.
+- Carry endpoint integration coverage into Cycle 08 integration tests/fixtures.

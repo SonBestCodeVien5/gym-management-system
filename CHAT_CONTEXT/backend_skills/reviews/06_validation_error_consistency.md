@@ -4,8 +4,8 @@
 
 - Status: not started
 - Feature: validation error consistency
-- Plan file: `CHAT_CONTEXT/backend_skills/plans/05_validation_error_consistency.md`
-- Implementation file: `CHAT_CONTEXT/backend_skills/implementations/05_validation_error_consistency.md`
+- Plan file: `CHAT_CONTEXT/backend_skills/plans/06_validation_error_consistency.md`
+- Implementation file: `CHAT_CONTEXT/backend_skills/implementations/06_validation_error_consistency.md`
 - Reviewed at:
 
 ## Review summary

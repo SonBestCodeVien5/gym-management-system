@@ -195,7 +195,7 @@ Use existing `attendances` collection.
 
 No index required for endpoint exposure.
 
-Recommended follow-up for Cycle 06:
+Recommended follow-up for Cycle 07:
 - `{ sub_id: 1, date: -1 }` for history/window checks.
 - Optional partial unique index for makeup reuse if moving from date reference to stable report ID.
 
@@ -331,7 +331,7 @@ Manual API flow:
 
 - Current makeup reference uses exact `time.Time` equality. Client must send same RFC3339 instant as report date. This is fragile.
 - No DB-level uniqueness prevents concurrent duplicate makeup reuse. Service scan can race under double-submit.
-- `CheckIn` creates attendance before checking remaining sessions for `attended/makeup`; if remaining sessions is already 0, a makeup record can be inserted before `ErrNoRemainingSessions`. This pre-existing risk should be handled in Cycle 06 or fixed during implementation if approved.
+- `CheckIn` creates attendance before checking remaining sessions for `attended/makeup`; if remaining sessions is already 0, a makeup record can be inserted before `ErrNoRemainingSessions`. This pre-existing risk should be handled in Cycle 07 or fixed during implementation if approved.
 - Current plan does not add `reason` or `reported_missed_ref_id`; adding them expands scope to model/repository/service/API docs.
 - Error consistency should be revisited in Cycle 05.
 
@@ -342,4 +342,4 @@ Implement minimal endpoint exposure now:
 2. Reuse existing `AttendanceService.CheckIn`.
 3. Register two routes.
 4. Update API docs and samples during completion phase.
-5. Leave DB indexes/concurrency hardening for Cycle 06 unless user approves scope expansion.
+5. Leave DB indexes/concurrency hardening for Cycle 07 unless user approves scope expansion.

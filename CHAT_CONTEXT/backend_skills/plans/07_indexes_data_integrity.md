@@ -1,4 +1,4 @@
-# Cycle 06 — Indexes & Data Integrity
+# Cycle 07 — Indexes & Data Integrity
 
 ## Status
 

@@ -1,12 +1,12 @@
-# Test — indexes data integrity
+# Test — validation error consistency
 
 ## Status
 
 - Status: not started
-- Feature: indexes data integrity
-- Plan file: `CHAT_CONTEXT/backend_skills/plans/06_indexes_data_integrity.md`
-- Implementation file: `CHAT_CONTEXT/backend_skills/implementations/06_indexes_data_integrity.md`
-- Review file: `CHAT_CONTEXT/backend_skills/reviews/06_indexes_data_integrity.md`
+- Feature: validation error consistency
+- Plan file: `CHAT_CONTEXT/backend_skills/plans/06_validation_error_consistency.md`
+- Implementation file: `CHAT_CONTEXT/backend_skills/implementations/06_validation_error_consistency.md`
+- Review file: `CHAT_CONTEXT/backend_skills/reviews/06_validation_error_consistency.md`
 - Tested at:
 
 ## Commands

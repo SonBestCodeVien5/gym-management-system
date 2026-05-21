@@ -40,6 +40,7 @@ Implemented backend surfaces:
 
 Planned next surfaces:
 - Auth/login and role guard.
+- Employee management for staff accounts.
 - Validation/error consistency hardening.
 - Index and data-integrity hardening.
 - Integration tests and fixtures.

@@ -4,7 +4,7 @@
 
 - Status: not started
 - Feature: indexes data integrity
-- Plan file: `CHAT_CONTEXT/backend_skills/plans/06_indexes_data_integrity.md`
+- Plan file: `CHAT_CONTEXT/backend_skills/plans/07_indexes_data_integrity.md`
 - Started at:
 - Finished at:
 

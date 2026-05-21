@@ -4,7 +4,7 @@
 
 - Status: not started
 - Feature: validation error consistency
-- Plan file: `CHAT_CONTEXT/backend_skills/plans/05_validation_error_consistency.md`
+- Plan file: `CHAT_CONTEXT/backend_skills/plans/06_validation_error_consistency.md`
 - Started at:
 - Finished at:
 
