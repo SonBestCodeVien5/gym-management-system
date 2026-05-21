@@ -1,6 +1,6 @@
 # API Contract (Current)
 
-Cap nhat: 2026-05-20
+Cap nhat: 2026-05-21
 
 Muc tieu: chot ten endpoint + request/response co ban de FE va BE dung chung.
 
@@ -50,8 +50,8 @@ Muc tieu: chot ten endpoint + request/response co ban de FE va BE dung chung.
 |---|---|---|---|
 | POST | /api/v1/attendance/checkin | Ghi nhận check-in tự do hoặc theo session. | Implemented |
 | GET | /api/v1/subscriptions/:id/attendance | Xem lịch sử attendance của một subscription. | Implemented |
-| POST | /api/v1/attendance/report | Báo nghỉ hợp lệ để mở cửa sổ tập bù. | Planned |
-| POST | /api/v1/attendance/makeup | Tạo attendance tập bù từ report đã được duyệt. | Planned |
+| POST | /api/v1/attendance/report | Báo nghỉ hợp lệ để mở cửa sổ tập bù. | Implemented |
+| POST | /api/v1/attendance/makeup | Tạo attendance tập bù từ report đã được duyệt. | Implemented |
 
 ### Sessions
 | Method | Endpoint | Code làm gì | Trạng thái |
@@ -72,6 +72,89 @@ Muc tieu: chot ten endpoint + request/response co ban de FE va BE dung chung.
 ---
 
 ## Endpoint details
+
+### Attendance report
+
+`POST /api/v1/attendance/report`
+
+Body:
+
+| Field | Type | Required | Rule |
+|---|---|---:|---|
+| `subscription_id` | ObjectID string | yes | Must reference an existing active subscription. |
+| `branch_id` | ObjectID string | yes | Attendance branch. |
+| `date` | RFC3339 string | no | Missed date; defaults to server time when omitted. |
+
+Response `201`:
+
+```json
+{
+  "message": "attendance report recorded successfully",
+  "data": {
+    "id": "69f20c000c4cd4cdf5768500",
+    "sub_id": "69f20b22f79bb78cac99aa0a",
+    "branch_id": "69f20a180c4cd4cdf57684fe",
+    "date": "2026-05-12T08:00:00Z",
+    "status": "reported_missed",
+    "is_makeup_for": null
+  }
+}
+```
+
+Status codes:
+
+- `201`: reported-missed attendance created.
+- `400`: invalid body, ObjectID, or RFC3339 date input.
+- `404`: subscription not found.
+- `409`: subscription state/expiry conflict or reported-missed 30-day limit reached.
+- `500`: internal server error.
+
+Notes:
+
+- Client does not send `status`; handler sets `reported_missed`.
+- `reported_missed` does not consume a remaining session.
+
+### Attendance makeup
+
+`POST /api/v1/attendance/makeup`
+
+Body:
+
+| Field | Type | Required | Rule |
+|---|---|---:|---|
+| `subscription_id` | ObjectID string | yes | Must reference an existing active subscription. |
+| `branch_id` | ObjectID string | yes | Attendance branch. |
+| `date` | RFC3339 string | no | Makeup date; defaults to server time when omitted. |
+| `is_makeup_for` | RFC3339 string | yes | Must equal the source `reported_missed` date for the same subscription. |
+
+Response `201`:
+
+```json
+{
+  "message": "attendance makeup recorded successfully",
+  "data": {
+    "id": "69f20c010c4cd4cdf5768501",
+    "sub_id": "69f20b22f79bb78cac99aa0a",
+    "branch_id": "69f20a180c4cd4cdf57684fe",
+    "date": "2026-05-14T08:00:00Z",
+    "status": "makeup",
+    "is_makeup_for": "2026-05-12T08:00:00Z"
+  }
+}
+```
+
+Status codes:
+
+- `201`: makeup attendance created.
+- `400`: invalid body, ObjectID, RFC3339 date input, or missing `is_makeup_for`.
+- `404`: subscription not found.
+- `409`: subscription state/expiry conflict, weekly or remaining-session limit, invalid/not-found makeup source reference, or reused makeup reference.
+- `500`: internal server error.
+
+Notes:
+
+- Client does not send `status`; handler sets `makeup`.
+- Makeup must reference a reported-missed date within 7 days and consumes one remaining session.
 
 ### Branch nearby
 

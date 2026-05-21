@@ -70,8 +70,18 @@ func (s *attendanceServiceImpl) CheckIn(ctx context.Context, attendance *models.
 		return ErrSubscriptionExpired
 	}
 
-	// 3) Enforce weekly quota for attended/makeup records.
+	// 3) Only these statuses are accepted for this initial version.
+	validStatus := attendance.Status == "attended" || attendance.Status == "makeup" || attendance.Status == "absent" || attendance.Status == "reported_missed"
+	if !validStatus {
+		return ErrInvalidAttendanceInput
+	}
+
+	// 4) Attended/makeup records consume remaining sessions, so reject before inserting attendance.
 	if attendance.Status == "attended" || attendance.Status == "makeup" {
+		if subscription.RemainingSessions <= 0 {
+			return ErrNoRemainingSessions
+		}
+
 		weeklyCount, err := s.countWeeklySessions(ctx, attendance.SubID.Hex(), attendance.Date)
 		if err != nil {
 			return err
@@ -79,12 +89,6 @@ func (s *attendanceServiceImpl) CheckIn(ctx context.Context, attendance *models.
 		if weeklyCount >= subscription.SessionPerWeek {
 			return ErrWeeklySessionLimitReached
 		}
-	}
-
-	// 4) Only these statuses are accepted for this initial version.
-	validStatus := attendance.Status == "attended" || attendance.Status == "makeup" || attendance.Status == "absent" || attendance.Status == "reported_missed"
-	if !validStatus {
-		return ErrInvalidAttendanceInput
 	}
 
 	// 4.1) Enforce report/makeup-specific rules.
@@ -99,18 +103,21 @@ func (s *attendanceServiceImpl) CheckIn(ctx context.Context, attendance *models.
 		}
 	}
 
-	// 5) Create attendance record first.
+	// 5) Re-check duplicate makeup immediately before insert to narrow double-submit race window.
+	if attendance.Status == "makeup" {
+		if err := s.ensureMakeupNotUsed(ctx, attendance.SubID.Hex(), attendance.IsMakeupFor); err != nil {
+			return err
+		}
+	}
+
+	// 6) Create attendance record.
 	attendance.ID = primitive.NewObjectID()
 	if err := s.attendanceRepo.Create(ctx, attendance); err != nil {
 		return err
 	}
 
-	// 6) For attended/makeup, decrease remaining_sessions and increase member attended count.
+	// 7) For attended/makeup, decrease remaining_sessions and increase member attended count.
 	if attendance.Status == "attended" || attendance.Status == "makeup" {
-		if subscription.RemainingSessions <= 0 {
-			return ErrNoRemainingSessions
-		}
-
 		newRemaining := subscription.RemainingSessions - 1
 		if newRemaining <= 0 {
 			if err := s.subscriptionRepo.UpdateRemainingSessionsAndStatus(ctx, attendance.SubID.Hex(), 0, "expired"); err != nil {
@@ -177,6 +184,20 @@ func (s *attendanceServiceImpl) validateMakeupRequest(ctx context.Context, subsc
 	}
 	if sourceReport == nil {
 		return ErrMakeupReferenceNotFound
+	}
+
+	return s.ensureMakeupNotUsed(ctx, subscriptionID, makeupFor)
+}
+
+// ensureMakeupNotUsed rejects duplicate makeup records for the same subscription and missed date.
+func (s *attendanceServiceImpl) ensureMakeupNotUsed(ctx context.Context, subscriptionID string, makeupFor *time.Time) error {
+	if makeupFor == nil || makeupFor.IsZero() {
+		return ErrMakeupReferenceInvalid
+	}
+
+	records, err := s.attendanceRepo.ListBySubscriptionID(ctx, subscriptionID)
+	if err != nil {
+		return err
 	}
 
 	for _, record := range records {

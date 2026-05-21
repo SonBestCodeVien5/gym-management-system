@@ -6,7 +6,7 @@ Dùng file này để ghi lại plan, implement, code review, test cho từng fe
 
 - [x] Refund flow & pricing rules
 - [x] Branch nearby geo query
-- [ ] Attendance report/makeup endpoints nếu route còn thiếu
+- [x] Attendance report/makeup endpoints nếu route còn thiếu
 - [ ] Auth/login + role guard
 - [ ] Validation hardening & error consistency
 - [ ] Indexes and data integrity
@@ -253,3 +253,54 @@ Implement `GET /api/v1/branches/nearby`.
 
 ### Remaining risks
 - Existing malformed `branches.location` documents can fail index creation or be excluded from geo results.
+
+---
+
+# Feature - Attendance report/makeup endpoints
+
+## Status
+- Planned: yes
+- Implemented: yes
+- Reviewed: yes
+- Tested: yes
+- Docs updated: yes
+
+## Plan summary
+
+### Goal
+Expose dedicated attendance report/makeup routes without exposing client-controlled attendance status.
+
+### API
+- `POST /api/v1/attendance/report`
+- `POST /api/v1/attendance/makeup`
+- Report request uses `subscription_id`, `branch_id`, optional `date`.
+- Makeup request uses `subscription_id`, `branch_id`, optional `date`, required `is_makeup_for`.
+
+### Business rules
+- Report stores `reported_missed`, keeps remaining sessions unchanged, and enforces one report in the 30-day window.
+- Makeup stores `makeup`, must reference a reported-missed date within 7 days, cannot reuse the same reference, respects weekly limits, and consumes one remaining session.
+
+## Completion - 2026-05-21
+
+### Result
+- Dedicated report and makeup handlers/routes are implemented.
+- `AttendanceService.CheckIn` remains the shared rule path.
+- `docs/api_contract.md` documents request, response, and status behavior.
+- `api_test.http` has report and makeup request samples.
+
+### Verification
+- `go build ./...` - pass in test and re-review phases.
+- `go test ./...` - pass in test and re-review phases.
+- Manual API - pass for happy path, invalid input, not found, subscription-state conflict, report window conflict, missing/overdue makeup reference, and duplicate makeup.
+- Direct Mongo verification - pass for attendance records, remaining-session decrement, member attended counter, and rejected overdue makeup non-insert.
+
+### Docs updated
+- [x] `docs/api_contract.md`
+- [x] `api_test.http`
+- [x] `CHAT_CONTEXT/README.md`
+
+### Remaining risks
+- Duplicate makeup protection is not DB-enforced yet; track under `06_indexes_data_integrity`.
+- Attendance insert, subscription decrement, and member attended-count increment are not atomic as one unit.
+- Makeup still references the exact reported-missed RFC3339 instant instead of a stable report ID.
+- Feature-specific integration coverage remains for `07_integration_tests_fixtures`.

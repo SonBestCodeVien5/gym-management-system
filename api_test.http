@@ -207,5 +207,28 @@ Content-Type: application/json
 }
 
 ###
+# Report missed attendance
+POST http://localhost:8080/api/v1/attendance/report
+Content-Type: application/json
+
+{
+  "subscription_id": "69f20b22f79bb78cac99aa0a",
+  "branch_id": "69f20a180c4cd4cdf57684fe",
+  "date": "2026-05-12T08:00:00Z"
+}
+
+###
+# Makeup attendance for reported missed date
+POST http://localhost:8080/api/v1/attendance/makeup
+Content-Type: application/json
+
+{
+  "subscription_id": "69f20b22f79bb78cac99aa0a",
+  "branch_id": "69f20a180c4cd4cdf57684fe",
+  "date": "2026-05-14T08:00:00Z",
+  "is_makeup_for": "2026-05-12T08:00:00Z"
+}
+
+###
 # List attendance by subscription
 GET http://localhost:8080/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/attendance

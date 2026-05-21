@@ -96,9 +96,9 @@ File này chỉ giữ tổng hợp quan trọng. Plan con theo từng chu kỳ n
 
 | Cycle | Feature | Plan file | Status |
 |---|---|---|---|
-| 01 | Refund flow & pricing rules | `plans/01_refund_pricing.md` | planned |
-| 02 | Branch nearby geo query | `plans/02_branch_nearby.md` | planned |
-| 03 | Attendance report/makeup endpoints | `plans/03_attendance_report_makeup.md` | planned |
+| 01 | Refund flow & pricing rules | `plans/01_refund_pricing.md` | completed |
+| 02 | Branch nearby geo query | `plans/02_branch_nearby.md` | completed |
+| 03 | Attendance report/makeup endpoints | `plans/03_attendance_report_makeup.md` | completed |
 | 04 | Auth/login + role guard | `plans/04_auth_role_guard.md` | planned |
 | 05 | Validation hardening & error consistency | `plans/05_validation_error_consistency.md` | planned |
 | 06 | Indexes and data integrity | `plans/06_indexes_data_integrity.md` | planned |
@@ -106,7 +106,7 @@ File này chỉ giữ tổng hợp quan trọng. Plan con theo từng chu kỳ n
 
 ## Next action
 
-Implement Cycle 01: Refund flow & pricing rules.
+Implement Cycle 04: Auth/login + role guard.
 
 ## Rule cập nhật tiến độ
 

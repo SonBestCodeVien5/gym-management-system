@@ -31,6 +31,19 @@ type checkInRequest struct {
 	IsMakeupFor    string `json:"is_makeup_for"`
 }
 
+type attendanceReportRequest struct {
+	SubscriptionID string `json:"subscription_id"`
+	BranchID       string `json:"branch_id"`
+	Date           string `json:"date"`
+}
+
+type attendanceMakeupRequest struct {
+	SubscriptionID string `json:"subscription_id"`
+	BranchID       string `json:"branch_id"`
+	Date           string `json:"date"`
+	IsMakeupFor    string `json:"is_makeup_for"`
+}
+
 // CheckIn handles POST /attendance/checkin.
 func (h *AttendanceHandler) CheckIn(c *gin.Context) {
 	// 1) Parse JSON body.
@@ -113,6 +126,120 @@ func (h *AttendanceHandler) CheckIn(c *gin.Context) {
 
 	// 6) Success response.
 	c.JSON(http.StatusCreated, gin.H{"message": "attendance check-in recorded successfully", "data": attendance})
+}
+
+// ReportMissed handles POST /attendance/report.
+func (h *AttendanceHandler) ReportMissed(c *gin.Context) {
+	var req attendanceReportRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid request body", "error": err.Error()})
+		return
+	}
+
+	subID, err := primitive.ObjectIDFromHex(req.SubscriptionID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid subscription id"})
+		return
+	}
+	branchID, err := primitive.ObjectIDFromHex(req.BranchID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid branch id"})
+		return
+	}
+
+	attendanceDate := time.Now()
+	if req.Date != "" {
+		parsed, err := time.Parse(time.RFC3339, req.Date)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid date format"})
+			return
+		}
+		attendanceDate = parsed
+	}
+
+	attendance := &models.Attendance{
+		SubID:    subID,
+		BranchID: branchID,
+		Date:     attendanceDate,
+		Status:   "reported_missed",
+	}
+	if err := h.attendanceService.CheckIn(c.Request.Context(), attendance); err != nil {
+		h.handleAttendanceError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": "attendance report recorded successfully", "data": attendance})
+}
+
+// Makeup handles POST /attendance/makeup.
+func (h *AttendanceHandler) Makeup(c *gin.Context) {
+	var req attendanceMakeupRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid request body", "error": err.Error()})
+		return
+	}
+
+	subID, err := primitive.ObjectIDFromHex(req.SubscriptionID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid subscription id"})
+		return
+	}
+	branchID, err := primitive.ObjectIDFromHex(req.BranchID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid branch id"})
+		return
+	}
+
+	attendanceDate := time.Now()
+	if req.Date != "" {
+		parsed, err := time.Parse(time.RFC3339, req.Date)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid date format"})
+			return
+		}
+		attendanceDate = parsed
+	}
+
+	if req.IsMakeupFor == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "is_makeup_for is required"})
+		return
+	}
+	makeupFor, err := time.Parse(time.RFC3339, req.IsMakeupFor)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid is_makeup_for format"})
+		return
+	}
+
+	attendance := &models.Attendance{
+		SubID:       subID,
+		BranchID:    branchID,
+		Date:        attendanceDate,
+		Status:      "makeup",
+		IsMakeupFor: &makeupFor,
+	}
+	if err := h.attendanceService.CheckIn(c.Request.Context(), attendance); err != nil {
+		h.handleAttendanceError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": "attendance makeup recorded successfully", "data": attendance})
+}
+
+func (h *AttendanceHandler) handleAttendanceError(c *gin.Context, err error) {
+	switch {
+	case errors.Is(err, service.ErrInvalidAttendanceInput):
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+	case errors.Is(err, service.ErrSubscriptionNotFound):
+		c.JSON(http.StatusNotFound, gin.H{"message": "subscription not found"})
+	case errors.Is(err, service.ErrAttendanceCheckInNotAllowed), errors.Is(err, service.ErrSubscriptionExpired), errors.Is(err, service.ErrNoRemainingSessions):
+		c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
+	case errors.Is(err, service.ErrWeeklySessionLimitReached):
+		c.JSON(http.StatusConflict, gin.H{"message": "weekly session limit reached"})
+	case errors.Is(err, service.ErrReportedMissedLimitReached), errors.Is(err, service.ErrMakeupReferenceInvalid), errors.Is(err, service.ErrMakeupReferenceNotFound), errors.Is(err, service.ErrMakeupAlreadyUsed):
+		c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
+	default:
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+	}
 }
 
 // ListBySubscription handles GET /subscriptions/:id/attendance.

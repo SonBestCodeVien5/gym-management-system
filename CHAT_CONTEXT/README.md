@@ -4,7 +4,7 @@ Read this first when continuing the project in a new chat.
 
 ## Current state
 - Stack: Go + Gin + MongoDB, Clean Architecture.
-- Current focus: backend feature completion, with refund/pricing and branch nearby search implemented; next work centers on attendance report/makeup routes, auth, validation, indexes, and integration tests.
+- Current focus: backend feature completion, with refund/pricing, branch nearby search, and attendance report/makeup endpoints completed; next work centers on auth, validation, indexes, and integration tests.
 - Member flow implemented:
    - `POST /api/v1/members`
    - `GET /api/v1/members/:id`
@@ -32,6 +32,8 @@ Read this first when continuing the project in a new chat.
   - `GET /api/v1/branches/nearby`
 - Attendance flow implemented:
   - `POST /api/v1/attendance/checkin`
+  - `POST /api/v1/attendance/report`
+  - `POST /api/v1/attendance/makeup`
   - `GET /api/v1/subscriptions/:id/attendance`
 - Sessions workflow implemented:
   - `POST /api/v1/sessions`
@@ -79,7 +81,7 @@ Read this first when continuing the project in a new chat.
 - Phase 2 design docs aligned to the current contract (including auth/refund/nearby placeholders).
 
 ## Testing notes
-- `api_test.http` contains sample requests for ping, member registration, member activation, subscription, course/branch CRUD, branch nearby, and attendance.
+- `api_test.http` contains sample requests for ping, member registration, member activation, subscription, course/branch CRUD, branch nearby, attendance check-in, attendance report, and attendance makeup.
 - Subscription testing needs real `course_id` and `branch_id`, but now there are create APIs for both.
 - Sessions workflow currently covers create/list/get/enroll/checkin.
 - Enroll uses atomic Mongo update plus tag allow-list validation.
@@ -88,7 +90,7 @@ Read this first when continuing the project in a new chat.
 
 ## Recommended next step
 - Continue with auth/login + role guard, validation/error consistency, indexes/data integrity, then integration tests and fixtures.
-- Refund remaining risks fit `06_indexes_data_integrity`: unique index for `refunds.subscription_id` and optional Mongo transaction for refund audit consistency.
+- Refund and attendance remaining risks fit `06_indexes_data_integrity`: refund uniqueness/audit consistency, duplicate makeup protection, and atomic attendance side effects.
 
 ## Todo list (current)
 - [x] Chuan hoa API contract & docs

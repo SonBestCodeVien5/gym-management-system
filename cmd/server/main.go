@@ -108,6 +108,8 @@ func main() {
 		api.PATCH("/subscriptions/:id/expire", subscriptionHandler.Expire)
 
 		api.POST("/attendance/checkin", attendanceHandler.CheckIn)
+		api.POST("/attendance/report", attendanceHandler.ReportMissed)
+		api.POST("/attendance/makeup", attendanceHandler.Makeup)
 		api.GET("/subscriptions/:id/attendance", attendanceHandler.ListBySubscription)
 
 		api.POST("/sessions", sessionHandler.Create)
