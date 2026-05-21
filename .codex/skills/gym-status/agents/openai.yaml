@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gym Status"
+  short_description: "Summarize gym backend project status"
+  default_prompt: "Use $gym-status to summarize the current backend status for this gym project."

@@ -1,109 +1,74 @@
-# Chat Context Snapshot
+# Project Context Snapshot
 
-Read this first when continuing the project in a new chat.
+Read this file when a new chat needs a short project handoff.
 
-## Current state
-- Stack: Go + Gin + MongoDB, Clean Architecture.
-- Current focus: backend feature completion, with refund/pricing, branch nearby search, and attendance report/makeup endpoints completed; next work centers on auth, validation, indexes, and integration tests.
-- Member flow implemented:
-   - `POST /api/v1/members`
-   - `GET /api/v1/members/:id`
-   - `GET /api/v1/members/:id/subscriptions` to list member subscriptions.
-   - `PATCH /api/v1/members/:id/activate` for offline payment confirmation.
-- Subscription flow implemented:
-  - `POST /api/v1/subscriptions`
-  - `GET /api/v1/subscriptions/:id`
-  - `PATCH /api/v1/subscriptions/:id/suspend`
-  - `PATCH /api/v1/subscriptions/:id/unsuspend`
-  - `PATCH /api/v1/subscriptions/:id/expire`
-  - `POST /api/v1/subscriptions/:id/refund`
-- Course flow implemented:
-  - `POST /api/v1/courses`
-  - `GET /api/v1/courses`
-  - `GET /api/v1/courses/:id`
-  - `PATCH /api/v1/courses/:id`
-  - `DELETE /api/v1/courses/:id`
-- Branch flow implemented:
-  - `POST /api/v1/branches`
-  - `GET /api/v1/branches`
-  - `GET /api/v1/branches/:id`
-  - `PATCH /api/v1/branches/:id`
-  - `DELETE /api/v1/branches/:id`
-  - `GET /api/v1/branches/nearby`
-- Attendance flow implemented:
-  - `POST /api/v1/attendance/checkin`
-  - `POST /api/v1/attendance/report`
-  - `POST /api/v1/attendance/makeup`
-  - `GET /api/v1/subscriptions/:id/attendance`
-- Sessions workflow implemented:
-  - `POST /api/v1/sessions`
-  - `GET /api/v1/sessions`
-  - `GET /api/v1/sessions/:id`
-  - `POST /api/v1/sessions/:id/enroll`
-  - `POST /api/v1/sessions/:id/checkin`
-- Repositories exist for:
-  - member
-  - course
-  - branch
-  - subscription
-  - attendance
-  - session
-- `members.ccid` has a unique index.
-- Subscription input parses `start_date` and `end_date` using RFC3339.
-- Subscription creation currently:
-  - validates member/course/branch references
-  - sets `status = pending`
-  - snapshots price/session count from `Course`
-  - calculates pricing/discount server-side: `subtotal_amount`, `discount_amount`, `total_amount_paid`.
-- Refund flow currently:
-  - allows only `active` subscriptions.
-  - rejects `pending`, `suspended`, `expired`, `refunded`.
-  - calculates `refund_amount = total_amount_paid * remaining_sessions / total_sessions`.
-  - atomically sets subscription `status = refunded` and `remaining_sessions = 0`, then inserts refund audit record.
-- Offline payment is handled by a separate member activation endpoint, not inside subscription creation.
-- Attendance check-in now enforces `sessionPerWeek` for `attended` and `makeup` records.
-- `reported_missed` now enforces a 30-day sliding window.
-- `makeup` now requires a valid `reported_missed` reference within 7 days and cannot reuse the same report twice.
-- Branch nearby search uses MongoDB `location_2dsphere` index and `$geoNear`, returns `distance_meters`, defaults `max_distance=5000` and `limit=10`.
+## Purpose
 
-## Session architecture notes
-- `Course.allowed_tags` defines which tags are allowed for a course.
-- `Subscription.allowed_tags` snapshots the course tags at purchase time.
-- `Session` does not have `course_id` anymore.
-- Session enrollment stores enrolled subscription IDs directly on the session document.
-- Enrollment is atomic in MongoDB, so the last slot cannot be double-booked by concurrent requests.
-- Enrollment tag validation is "any match is enough": if at least one `session.tags` item exists in `subscription.allowed_tags`, enroll is allowed.
-- Session check-in reuses the existing attendance service, so the same attendance rules still apply.
-- `attendance.session_id` is optional and supports both free check-in and session-based check-in.
+- This folder is project memory for resuming work, not a report draft store.
+- Durable project docs start at [../docs/README.md](../docs/README.md).
+- Formal report source material lives in
+  [../docs/report-materials/README.md](../docs/report-materials/README.md).
+- Backend phase plans, implementation notes, reviews, and test notes stay in
+  [backend_skills/README.md](backend_skills/README.md).
 
-## Docs alignment
-- Current vs planned API contract snapshot: see [docs/api_contract.md](docs/api_contract.md).
-- Phase 2 design docs aligned to the current contract (including auth/refund/nearby placeholders).
+## Read Order
 
-## Testing notes
-- `api_test.http` contains sample requests for ping, member registration, member activation, subscription, course/branch CRUD, branch nearby, attendance check-in, attendance report, and attendance makeup.
-- Subscription testing needs real `course_id` and `branch_id`, but now there are create APIs for both.
-- Sessions workflow currently covers create/list/get/enroll/checkin.
-- Enroll uses atomic Mongo update plus tag allow-list validation.
-- Check-in creates attendance with `session_id` and then applies the normal attendance rules.
-- `go build ./...` was last verified to pass.
+1. Read this snapshot.
+2. Read [../docs/README.md](../docs/README.md) for the documentation map.
+3. For backend feature delivery, use the focused skill: `$gym-plan`, `$gym-implement`,
+   `$gym-review`, `$gym-test`, `$gym-complete`, `$gym-resume`, or `$gym-status`.
+4. Read source code and current API docs for behavior that must be exact.
 
-## Recommended next step
-- Continue with auth/login + role guard, validation/error consistency, indexes/data integrity, then integration tests and fixtures.
-- Refund and attendance remaining risks fit `06_indexes_data_integrity`: refund uniqueness/audit consistency, duplicate makeup protection, and atomic attendance side effects.
+## Current State
 
-## Todo list (current)
-- [x] Chuan hoa API contract & docs
-- [x] Enforce sessionPerWeek rule
-- [x] Report/Makeup attendance rules
-- [x] Sessions enroll/checkin workflow
-- [x] Subscriptions list by member
-- [x] Refund flow & pricing rules
-- [x] Branch nearby geo query
-- [ ] Auth/login + role guard
-- [ ] Validation hardening & error consistency
-- [ ] Indexes and data integrity
-- [ ] Integration tests & fixtures
+Snapshot date: 2026-05-21.
 
-## Quick resume prompt
-- "Read `CHAT_CONTEXT/README.md` first, then continue from the current project state."
+Stack:
+- Go + Gin + MongoDB.
+- Layered backend flow: handler -> service -> repository -> MongoDB.
+
+Implemented backend surfaces:
+
+| Area | Current surface |
+|---|---|
+| Members | Register, get by ID, activate offline payment, list member subscriptions |
+| Subscriptions | Create pending subscription, get, suspend, unsuspend, expire, refund |
+| Courses | CRUD |
+| Branches | CRUD and nearby geo search |
+| Attendance | Free check-in, report missed, makeup, history by subscription |
+| Sessions | Create, list, get, enroll, session check-in |
+
+Planned next surfaces:
+- Auth/login and role guard.
+- Validation/error consistency hardening.
+- Index and data-integrity hardening.
+- Integration tests and fixtures.
+
+## Rules Worth Remembering
+
+- Subscription creation validates member/course/branch references and snapshots course pricing,
+  session count, and allowed tags.
+- Refund currently applies only to active subscriptions and sets refunded subscriptions to zero
+  remaining sessions after computing the refund amount.
+- Attendance enforces weekly session limits, a 30-day reported-missed window, and a 7-day makeup
+  reference window.
+- Branch nearby search depends on GeoJSON coordinates and a MongoDB `2dsphere` index.
+- Session enrollment stores subscription IDs on the session and session check-in reuses attendance
+  rules.
+
+## Where To Update
+
+| When | Update |
+|---|---|
+| API behavior changes | `docs/api_contract.md`, `api_test.http`, and this snapshot if the project surface changed |
+| Backend phase advances | Relevant files under `backend_skills/` plus `backend_skills/worklog.md` |
+| Report draft changes | `docs/report-materials/` |
+| Documentation structure changes | `docs/README.md` and relevant `$gym-*` skill if loading rules changed |
+
+## Resume Point
+
+The next backend cycle is auth/login plus role guard. Start from:
+
+1. `backend_skills/plans/04_auth_role_guard.md`
+2. the matching phase file for the requested task
+3. only the source files needed for that task

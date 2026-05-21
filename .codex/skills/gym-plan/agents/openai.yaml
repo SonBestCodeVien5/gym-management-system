@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gym Plan"
+  short_description: "Plan gym backend features from repo context"
+  default_prompt: "Use $gym-plan to plan the next backend feature for this gym project."

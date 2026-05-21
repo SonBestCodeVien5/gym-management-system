@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gym Review"
+  short_description: "Review gym backend changes by feature"
+  default_prompt: "Use $gym-review to review a backend feature change in this gym project."

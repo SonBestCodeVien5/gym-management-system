@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gym Report"
+  short_description: "Prepare gym report source material"
+  default_prompt: "Use $gym-report to prepare report material from this gym project."

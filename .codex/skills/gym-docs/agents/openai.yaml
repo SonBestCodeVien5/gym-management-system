@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gym Docs"
+  short_description: "Maintain gym project documentation"
+  default_prompt: "Use $gym-docs to update project docs in this gym repository."

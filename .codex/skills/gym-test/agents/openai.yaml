@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gym Test"
+  short_description: "Verify gym backend features and notes"
+  default_prompt: "Use $gym-test to verify a backend feature in this gym project."

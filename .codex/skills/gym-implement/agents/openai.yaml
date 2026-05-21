@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gym Implement"
+  short_description: "Implement gym backend features from plans"
+  default_prompt: "Use $gym-implement to implement a planned backend feature in this gym project."

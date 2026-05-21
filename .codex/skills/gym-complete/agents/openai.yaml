@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gym Complete"
+  short_description: "Finalize gym feature docs and context"
+  default_prompt: "Use $gym-complete to finalize docs and context for a completed gym backend feature."

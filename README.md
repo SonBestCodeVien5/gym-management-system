@@ -11,7 +11,16 @@ This project follows a simple layered structure:
 - `repository`: data access to MongoDB.
 - `models`: domain data models.
 
-API contract (current vs planned): see [docs/api_contract.md](docs/api_contract.md).
+Documentation map: see [docs/README.md](docs/README.md).
+
+Current API contract: see [docs/api_contract.md](docs/api_contract.md).
+
+Project continuity for Codex and chat handoff starts at
+[CHAT_CONTEXT/README.md](CHAT_CONTEXT/README.md). Repo-scoped Codex skills live under
+[.codex/skills](.codex/skills); start with `$gym-plan`, `$gym-implement`, `$gym-review`,
+`$gym-test`, `$gym-complete`, `$gym-resume`, `$gym-status`, `$gym-docs`, `$gym-report`, or
+`$gym-git` for focused work. Prompt and phase workflow guide:
+[.codex/GYM_SKILLS_WORKFLOW.md](.codex/GYM_SKILLS_WORKFLOW.md).
 
 ## Implemented Features
 
@@ -19,6 +28,7 @@ API contract (current vs planned): see [docs/api_contract.md](docs/api_contract.
 
 - `POST /api/v1/members`
 - `GET /api/v1/members/:id`
+- `GET /api/v1/members/:id/subscriptions`
 - `PATCH /api/v1/members/:id/activate`
 
 `activate` requires body `subscription_id` and performs:
@@ -33,6 +43,7 @@ API contract (current vs planned): see [docs/api_contract.md](docs/api_contract.
 - `PATCH /api/v1/subscriptions/:id/suspend`
 - `PATCH /api/v1/subscriptions/:id/unsuspend`
 - `PATCH /api/v1/subscriptions/:id/expire`
+- `POST /api/v1/subscriptions/:id/refund`
 
 Behavior:
 
@@ -53,12 +64,15 @@ Behavior:
 - `POST /api/v1/branches`
 - `GET /api/v1/branches`
 - `GET /api/v1/branches/:id`
+- `GET /api/v1/branches/nearby`
 - `PATCH /api/v1/branches/:id`
 - `DELETE /api/v1/branches/:id`
 
 ### 5) Attendance
 
 - `POST /api/v1/attendance/checkin`
+- `POST /api/v1/attendance/report`
+- `POST /api/v1/attendance/makeup`
 - `GET /api/v1/subscriptions/:id/attendance`
 
 Check-in effects (for `attended` or `makeup` status):
@@ -67,6 +81,14 @@ Check-in effects (for `attended` or `makeup` status):
 2. Decrease `remaining_sessions` of subscription.
 3. Increase `total_sessions_attended` of member.
 4. Auto-expire subscription if remaining sessions reach 0.
+
+### 6) Sessions
+
+- `POST /api/v1/sessions`
+- `GET /api/v1/sessions`
+- `GET /api/v1/sessions/:id`
+- `POST /api/v1/sessions/:id/enroll`
+- `POST /api/v1/sessions/:id/checkin`
 
 ## Run Locally
 

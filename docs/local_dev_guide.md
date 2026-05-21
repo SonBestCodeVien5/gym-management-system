@@ -3,12 +3,12 @@
 ## 1. Muc tieu tai lieu
 Tai lieu nay tong hop toan bo quy trinh da lam de ban co the:
 - Chay backend Go + MongoDB local
-- Test API (`/ping`, `/api/v1/members`)
+- Test API (`/ping`, members, subscriptions, attendance, sessions)
 - Xem record trong MongoDB nhanh
 - Ket noi MongoDB Compass dung cau hinh
 - Xu ly cac loi thuong gap
 
-Tai lieu API contract hien tai: [docs/api_contract.md](docs/api_contract.md)
+Tai lieu API contract hien tai: [api_contract.md](api_contract.md)
 
 ## 2. Kien truc dang dung (ban rut gon)
 Luong xu ly hien tai:
@@ -20,7 +20,8 @@ Luong xu ly hien tai:
 6. `internal/repository/course_repo.go`, `branch_repo.go` query theo `_id` cho subscription.
 7. `internal/repository/subscription_repo.go`, `internal/service/subscription_service.go`, `internal/handlers/subscription_handler.go` phuc vu luong subscription.
 8. `internal/handlers/course_handler.go`, `branch_handler.go` xu ly CRUD course/branch.
-9. `internal/handlers/attendance_handler.go` xu ly check-in va history.
+9. `internal/handlers/attendance_handler.go` xu ly check-in, report missed, makeup va history.
+10. `internal/handlers/session_handler.go` xu ly session create/list/get/enroll/check-in.
 
 Luot request dang ky:
 HTTP Request -> Handler -> Service -> Repository -> MongoDB -> JSON Response.
@@ -60,6 +61,7 @@ Neu thanh cong, log se co:
 - `GET /ping`
 - `POST /api/v1/members`
 - `GET /api/v1/members/:id`
+- `GET /api/v1/members/:id/subscriptions`
 - `PATCH /api/v1/members/:id/activate`
 - `POST /api/v1/courses`
 - `GET /api/v1/courses`
@@ -68,19 +70,28 @@ Neu thanh cong, log se co:
 - `DELETE /api/v1/courses/:id`
 - `POST /api/v1/branches`
 - `GET /api/v1/branches`
+- `GET /api/v1/branches/nearby`
 - `GET /api/v1/branches/:id`
 - `PATCH /api/v1/branches/:id`
 - `DELETE /api/v1/branches/:id`
 - `POST /api/v1/subscriptions`
+- `POST /api/v1/subscriptions/:id/refund`
 - `GET /api/v1/subscriptions/:id`
 - `PATCH /api/v1/subscriptions/:id/suspend`
 - `PATCH /api/v1/subscriptions/:id/unsuspend`
 - `PATCH /api/v1/subscriptions/:id/expire`
 - `POST /api/v1/attendance/checkin`
+- `POST /api/v1/attendance/report`
+- `POST /api/v1/attendance/makeup`
 - `GET /api/v1/subscriptions/:id/attendance`
+- `POST /api/v1/sessions`
+- `GET /api/v1/sessions`
+- `GET /api/v1/sessions/:id`
+- `POST /api/v1/sessions/:id/enroll`
+- `POST /api/v1/sessions/:id/checkin`
 
 ## 4. Test API
-### 4.1 File [api_test.http](api_test.http) dung format dung
+### 4.1 File [api_test.http](../api_test.http) dung format dung
 ```http
 # Health check
 GET http://localhost:8080/ping

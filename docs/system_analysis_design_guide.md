@@ -8,8 +8,8 @@ Tai lieu nay tong hop cac noi dung can de viet phan:
 4. Truy vet yeu cau va kiem thu
 
 Tai lieu wiki tham chieu nhanh:
-- [docs/faq_why.md](docs/faq_why.md)
-- [docs/development_journal.md](docs/development_journal.md)
+- [faq_why.md](faq_why.md)
+- [development_journal.md](development_journal.md)
 
 ## 2. De xuat mo hinh phat trien cho du an nay
 

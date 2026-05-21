@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gym Project Maintainer"
+  short_description: "Maintain gym docs, context, and delivery notes"
+  default_prompt: "Use $gym-project-maintainer to update this gym project with aligned docs and context."

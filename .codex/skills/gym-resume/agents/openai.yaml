@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gym Resume"
+  short_description: "Resume gym backend work from memory"
+  default_prompt: "Use $gym-resume to resume backend work in this gym project from current memory."

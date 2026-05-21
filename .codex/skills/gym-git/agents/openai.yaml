@@ -1,0 +1,4 @@
+interface:
+  display_name: "Gym Git"
+  short_description: "Manage Git and GitHub workflows safely"
+  default_prompt: "Use $gym-git to handle Git or GitHub workflow tasks for this gym project."
