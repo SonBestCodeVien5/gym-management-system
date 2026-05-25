@@ -1,11 +1,68 @@
+@baseUrl = http://localhost:8080
+@access_token = paste_access_token_here
+@refresh_token = paste_refresh_token_here
+@restricted_access_token = paste_receptionist_or_trainer_access_token_here
+
 # Health check
-GET http://localhost:8080/ping
+GET {{baseUrl}}/ping
+
+###
+
+# Login
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@gym.test",
+  "password": "change-me-before-running"
+}
+
+###
+
+# Refresh token
+POST {{baseUrl}}/api/v1/auth/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "{{refresh_token}}"
+}
+
+###
+
+# Logout
+POST {{baseUrl}}/api/v1/auth/logout
+Content-Type: application/json
+
+{
+  "refresh_token": "{{refresh_token}}"
+}
+
+###
+
+# Missing access token should return 401
+GET {{baseUrl}}/api/v1/courses
+
+###
+
+# Forbidden role should return 403 when token role cannot manage courses
+POST {{baseUrl}}/api/v1/courses
+Content-Type: application/json
+Authorization: Bearer {{restricted_access_token}}
+
+{
+  "title": "Role Guard Test",
+  "level": "basic",
+  "base_price": 100000,
+  "session_count": 10,
+  "description": "Should be rejected for non-admin/manager roles"
+}
 
 ###
 
 # Member registration
-POST http://localhost:8080/api/v1/members
+POST {{baseUrl}}/api/v1/members
 Content-Type: application/json
+Authorization: Bearer {{access_token}}
 
 {
   "ccid": "012345678901",
@@ -19,8 +76,9 @@ Content-Type: application/json
 ###
 
 # Member registration 2
-POST http://localhost:8080/api/v1/members
+POST {{baseUrl}}/api/v1/members
 Content-Type: application/json
+Authorization: Bearer {{access_token}}
 
 {
   "ccid": "012345678902",
@@ -33,16 +91,19 @@ Content-Type: application/json
 
 ###
 # Get member by ID
-GET http://localhost:8080/api/v1/members/69e100da9359b4be784078df
+GET {{baseUrl}}/api/v1/members/69e100da9359b4be784078df
+Authorization: Bearer {{access_token}}
 
 ###
 # List subscriptions by member ID
-GET http://localhost:8080/api/v1/members/69dfa3af8f14bfa54ed2509d/subscriptions
+GET {{baseUrl}}/api/v1/members/69dfa3af8f14bfa54ed2509d/subscriptions
+Authorization: Bearer {{access_token}}
 
 ###
 # Activate member after offline payment confirmation
-PATCH http://localhost:8080/api/v1/members/69dfa3af8f14bfa54ed2509d/activate
+PATCH {{baseUrl}}/api/v1/members/69dfa3af8f14bfa54ed2509d/activate
 Content-Type: application/json
+Authorization: Bearer {{access_token}}
 
 {
   "subscription_id": "69f20b22f79bb78cac99aa0a"
@@ -50,8 +111,9 @@ Content-Type: application/json
 
 ###
 # Create subscription
-POST http://localhost:8080/api/v1/subscriptions
+POST {{baseUrl}}/api/v1/subscriptions
 Content-Type: application/json
+Authorization: Bearer {{access_token}}
 
 {
   "member_id": "69dfa3af8f14bfa54ed2509d",
@@ -67,12 +129,14 @@ Content-Type: application/json
 
 ###
 # Get subscription by ID
-GET http://localhost:8080/api/v1/subscriptions/69f20b22f79bb78cac99aa0a
+GET {{baseUrl}}/api/v1/subscriptions/69f20b22f79bb78cac99aa0a
+Authorization: Bearer {{access_token}}
 
 ###
 # Suspend subscription
-PATCH http://localhost:8080/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/suspend
+PATCH {{baseUrl}}/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/suspend
 Content-Type: application/json
+Authorization: Bearer {{access_token}}
 
 {
   "start_date": "2026-05-05T09:00:00Z",
@@ -83,16 +147,19 @@ Content-Type: application/json
 
 ###
 # Resume subscription
-PATCH http://localhost:8080/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/unsuspend
+PATCH {{baseUrl}}/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/unsuspend
+Authorization: Bearer {{access_token}}
 
 ###
 # Expire subscription manually
-PATCH http://localhost:8080/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/expire
+PATCH {{baseUrl}}/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/expire
+Authorization: Bearer {{access_token}}
 
 ###
 # Refund subscription
-POST http://localhost:8080/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/refund
+POST {{baseUrl}}/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/refund
 Content-Type: application/json
+Authorization: Bearer {{access_token}}
 
 {
   "reason": "member requested cancellation"
@@ -100,8 +167,9 @@ Content-Type: application/json
 
 ###
 # Create course
-POST http://localhost:8080/api/v1/courses
+POST {{baseUrl}}/api/v1/courses
 Content-Type: application/json
+Authorization: Bearer {{access_token}}
 
 {
   "title": "Yoga for Beginners",
@@ -113,16 +181,19 @@ Content-Type: application/json
 
 ###
 # List courses
-GET http://localhost:8080/api/v1/courses
+GET {{baseUrl}}/api/v1/courses
+Authorization: Bearer {{access_token}}
 
 ###
 # Get course by ID
-GET http://localhost:8080/api/v1/courses/69f20a180c4cd4cdf57684fd
+GET {{baseUrl}}/api/v1/courses/69f20a180c4cd4cdf57684fd
+Authorization: Bearer {{access_token}}
 
 ###
 # Update course
-PATCH http://localhost:8080/api/v1/courses/69f20a180c4cd4cdf57684fd
+PATCH {{baseUrl}}/api/v1/courses/69f20a180c4cd4cdf57684fd
 Content-Type: application/json
+Authorization: Bearer {{access_token}}
 
 {
   "title": "Yoga for Beginners - Updated",
@@ -134,12 +205,14 @@ Content-Type: application/json
 
 ###
 # Delete course
-DELETE http://localhost:8080/api/v1/courses/69f20a180c4cd4cdf57684fd
+DELETE {{baseUrl}}/api/v1/courses/69f20a180c4cd4cdf57684fd
+Authorization: Bearer {{access_token}}
 
 ###
 # Create branch
-POST http://localhost:8080/api/v1/branches
+POST {{baseUrl}}/api/v1/branches
 Content-Type: application/json
+Authorization: Bearer {{access_token}}
 
 {
   "branch_code": "HCM01",
@@ -155,28 +228,34 @@ Content-Type: application/json
 
 ###
 # List branches
-GET http://localhost:8080/api/v1/branches
+GET {{baseUrl}}/api/v1/branches
+Authorization: Bearer {{access_token}}
 
 ###
 # Nearby branches
-GET http://localhost:8080/api/v1/branches/nearby?lng=106.7001&lat=10.8001&max_distance=5000&limit=10
+GET {{baseUrl}}/api/v1/branches/nearby?lng=106.7001&lat=10.8001&max_distance=5000&limit=10
+Authorization: Bearer {{access_token}}
 
 ###
 # Nearby branches with defaults
-GET http://localhost:8080/api/v1/branches/nearby?lng=106.7001&lat=10.8001
+GET {{baseUrl}}/api/v1/branches/nearby?lng=106.7001&lat=10.8001
+Authorization: Bearer {{access_token}}
 
 ###
 # Nearby branches invalid max_distance
-GET http://localhost:8080/api/v1/branches/nearby?lng=106.7001&lat=10.8001&max_distance=0
+GET {{baseUrl}}/api/v1/branches/nearby?lng=106.7001&lat=10.8001&max_distance=0
+Authorization: Bearer {{access_token}}
 
 ###
 # Get branch by ID
-GET http://localhost:8080/api/v1/branches/69f20a180c4cd4cdf57684fe
+GET {{baseUrl}}/api/v1/branches/69f20a180c4cd4cdf57684fe
+Authorization: Bearer {{access_token}}
 
 ###
 # Update branch
-PATCH http://localhost:8080/api/v1/branches/69f20a180c4cd4cdf57684fe
+PATCH {{baseUrl}}/api/v1/branches/69f20a180c4cd4cdf57684fe
 Content-Type: application/json
+Authorization: Bearer {{access_token}}
 
 {
   "branch_code": "HCM01",
@@ -192,12 +271,14 @@ Content-Type: application/json
 
 ###
 # Delete branch
-DELETE http://localhost:8080/api/v1/branches/69f20a180c4cd4cdf57684fe
+DELETE {{baseUrl}}/api/v1/branches/69f20a180c4cd4cdf57684fe
+Authorization: Bearer {{access_token}}
 
 ###
 # Attendance check-in
-POST http://localhost:8080/api/v1/attendance/checkin
+POST {{baseUrl}}/api/v1/attendance/checkin
 Content-Type: application/json
+Authorization: Bearer {{access_token}}
 
 {
   "subscription_id": "69f20b22f79bb78cac99aa0a",
@@ -208,8 +289,9 @@ Content-Type: application/json
 
 ###
 # Report missed attendance
-POST http://localhost:8080/api/v1/attendance/report
+POST {{baseUrl}}/api/v1/attendance/report
 Content-Type: application/json
+Authorization: Bearer {{access_token}}
 
 {
   "subscription_id": "69f20b22f79bb78cac99aa0a",
@@ -219,8 +301,9 @@ Content-Type: application/json
 
 ###
 # Makeup attendance for reported missed date
-POST http://localhost:8080/api/v1/attendance/makeup
+POST {{baseUrl}}/api/v1/attendance/makeup
 Content-Type: application/json
+Authorization: Bearer {{access_token}}
 
 {
   "subscription_id": "69f20b22f79bb78cac99aa0a",
@@ -231,4 +314,5 @@ Content-Type: application/json
 
 ###
 # List attendance by subscription
-GET http://localhost:8080/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/attendance
+GET {{baseUrl}}/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/attendance
+Authorization: Bearer {{access_token}}

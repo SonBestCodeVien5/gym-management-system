@@ -90,13 +90,28 @@ Check-in effects (for `attended` or `makeup` status):
 - `POST /api/v1/sessions/:id/enroll`
 - `POST /api/v1/sessions/:id/checkin`
 
+### 7) Auth and Role Guard
+
+- `POST /api/v1/auth/login`
+- `POST /api/v1/auth/refresh`
+- `POST /api/v1/auth/logout`
+
+Behavior:
+
+- Business routes under `/api/v1/*` require `Authorization: Bearer <access_token>`.
+- Access tokens are short-lived; refresh tokens are rotated and stored only as hashes.
+- Role guard currently protects member, subscription, course, branch, attendance, and session routes.
+- First admin can be bootstrapped from `BOOTSTRAP_ADMIN_*` environment variables.
+
 ## Run Locally
 
-1. Set environment variable `MONGODB_URI`.
+1. Set environment variables from `.env.example`, especially `MONGODB_URI`,
+   `JWT_ACCESS_SECRET`, and `JWT_REFRESH_SECRET`.
 2. Run server:
 
 ```bash
 go run cmd/server/main.go
 ```
 
-3. Use requests in `api_test.http` for manual API testing.
+3. Login with the bootstrap admin, paste the returned tokens into `api_test.http`, then run the
+   protected API samples.

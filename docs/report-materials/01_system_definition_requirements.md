@@ -45,6 +45,10 @@ Thị trường phòng gym tư nhân tại Việt Nam đang phát triển mạnh
 
 ## III. YÊU CẦU CHỨC NĂNG (FUNCTIONAL REQUIREMENTS)
 
+Ghi chú khi đưa vào báo cáo: danh sách dưới đây là **requirement target** của hệ thống tổng thể.
+Không phải mọi mục đều đã có trong backend hiện tại. Bảng đối chiếu implemented/planned nằm ở
+[07_current_implementation_evidence.md](07_current_implementation_evidence.md).
+
 ### FR-01: Quản lý học viên
 - FR-01.1: Đăng ký hồ sơ học viên mới với xác thực CCCD (duy nhất toàn hệ thống).
 - FR-01.2: Định danh học viên bằng CCCD và nhận diện khuôn mặt để đảm bảo nguyên tắc "1 thẻ - 1 người".
@@ -125,7 +129,9 @@ Học viên cung cấp CCCD
     → Lễ tân tạo hồ sơ Member
     → Chọn gói tập & tính tiền (áp dụng ưu đãi nếu isRegistered = true)
     → Xác nhận thanh toán
-    → Tạo Subscription (status = Active, ghi số buổi & unitPrice)
+    → Tạo Subscription (implementation hiện tại: status = Pending)
+    → Xác nhận thanh toán offline
+    → Kích hoạt Subscription (status = Active, ghi số buổi & unitPrice)
     → Gửi email xác nhận cho học viên
 ```
 

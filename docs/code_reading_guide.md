@@ -34,6 +34,7 @@ Khi doc mot feature, di theo luong:
 | Attendance rules | `attendance_handler.go`, `attendance_service.go`, `attendance_repo.go`, `attendance.go` |
 | Sessions | `session_handler.go`, `session_service.go`, `session_repo.go`, `session.go` |
 | Branch nearby | `branch_handler.go`, `branch_service.go`, `branch_repo.go`, `branch.go` |
+| Auth and role guard | `auth_handler.go`, `auth_middleware.go`, `auth_service.go`, `employee_repo.go`, `refresh_token_repo.go`, `employee.go`, `refresh_token.go` |
 
 ## 4. Rule Dang Co
 
@@ -44,6 +45,10 @@ Khi doc mot feature, di theo luong:
 - Attendance handles weekly quota, reported-missed window, makeup reference, and remaining session
   effects.
 - Nearby branch search depends on GeoJSON coordinates and MongoDB geo index behavior.
+- Auth normalizes employee email, verifies bcrypt password hash, signs access/refresh tokens, stores
+  refresh tokens as hashes, and reloads employee state during access-token validation.
+- Role guard checks trusted roles from auth middleware; handlers must not trust client-sent role
+  fields.
 
 Doc rule trong service truoc khi sua handler hay repository.
 
@@ -63,7 +68,8 @@ Doc rule trong service truoc khi sua handler hay repository.
 4. subscription handler/service/repository/model
 5. attendance handler/service/repository/model
 6. session handler/service/repository/model
-7. tests va API contract cho feature dang sua
+7. auth handler/middleware/service/repository/model
+8. tests va API contract cho feature dang sua
 
 ## 7. Tai Lieu Lien Quan
 

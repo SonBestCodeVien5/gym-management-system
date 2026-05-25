@@ -7,11 +7,57 @@ Dùng file này để giữ roadmap và completion summary ngắn cho feature ba
 - [x] Refund flow & pricing rules
 - [x] Branch nearby geo query
 - [x] Attendance report/makeup endpoints nếu route còn thiếu
-- [ ] Auth/login + role guard
+- [x] Auth/login + role guard
 - [ ] Employee management
 - [ ] Validation hardening & error consistency
 - [ ] Indexes and data integrity
 - [ ] Integration tests & fixtures
+
+---
+
+# Feature - Auth/login + role guard
+
+## Status
+- Planned: yes
+- Implemented: yes
+- Reviewed: yes
+- Tested: yes
+- Docs updated: yes
+
+## Completion - 2026-05-25
+
+### Result
+- Added employee login with bcrypt password verification.
+- Added access + refresh token issue, refresh rotation, logout revoke, and refresh-token hash
+  persistence.
+- Added env bootstrap for first admin account.
+- Added auth middleware and role guard for current business routes.
+- Updated API contract and REST samples for auth and protected routes.
+- Updated local development and code-reading docs for auth/env/role guard.
+
+### Verification
+- `env GOCACHE=/tmp/gocache go build ./...` - pass.
+- `env GOCACHE=/tmp/gocache go test ./...` - pass.
+- Manual API - pass for health, admin login, protected route with/without token, wrong password,
+  missing refresh token, refresh rotation, reused old refresh token, logout idempotency, inactive
+  employee login rejection, and receptionist role forbidden check.
+- Direct Mongo verification - pass for admin bootstrap, bcrypt password hash presence, refresh-token
+  hash storage, absence of raw token fields, and `revoked_at` after refresh/logout.
+
+### Docs updated
+- [x] `docs/api_contract.md`
+- [x] `api_test.http`
+- [x] `README.md`
+- [x] `docs/local_dev_guide.md`
+- [x] `docs/code_reading_guide.md`
+- [x] `CHAT_CONTEXT/README.md`
+
+### Follow-up risks
+- Refresh-token TTL cleanup remains for the index/data-integrity cycle.
+- Refresh rotation can invalidate the old token before replacement persistence succeeds; accepted as
+  residual availability risk for MVP.
+- Employee management remains the next backend cycle for creating and maintaining non-bootstrap
+  staff accounts.
 
 ---
 

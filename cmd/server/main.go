@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -52,6 +53,14 @@ func main() {
 	refundRepo := repository.NewRefundRepository(db)
 	attendanceRepo := repository.NewAttendanceRepository(db)
 	sessionRepo := repository.NewSessionRepository(db)
+	employeeRepo, err := repository.NewEmployeeRepository(db)
+	if err != nil {
+		log.Fatalf("Error: Failed to initialize employee repository: %v", err)
+	}
+	refreshTokenRepo, err := repository.NewRefreshTokenRepository(db)
+	if err != nil {
+		log.Fatalf("Error: Failed to initialize refresh token repository: %v", err)
+	}
 
 	// Build services.
 	subscriptionService := service.NewSubscriptionService(subscriptionRepo, refundRepo, memberRepo, courseRepo, branchRepo)
@@ -60,6 +69,18 @@ func main() {
 	branchService := service.NewBranchService(branchRepo)
 	attendanceService := service.NewAttendanceService(attendanceRepo, subscriptionRepo, memberRepo)
 	sessionService := service.NewSessionService(sessionRepo, subscriptionRepo, attendanceRepo, attendanceService)
+	authService, err := service.NewAuthService(employeeRepo, refreshTokenRepo, service.AuthConfig{
+		AccessSecret:  os.Getenv("JWT_ACCESS_SECRET"),
+		RefreshSecret: os.Getenv("JWT_REFRESH_SECRET"),
+		AccessTTL:     durationFromEnv("JWT_ACCESS_TTL", 15*time.Minute),
+		RefreshTTL:    durationFromEnv("JWT_REFRESH_TTL", 7*24*time.Hour),
+	})
+	if err != nil {
+		log.Fatalf("Error: Failed to initialize auth service: %v", err)
+	}
+	if err := authService.BootstrapAdmin(context.Background(), bootstrapAdminFromEnv()); err != nil {
+		log.Fatalf("Error: Failed to bootstrap admin employee: %v", err)
+	}
 
 	// Build HTTP handlers.
 	memberHandler := handlers.NewMemberHandler(memberService, subscriptionService)
@@ -68,6 +89,7 @@ func main() {
 	branchHandler := handlers.NewBranchHandler(branchService)
 	attendanceHandler := handlers.NewAttendanceHandler(attendanceService)
 	sessionHandler := handlers.NewSessionHandler(sessionService)
+	authHandler := handlers.NewAuthHandler(authService)
 
 	// Initialize Gin engine.
 	r := gin.Default()
@@ -82,41 +104,55 @@ func main() {
 	// API routes.
 	api := r.Group("/api/v1")
 	{
-		api.POST("/members", memberHandler.Register)
-		api.GET("/members/:id", memberHandler.GetByID)
-		api.GET("/members/:id/subscriptions", memberHandler.ListSubscriptions)
-		api.PATCH("/members/:id/activate", memberHandler.Activate)
+		api.POST("/auth/login", authHandler.Login)
+		api.POST("/auth/refresh", authHandler.Refresh)
+		api.POST("/auth/logout", authHandler.Logout)
 
-		api.POST("/courses", courseHandler.Create)
-		api.GET("/courses", courseHandler.List)
-		api.GET("/courses/:id", courseHandler.GetByID)
-		api.PATCH("/courses/:id", courseHandler.Update)
-		api.DELETE("/courses/:id", courseHandler.Delete)
+		protected := api.Group("")
+		protected.Use(handlers.AuthRequired(authService))
 
-		api.POST("/branches", branchHandler.Create)
-		api.GET("/branches", branchHandler.List)
-		api.GET("/branches/nearby", branchHandler.Nearby)
-		api.GET("/branches/:id", branchHandler.GetByID)
-		api.PATCH("/branches/:id", branchHandler.Update)
-		api.DELETE("/branches/:id", branchHandler.Delete)
+		memberRoutes := protected.Group("", handlers.RequireRoles(service.RoleAdmin, service.RoleManager, service.RoleReceptionist))
+		memberRoutes.POST("/members", memberHandler.Register)
+		memberRoutes.GET("/members/:id", memberHandler.GetByID)
+		memberRoutes.GET("/members/:id/subscriptions", memberHandler.ListSubscriptions)
+		memberRoutes.PATCH("/members/:id/activate", memberHandler.Activate)
 
-		api.POST("/subscriptions", subscriptionHandler.Create)
-		api.POST("/subscriptions/:id/refund", subscriptionHandler.Refund)
-		api.GET("/subscriptions/:id", subscriptionHandler.GetByID)
-		api.PATCH("/subscriptions/:id/suspend", subscriptionHandler.Suspend)
-		api.PATCH("/subscriptions/:id/unsuspend", subscriptionHandler.Resume)
-		api.PATCH("/subscriptions/:id/expire", subscriptionHandler.Expire)
+		courseRoutes := protected.Group("", handlers.RequireRoles(service.RoleAdmin, service.RoleManager))
+		courseRoutes.POST("/courses", courseHandler.Create)
+		courseRoutes.GET("/courses", courseHandler.List)
+		courseRoutes.GET("/courses/:id", courseHandler.GetByID)
+		courseRoutes.PATCH("/courses/:id", courseHandler.Update)
+		courseRoutes.DELETE("/courses/:id", courseHandler.Delete)
 
-		api.POST("/attendance/checkin", attendanceHandler.CheckIn)
-		api.POST("/attendance/report", attendanceHandler.ReportMissed)
-		api.POST("/attendance/makeup", attendanceHandler.Makeup)
-		api.GET("/subscriptions/:id/attendance", attendanceHandler.ListBySubscription)
+		branchRoutes := protected.Group("", handlers.RequireRoles(service.RoleAdmin, service.RoleManager))
+		branchRoutes.POST("/branches", branchHandler.Create)
+		branchRoutes.GET("/branches", branchHandler.List)
+		branchRoutes.GET("/branches/nearby", branchHandler.Nearby)
+		branchRoutes.GET("/branches/:id", branchHandler.GetByID)
+		branchRoutes.PATCH("/branches/:id", branchHandler.Update)
+		branchRoutes.DELETE("/branches/:id", branchHandler.Delete)
 
-		api.POST("/sessions", sessionHandler.Create)
-		api.GET("/sessions", sessionHandler.List)
-		api.GET("/sessions/:id", sessionHandler.GetByID)
-		api.POST("/sessions/:id/enroll", sessionHandler.Enroll)
-		api.POST("/sessions/:id/checkin", sessionHandler.CheckIn)
+		subscriptionRoutes := protected.Group("", handlers.RequireRoles(service.RoleAdmin, service.RoleManager, service.RoleReceptionist))
+		subscriptionRoutes.POST("/subscriptions", subscriptionHandler.Create)
+		subscriptionRoutes.POST("/subscriptions/:id/refund", subscriptionHandler.Refund)
+		subscriptionRoutes.GET("/subscriptions/:id", subscriptionHandler.GetByID)
+		subscriptionRoutes.PATCH("/subscriptions/:id/suspend", subscriptionHandler.Suspend)
+		subscriptionRoutes.PATCH("/subscriptions/:id/unsuspend", subscriptionHandler.Resume)
+		subscriptionRoutes.PATCH("/subscriptions/:id/expire", subscriptionHandler.Expire)
+
+		attendanceRoutes := protected.Group("", handlers.RequireRoles(service.RoleAdmin, service.RoleManager, service.RoleReceptionist))
+		attendanceRoutes.POST("/attendance/checkin", attendanceHandler.CheckIn)
+		attendanceRoutes.POST("/attendance/report", attendanceHandler.ReportMissed)
+		attendanceRoutes.POST("/attendance/makeup", attendanceHandler.Makeup)
+		attendanceRoutes.GET("/subscriptions/:id/attendance", attendanceHandler.ListBySubscription)
+
+		sessionCreateRoutes := protected.Group("", handlers.RequireRoles(service.RoleAdmin, service.RoleManager, service.RoleTrainer))
+		sessionCreateRoutes.POST("/sessions", sessionHandler.Create)
+		sessionRoutes := protected.Group("", handlers.RequireRoles(service.RoleAdmin, service.RoleManager, service.RoleTrainer))
+		sessionRoutes.GET("/sessions", sessionHandler.List)
+		sessionRoutes.GET("/sessions/:id", sessionHandler.GetByID)
+		sessionRoutes.POST("/sessions/:id/enroll", sessionHandler.Enroll)
+		sessionRoutes.POST("/sessions/:id/checkin", sessionHandler.CheckIn)
 	}
 
 	// Start HTTP server.
@@ -129,5 +165,28 @@ func main() {
 	// Khởi động server (sẽ chạy vòng lặp vô hạn ở đây)
 	if err := r.Run(":" + port); err != nil {
 		log.Fatalf("Error: Failed to start server: %v", err)
+	}
+}
+
+func durationFromEnv(key string, fallback time.Duration) time.Duration {
+	raw := os.Getenv(key)
+	if raw == "" {
+		return fallback
+	}
+	duration, err := time.ParseDuration(raw)
+	if err != nil {
+		log.Fatalf("Error: %s must be a valid duration: %v", key, err)
+	}
+	return duration
+}
+
+func bootstrapAdminFromEnv() service.BootstrapAdminConfig {
+	return service.BootstrapAdminConfig{
+		EmployeeID: os.Getenv("BOOTSTRAP_ADMIN_EMPLOYEE_ID"),
+		FullName:   os.Getenv("BOOTSTRAP_ADMIN_FULL_NAME"),
+		Email:      os.Getenv("BOOTSTRAP_ADMIN_EMAIL"),
+		Password:   os.Getenv("BOOTSTRAP_ADMIN_PASSWORD"),
+		Phone:      os.Getenv("BOOTSTRAP_ADMIN_PHONE"),
+		Level:      os.Getenv("BOOTSTRAP_ADMIN_LEVEL"),
 	}
 }

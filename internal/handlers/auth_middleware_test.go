@@ -1,0 +1,124 @@
+package handlers
+
+import (
+	"context"
+	"errors"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/SonBestCodeVien5/gym-management-system/internal/service"
+	"github.com/gin-gonic/gin"
+)
+
+type stubAuthService struct {
+	claims *service.AuthClaims
+	err    error
+}
+
+func (s *stubAuthService) BootstrapAdmin(ctx context.Context, cfg service.BootstrapAdminConfig) error {
+	return nil
+}
+
+func (s *stubAuthService) Login(ctx context.Context, email string, password string) (*service.AuthTokenPair, error) {
+	return nil, nil
+}
+
+func (s *stubAuthService) Refresh(ctx context.Context, refreshToken string) (*service.AuthTokenPair, error) {
+	return nil, nil
+}
+
+func (s *stubAuthService) Logout(ctx context.Context, refreshToken string) error {
+	return nil
+}
+
+func (s *stubAuthService) ValidateAccessToken(ctx context.Context, accessToken string) (*service.AuthClaims, error) {
+	if s.err != nil {
+		return nil, s.err
+	}
+	return s.claims, nil
+}
+
+func TestAuthRequiredMissingTokenReturnsUnauthorized(t *testing.T) {
+	router := authMiddlewareTestRouter(&stubAuthService{
+		claims: &service.AuthClaims{EmployeeID: "employee-id", Role: []string{service.RoleAdmin}},
+	}, service.RoleAdmin)
+
+	req := httptest.NewRequest(http.MethodGet, "/protected", nil)
+	res := httptest.NewRecorder()
+
+	router.ServeHTTP(res, req)
+
+	if res.Code != http.StatusUnauthorized {
+		t.Fatalf("status = %d, want %d", res.Code, http.StatusUnauthorized)
+	}
+}
+
+func TestAuthRequiredInvalidTokenReturnsUnauthorized(t *testing.T) {
+	router := authMiddlewareTestRouter(&stubAuthService{err: service.ErrInvalidToken}, service.RoleAdmin)
+
+	req := httptest.NewRequest(http.MethodGet, "/protected", nil)
+	req.Header.Set("Authorization", "Bearer invalid")
+	res := httptest.NewRecorder()
+
+	router.ServeHTTP(res, req)
+
+	if res.Code != http.StatusUnauthorized {
+		t.Fatalf("status = %d, want %d", res.Code, http.StatusUnauthorized)
+	}
+}
+
+func TestRequireRolesAllowsMatchingRole(t *testing.T) {
+	router := authMiddlewareTestRouter(&stubAuthService{
+		claims: &service.AuthClaims{EmployeeID: "employee-id", Role: []string{service.RoleManager}},
+	}, service.RoleAdmin, service.RoleManager)
+
+	req := httptest.NewRequest(http.MethodGet, "/protected", nil)
+	req.Header.Set("Authorization", "Bearer valid")
+	res := httptest.NewRecorder()
+
+	router.ServeHTTP(res, req)
+
+	if res.Code != http.StatusOK {
+		t.Fatalf("status = %d, want %d", res.Code, http.StatusOK)
+	}
+}
+
+func TestRequireRolesRejectsNonMatchingRole(t *testing.T) {
+	router := authMiddlewareTestRouter(&stubAuthService{
+		claims: &service.AuthClaims{EmployeeID: "employee-id", Role: []string{service.RoleReceptionist}},
+	}, service.RoleAdmin, service.RoleManager)
+
+	req := httptest.NewRequest(http.MethodGet, "/protected", nil)
+	req.Header.Set("Authorization", "Bearer valid")
+	res := httptest.NewRecorder()
+
+	router.ServeHTTP(res, req)
+
+	if res.Code != http.StatusForbidden {
+		t.Fatalf("status = %d, want %d", res.Code, http.StatusForbidden)
+	}
+}
+
+func TestAuthRequiredUnexpectedServiceErrorReturnsServerError(t *testing.T) {
+	router := authMiddlewareTestRouter(&stubAuthService{err: errors.New("storage failed")}, service.RoleAdmin)
+
+	req := httptest.NewRequest(http.MethodGet, "/protected", nil)
+	req.Header.Set("Authorization", "Bearer valid")
+	res := httptest.NewRecorder()
+
+	router.ServeHTTP(res, req)
+
+	if res.Code != http.StatusInternalServerError {
+		t.Fatalf("status = %d, want %d", res.Code, http.StatusInternalServerError)
+	}
+}
+
+func authMiddlewareTestRouter(authService service.AuthService, allowedRoles ...string) *gin.Engine {
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+	router.GET("/protected", AuthRequired(authService), RequireRoles(allowedRoles...), func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"message": "ok"})
+	})
+	return router
+}

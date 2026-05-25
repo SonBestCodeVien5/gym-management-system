@@ -3,7 +3,7 @@
 ## 1. Muc tieu tai lieu
 Tai lieu nay tong hop toan bo quy trinh da lam de ban co the:
 - Chay backend Go + MongoDB local
-- Test API (`/ping`, members, subscriptions, attendance, sessions)
+- Test API (`/ping`, auth, members, subscriptions, attendance, sessions)
 - Xem record trong MongoDB nhanh
 - Ket noi MongoDB Compass dung cau hinh
 - Xu ly cac loi thuong gap
@@ -22,6 +22,8 @@ Luong xu ly hien tai:
 8. `internal/handlers/course_handler.go`, `branch_handler.go` xu ly CRUD course/branch.
 9. `internal/handlers/attendance_handler.go` xu ly check-in, report missed, makeup va history.
 10. `internal/handlers/session_handler.go` xu ly session create/list/get/enroll/check-in.
+11. `internal/handlers/auth_handler.go`, `auth_middleware.go`, `internal/service/auth_service.go`
+    xu ly login, refresh, logout, access token va role guard.
 
 Luot request dang ky:
 HTTP Request -> Handler -> Service -> Repository -> MongoDB -> JSON Response.
@@ -43,9 +45,21 @@ docker ps --filter name=gym_mongodb --format 'table {{.Names}}\t{{.Status}}\t{{.
 ### 3.2 Kiem tra file `.env`
 Noi dung can dung:
 ```env
-MONGODB_URI=mongodb://admin:password123@localhost:27017/?authSource=admin
+MONGODB_URI=mongodb://admin:password123@127.0.0.1:27017/?authSource=admin&directConnection=true
 PORT=8080
+JWT_ACCESS_SECRET=replace-with-a-long-random-access-secret
+JWT_REFRESH_SECRET=replace-with-a-long-random-refresh-secret
+JWT_ACCESS_TTL=15m
+JWT_REFRESH_TTL=168h
+BOOTSTRAP_ADMIN_EMPLOYEE_ID=ADMIN001
+BOOTSTRAP_ADMIN_FULL_NAME=Gym Admin
+BOOTSTRAP_ADMIN_EMAIL=admin@gym.test
+BOOTSTRAP_ADMIN_PASSWORD=change-me-before-running
 ```
+
+`JWT_ACCESS_SECRET` va `JWT_REFRESH_SECRET` bat buoc phai co. Neu thieu, server se dung loi khi
+khoi tao auth service. `BOOTSTRAP_ADMIN_EMAIL` + `BOOTSTRAP_ADMIN_PASSWORD` tao admin dau tien neu
+email chua ton tai.
 
 ### 3.3 Build va run backend
 ```bash
@@ -59,6 +73,9 @@ Neu thanh cong, log se co:
 
 ### 3.4 Route hien co
 - `GET /ping`
+- `POST /api/v1/auth/login`
+- `POST /api/v1/auth/refresh`
+- `POST /api/v1/auth/logout`
 - `POST /api/v1/members`
 - `GET /api/v1/members/:id`
 - `GET /api/v1/members/:id/subscriptions`
@@ -90,6 +107,11 @@ Neu thanh cong, log se co:
 - `POST /api/v1/sessions/:id/enroll`
 - `POST /api/v1/sessions/:id/checkin`
 
+Luu y auth:
+- Public: `/ping`, `/api/v1/auth/login`, `/api/v1/auth/refresh`, `/api/v1/auth/logout`.
+- Cac route business con lai can header `Authorization: Bearer <access_token>`.
+- Role guard kiem quyen theo ma tran trong [api_contract.md](api_contract.md).
+
 ## 4. Test API
 ### 4.1 File [api_test.http](../api_test.http) dung format dung
 ```http
@@ -98,32 +120,42 @@ GET http://localhost:8080/ping
 
 ###
 
-# Member registration
-POST http://localhost:8080/api/v1/members
+# Login
+POST http://localhost:8080/api/v1/auth/login
 Content-Type: application/json
 
 {
-  "ccid": "012345678901",
-  "full_name": "Nguyen Van A",
-  "email": "a@example.com",
-  "phone": "0900000000",
-  "gender": "male",
-  "level": "basic"
+  "email": "admin@gym.test",
+  "password": "change-me-before-running"
 }
 ```
 
 Luu y:
 - Bat buoc co `###` de REST Client nhan la 2 request rieng.
 - Neu khong co `###` thi co the khong hien `Send Request` cho request thu 2.
+- Sau khi login, copy `access_token` vao bien `@access_token` trong `api_test.http`.
 
 ### 4.2 Test nhanh bang curl
 ```bash
 curl -s http://localhost:8080/ping
 ```
 
+Login:
+```bash
+curl -s -X POST http://localhost:8080/api/v1/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"admin@gym.test","password":"change-me-before-running"}'
+```
+
+Gan token de goi route protected:
+```bash
+ACCESS_TOKEN='PASTE_ACCESS_TOKEN_HERE'
+```
+
 ```bash
 curl -s -X POST http://localhost:8080/api/v1/members \
   -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
   -d '{"ccid":"012345678901","full_name":"Nguyen Van A","email":"a@example.com","phone":"0900000000","gender":"male","level":"basic"}'
 ```
 
@@ -131,6 +163,7 @@ Subscription test mau (RFC3339):
 ```bash
 curl -s -X POST http://localhost:8080/api/v1/subscriptions \
   -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
   -d '{"member_id":"PUT_MEMBER_OBJECT_ID","course_id":"PUT_COURSE_OBJECT_ID","home_branch_id":"PUT_BRANCH_OBJECT_ID","start_date":"2026-04-28T10:00:00Z","end_date":"2026-05-28T10:00:00Z","session_per_week":3}'
 ```
 
@@ -138,6 +171,7 @@ Activate member (offline payment confirm):
 ```bash
 curl -s -X PATCH http://localhost:8080/api/v1/members/PUT_MEMBER_OBJECT_ID/activate \
   -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
   -d '{"subscription_id":"PUT_SUBSCRIPTION_OBJECT_ID"}'
 ```
 
@@ -145,6 +179,7 @@ Attendance check-in (attended/makeup):
 ```bash
 curl -s -X POST http://localhost:8080/api/v1/attendance/checkin \
   -H 'Content-Type: application/json' \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
   -d '{"subscription_id":"PUT_SUBSCRIPTION_OBJECT_ID","branch_id":"PUT_BRANCH_OBJECT_ID","date":"2026-05-10T08:00:00Z","status":"attended"}'
 ```
 
@@ -165,6 +200,8 @@ show dbs
 use gym_management
 show collections
 db.members.find().pretty()
+db.employees.find({}, {password_hash:0}).pretty()
+db.refresh_tokens.find({}, {token_hash:1, employee_id:1, expires_at:1, revoked_at:1}).pretty()
 exit
 ```
 
@@ -211,8 +248,19 @@ Cach sua:
 ### 7.4 `go run` exit code 1
 - Thuong do DB auth sai, port dang ban, hoac env thieu.
 - Kiem tra lai `.env`, `docker ps`, va log terminal.
+- Neu log bao `Failed to initialize auth service`, kiem tra `JWT_ACCESS_SECRET` va
+  `JWT_REFRESH_SECRET`.
 
-### 7.5 `invalid start_date format` khi test subscription
+### 7.5 Route business tra `401`
+- Thieu header `Authorization: Bearer <access_token>`.
+- Token het han, sai secret, malformed, hoac employee da inactive.
+- Login lai bang `/api/v1/auth/login` hoac refresh token bang `/api/v1/auth/refresh`.
+
+### 7.6 Route business tra `403`
+- Token hop le nhung role khong du quyen cho route.
+- Xem ma tran role trong [api_contract.md](api_contract.md).
+
+### 7.7 `invalid start_date format` khi test subscription
 - Do input date khong dung RFC3339.
 - Dinh dang dung la `2026-04-28T10:00:00Z` hoac co timezone ro rang.
 
@@ -224,3 +272,5 @@ Cach sua:
 5. Da giam coupling nhe: service khong check `mongo.ErrNoDocuments` truc tiep, su dung loi trung lap tu repository.
 6. Da co unique index `ccid`.
 7. Da co route subscription va parser RFC3339.
+8. Da co auth login/refresh/logout, bootstrap admin, refresh-token hash storage, access-token
+   middleware, va role guard cho route business.

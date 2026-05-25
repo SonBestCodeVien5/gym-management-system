@@ -21,7 +21,7 @@ Read this file when a new chat needs a short project handoff.
 
 ## Current State
 
-Snapshot date: 2026-05-21.
+Snapshot date: 2026-05-25.
 
 Stack:
 - Go + Gin + MongoDB.
@@ -37,9 +37,9 @@ Implemented backend surfaces:
 | Branches | CRUD and nearby geo search |
 | Attendance | Free check-in, report missed, makeup, history by subscription |
 | Sessions | Create, list, get, enroll, session check-in |
+| Auth | Login, refresh rotation, logout revoke, access-token middleware, role guard |
 
 Planned next surfaces:
-- Auth/login and role guard.
 - Employee management for staff accounts.
 - Validation/error consistency hardening.
 - Index and data-integrity hardening.
@@ -56,6 +56,8 @@ Planned next surfaces:
 - Branch nearby search depends on GeoJSON coordinates and a MongoDB `2dsphere` index.
 - Session enrollment stores subscription IDs on the session and session check-in reuses attendance
   rules.
+- Auth requires `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET`; bootstrap admin is created from
+  `BOOTSTRAP_ADMIN_*` env values only when the normalized email is absent.
 
 ## Where To Update
 
@@ -68,8 +70,10 @@ Planned next surfaces:
 
 ## Resume Point
 
-The next backend cycle is auth/login plus role guard. Start from:
+Cycle 04 auth/login plus role guard is complete. The next backend cycle is employee management for
+staff accounts.
+Start from:
 
-1. `backend_skills/plans/04_auth_role_guard.md`
-2. the matching phase file for the requested task
+1. `backend_skills/plans/05_employee_management.md`
+2. the requested phase skill for the next task
 3. only the source files needed for that task
