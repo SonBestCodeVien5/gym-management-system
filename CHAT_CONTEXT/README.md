@@ -21,7 +21,7 @@ Read this file when a new chat needs a short project handoff.
 
 ## Current State
 
-Snapshot date: 2026-05-25.
+Snapshot date: 2026-05-26.
 
 Stack:
 - Go + Gin + MongoDB.
@@ -38,9 +38,9 @@ Implemented backend surfaces:
 | Attendance | Free check-in, report missed, makeup, history by subscription |
 | Sessions | Create, list, get, enroll, session check-in |
 | Auth | Login, refresh rotation, logout revoke, access-token middleware, role guard |
+| Employees | Admin-only create, list, get, update, password reset, deactivate |
 
 Planned next surfaces:
-- Employee management for staff accounts.
 - Validation/error consistency hardening.
 - Index and data-integrity hardening.
 - Integration tests and fixtures.
@@ -58,6 +58,8 @@ Planned next surfaces:
   rules.
 - Auth requires `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET`; bootstrap admin is created from
   `BOOTSTRAP_ADMIN_*` env values only when the normalized email is absent.
+- Employee management is admin-only, stores bcrypt password hashes, never returns `password_hash` or
+  `normalized_email`, and revokes active refresh tokens on password reset/deactivation.
 
 ## Where To Update
 
@@ -70,10 +72,10 @@ Planned next surfaces:
 
 ## Resume Point
 
-Cycle 04 auth/login plus role guard is complete. The next backend cycle is employee management for
-staff accounts.
+Cycle 05 employee management is complete. The next backend cycle is validation/error consistency
+hardening.
 Start from:
 
-1. `backend_skills/plans/05_employee_management.md`
+1. `backend_skills/plans/06_validation_error_consistency.md`
 2. the requested phase skill for the next task
 3. only the source files needed for that task

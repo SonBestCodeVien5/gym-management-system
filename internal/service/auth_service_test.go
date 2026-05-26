@@ -37,6 +37,18 @@ func (r *stubEmployeeAuthRepo) GetByNormalizedEmail(ctx context.Context, email s
 	return employee, nil
 }
 
+func (r *stubEmployeeAuthRepo) List(ctx context.Context, filter repository.EmployeeListFilter) ([]models.Employee, error) {
+	return nil, nil
+}
+
+func (r *stubEmployeeAuthRepo) UpdateByID(ctx context.Context, id string, update repository.EmployeeUpdate) (*models.Employee, error) {
+	return nil, nil
+}
+
+func (r *stubEmployeeAuthRepo) UpdatePasswordByID(ctx context.Context, id string, passwordHash string, updatedAt time.Time) error {
+	return nil
+}
+
 func (r *stubEmployeeAuthRepo) BootstrapAdmin(ctx context.Context, employee *models.Employee) error {
 	return nil
 }
@@ -70,6 +82,16 @@ func (r *stubRefreshTokenAuthRepo) RevokeActiveByHash(ctx context.Context, token
 	}
 	token.RevokedAt = &revokedAt
 	token.UpdatedAt = revokedAt
+	return nil
+}
+
+func (r *stubRefreshTokenAuthRepo) RevokeActiveByEmployeeID(ctx context.Context, employeeID primitive.ObjectID, revokedAt time.Time) error {
+	for _, token := range r.byHash {
+		if token.EmployeeID == employeeID && token.RevokedAt == nil {
+			token.RevokedAt = &revokedAt
+			token.UpdatedAt = revokedAt
+		}
+	}
 	return nil
 }
 

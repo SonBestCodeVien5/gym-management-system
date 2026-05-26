@@ -8,10 +8,141 @@ Dùng file này để giữ roadmap và completion summary ngắn cho feature ba
 - [x] Branch nearby geo query
 - [x] Attendance report/makeup endpoints nếu route còn thiếu
 - [x] Auth/login + role guard
-- [ ] Employee management
+- [x] Employee management
 - [ ] Validation hardening & error consistency
 - [ ] Indexes and data integrity
 - [ ] Integration tests & fixtures
+
+---
+
+# Feature - Employee management
+
+## Status
+- Planned: yes
+- Implemented: yes
+- Reviewed: yes
+- Tested: yes
+- Docs updated: yes
+
+## Plan summary - 2026-05-26
+
+### Goal
+Thêm API admin-only để tạo, list, xem chi tiết, cập nhật, vô hiệu hóa, và reset mật khẩu cho staff
+account sau cycle bootstrap admin/auth.
+
+### Planned API
+- `POST /api/v1/employees`
+- `GET /api/v1/employees`
+- `GET /api/v1/employees/:id`
+- `PATCH /api/v1/employees/:id`
+- `PATCH /api/v1/employees/:id/password`
+
+### Key decisions
+- Không hard delete trong cycle này; offboarding dùng `status = inactive`.
+- Response không được expose `password_hash` hoặc `normalized_email`.
+- Employee management là admin-only.
+- Password reset và update từ active sang inactive nên revoke refresh token active của employee đó.
+- Admin tự deactivate hoặc tự remove role `admin` của mình nên bị conflict để giảm rủi ro tự khóa hệ
+  thống.
+
+### Next action
+Dùng `$gym-review` với `CHAT_CONTEXT/backend_skills/implementations/05_employee_management.md`.
+
+## Implementation summary - 2026-05-26
+
+### Result
+- Added admin-only employee create/list/get/update/password reset endpoints.
+- Added employee service validation for role/status/level/password, email normalization, branch
+  references, and self-lockout prevention.
+- Added employee repository list/update/password-update operations and duplicate-key mapping.
+- Added refresh-token revoke by employee ID for password reset and deactivation.
+- Updated API contract, REST samples, code-reading guide, and local dev checkpoint.
+
+### Verification
+- `env GOCACHE=/tmp/gocache go build ./...` - pass.
+- `env GOCACHE=/tmp/gocache go test ./...` - pass.
+
+### Review handoff
+- Review route authorization, partial update semantics, refresh-token revocation ordering, and
+  employee response safety.
+
+## Review summary - 2026-05-26
+
+### Result
+- Review passed with no blocking findings.
+- Checked route authorization/order, handler/service/repository ownership, error mapping, response
+  safety, docs/API sample alignment, and focused employee service tests.
+
+### Verification
+- `env GOCACHE=/tmp/gocache go test ./internal/service -run TestEmployeeService -count=1` - pass.
+- `env GOCACHE=/tmp/gocache go build ./...` - pass.
+- `git diff --check` - pass.
+- `env GOCACHE=/tmp/gocache go test ./...` - pass.
+
+### Next action
+Use `$gym-test` with `CHAT_CONTEXT/backend_skills/reviews/05_employee_management.md`.
+
+## Test summary - 2026-05-26
+
+### Result
+- Automated build/tests passed.
+- Manual API verification passed for admin create/list/get/update/reset/deactivate, invalid input,
+  not found, duplicate conflict, self-deactivation conflict, missing-token `401`, non-admin `403`,
+  refresh-token revoke after reset, inactive login rejection, and inactive access-token rejection.
+- Direct MongoDB verification passed for normalized email, password hash presence, inactive final
+  status, and revoked refresh tokens.
+
+### Verification
+- `env GOCACHE=/tmp/gocache go build ./...` - pass.
+- `env GOCACHE=/tmp/gocache go test ./internal/service -run TestEmployeeService -count=1` - pass.
+- `git diff --check` - pass.
+- `env GOCACHE=/tmp/gocache go test ./...` - pass.
+- Manual API script against local server on `PORT=18081` - pass.
+- Temporary Go DB check script - pass.
+
+### Next action
+Use `$gym-complete` with `CHAT_CONTEXT/backend_skills/tests/05_employee_management.md`.
+
+## Completion - 2026-05-26
+
+### Result
+- Employee management cycle completed end-to-end.
+- Added admin-only APIs for employee create/list/get/update/password reset.
+- Employee create/update normalizes email, validates role/status/level/password and branch
+  references, hashes passwords with bcrypt, and returns safe employee responses.
+- Password reset and active-to-inactive deactivation revoke active refresh tokens for the employee.
+- Admin self-deactivation and self-removal of `admin` role return conflict.
+- Durable docs and API samples were aligned with implemented behavior.
+
+### Verification
+- `env GOCACHE=/tmp/gocache go build ./...` - pass.
+- `env GOCACHE=/tmp/gocache go test ./internal/service -run TestEmployeeService -count=1` - pass.
+- `git diff --check` - pass.
+- `env GOCACHE=/tmp/gocache go test ./...` - pass.
+- Manual API - pass for admin login, employee create/list/get/update/reset/deactivate, invalid
+  input, not found, duplicate conflict, self-deactivation conflict, missing-token `401`, non-admin
+  `403`, refresh-token revoke after reset, inactive login rejection, and inactive access-token
+  rejection.
+- Direct Mongo verification - pass for normalized email, bcrypt-like password hash, inactive final
+  status, and revoked refresh tokens.
+
+### Docs updated
+- [x] `docs/api_contract.md`
+- [x] `api_test.http`
+- [x] `README.md`
+- [x] `docs/local_dev_guide.md`
+- [x] `docs/code_reading_guide.md`
+- [x] `CHAT_CONTEXT/README.md`
+
+### Follow-up risks
+- Password/profile update and refresh-token revocation are not transactional.
+- Last-active-admin invariant is not enforced beyond self-lockout prevention.
+- Session create still does not validate `trainer_id` as an active trainer.
+- Manual test data remains as inactive employee `codex.employee.1779803637@gym.test` with revoked
+  refresh tokens.
+
+### Next action
+Use `$gym-plan` or `$gym-implement` for `CHAT_CONTEXT/backend_skills/plans/06_validation_error_consistency.md`.
 
 ---
 
@@ -56,8 +187,8 @@ Dùng file này để giữ roadmap và completion summary ngắn cho feature ba
 - Refresh-token TTL cleanup remains for the index/data-integrity cycle.
 - Refresh rotation can invalidate the old token before replacement persistence succeeds; accepted as
   residual availability risk for MVP.
-- Employee management remains the next backend cycle for creating and maintaining non-bootstrap
-  staff accounts.
+- Employee management is now complete; validation/error consistency hardening is the next backend
+  cycle.
 
 ---
 

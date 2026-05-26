@@ -35,6 +35,7 @@ Khi doc mot feature, di theo luong:
 | Sessions | `session_handler.go`, `session_service.go`, `session_repo.go`, `session.go` |
 | Branch nearby | `branch_handler.go`, `branch_service.go`, `branch_repo.go`, `branch.go` |
 | Auth and role guard | `auth_handler.go`, `auth_middleware.go`, `auth_service.go`, `employee_repo.go`, `refresh_token_repo.go`, `employee.go`, `refresh_token.go` |
+| Employee management | `employee_handler.go`, `employee_service.go`, `employee_repo.go`, `refresh_token_repo.go`, `employee.go` |
 
 ## 4. Rule Dang Co
 
@@ -49,6 +50,8 @@ Khi doc mot feature, di theo luong:
   refresh tokens as hashes, and reloads employee state during access-token validation.
 - Role guard checks trusted roles from auth middleware; handlers must not trust client-sent role
   fields.
+- Employee management is admin-only, hashes password in service, never returns password hash, and
+  revokes active refresh tokens on password reset or deactivation.
 
 Doc rule trong service truoc khi sua handler hay repository.
 
@@ -68,7 +71,7 @@ Doc rule trong service truoc khi sua handler hay repository.
 4. subscription handler/service/repository/model
 5. attendance handler/service/repository/model
 6. session handler/service/repository/model
-7. auth handler/middleware/service/repository/model
+7. auth va employee handler/middleware/service/repository/model
 8. tests va API contract cho feature dang sua
 
 ## 7. Tai Lieu Lien Quan

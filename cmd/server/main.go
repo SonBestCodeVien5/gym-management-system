@@ -69,6 +69,7 @@ func main() {
 	branchService := service.NewBranchService(branchRepo)
 	attendanceService := service.NewAttendanceService(attendanceRepo, subscriptionRepo, memberRepo)
 	sessionService := service.NewSessionService(sessionRepo, subscriptionRepo, attendanceRepo, attendanceService)
+	employeeService := service.NewEmployeeService(employeeRepo, branchRepo, refreshTokenRepo)
 	authService, err := service.NewAuthService(employeeRepo, refreshTokenRepo, service.AuthConfig{
 		AccessSecret:  os.Getenv("JWT_ACCESS_SECRET"),
 		RefreshSecret: os.Getenv("JWT_REFRESH_SECRET"),
@@ -89,6 +90,7 @@ func main() {
 	branchHandler := handlers.NewBranchHandler(branchService)
 	attendanceHandler := handlers.NewAttendanceHandler(attendanceService)
 	sessionHandler := handlers.NewSessionHandler(sessionService)
+	employeeHandler := handlers.NewEmployeeHandler(employeeService)
 	authHandler := handlers.NewAuthHandler(authService)
 
 	// Initialize Gin engine.
@@ -110,6 +112,13 @@ func main() {
 
 		protected := api.Group("")
 		protected.Use(handlers.AuthRequired(authService))
+
+		employeeRoutes := protected.Group("", handlers.RequireRoles(service.RoleAdmin))
+		employeeRoutes.POST("/employees", employeeHandler.Create)
+		employeeRoutes.GET("/employees", employeeHandler.List)
+		employeeRoutes.GET("/employees/:id", employeeHandler.GetByID)
+		employeeRoutes.PATCH("/employees/:id/password", employeeHandler.UpdatePassword)
+		employeeRoutes.PATCH("/employees/:id", employeeHandler.Update)
 
 		memberRoutes := protected.Group("", handlers.RequireRoles(service.RoleAdmin, service.RoleManager, service.RoleReceptionist))
 		memberRoutes.POST("/members", memberHandler.Register)

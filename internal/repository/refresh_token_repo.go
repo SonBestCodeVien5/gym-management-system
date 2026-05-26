@@ -16,6 +16,7 @@ type RefreshTokenRepository interface {
 	Create(ctx context.Context, token *models.RefreshToken) error
 	FindActiveByHash(ctx context.Context, tokenHash string) (*models.RefreshToken, error)
 	RevokeActiveByHash(ctx context.Context, tokenHash string, revokedAt time.Time) error
+	RevokeActiveByEmployeeID(ctx context.Context, employeeID primitive.ObjectID, revokedAt time.Time) error
 }
 
 type refreshTokenRepoImpl struct {
@@ -74,4 +75,13 @@ func (r *refreshTokenRepoImpl) RevokeActiveByHash(ctx context.Context, tokenHash
 		return ErrNotFound
 	}
 	return nil
+}
+
+func (r *refreshTokenRepoImpl) RevokeActiveByEmployeeID(ctx context.Context, employeeID primitive.ObjectID, revokedAt time.Time) error {
+	_, err := r.collection.UpdateMany(
+		ctx,
+		bson.M{"employee_id": employeeID, "revoked_at": bson.M{"$exists": false}},
+		bson.M{"$set": bson.M{"revoked_at": revokedAt, "updated_at": revokedAt}},
+	)
+	return err
 }

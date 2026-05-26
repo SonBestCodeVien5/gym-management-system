@@ -103,6 +103,22 @@ Behavior:
 - Role guard currently protects member, subscription, course, branch, attendance, and session routes.
 - First admin can be bootstrapped from `BOOTSTRAP_ADMIN_*` environment variables.
 
+### 8) Employee Management
+
+- `POST /api/v1/employees`
+- `GET /api/v1/employees`
+- `GET /api/v1/employees/:id`
+- `PATCH /api/v1/employees/:id`
+- `PATCH /api/v1/employees/:id/password`
+
+Behavior:
+
+- Employee management routes are admin-only.
+- Staff passwords are stored only as bcrypt hashes.
+- Responses never expose `password_hash` or `normalized_email`.
+- Password reset and employee deactivation revoke active refresh tokens.
+- Offboarding uses `status = inactive`; no hard delete endpoint is exposed.
+
 ## Run Locally
 
 1. Set environment variables from `.env.example`, especially `MONGODB_URI`,

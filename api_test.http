@@ -59,6 +59,79 @@ Authorization: Bearer {{restricted_access_token}}
 
 ###
 
+# Create employee - admin only
+POST {{baseUrl}}/api/v1/employees
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+{
+  "employee_id": "EMP001",
+  "full_name": "Tran Van Trainer",
+  "email": "trainer@gym.test",
+  "password": "strong-password-123",
+  "role": ["trainer"],
+  "level": "advanced",
+  "phone": "0900000002",
+  "branch_id": ["69f20a180c4cd4cdf57684fe"],
+  "status": "active"
+}
+
+###
+
+# List employees
+GET {{baseUrl}}/api/v1/employees?role=trainer&status=active&branch_id=69f20a180c4cd4cdf57684fe
+Authorization: Bearer {{access_token}}
+
+###
+
+# Get employee by ID
+GET {{baseUrl}}/api/v1/employees/69f20c000c4cd4cdf5768500
+Authorization: Bearer {{access_token}}
+
+###
+
+# Update employee
+PATCH {{baseUrl}}/api/v1/employees/69f20c000c4cd4cdf5768500
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+{
+  "full_name": "Tran Van Trainer Updated",
+  "role": ["trainer", "manager"],
+  "level": "professional",
+  "phone": "0900000003"
+}
+
+###
+
+# Reset employee password
+PATCH {{baseUrl}}/api/v1/employees/69f20c000c4cd4cdf5768500/password
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+{
+  "password": "new-strong-password-123"
+}
+
+###
+
+# Login with created employee
+POST {{baseUrl}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "trainer@gym.test",
+  "password": "new-strong-password-123"
+}
+
+###
+
+# Non-admin employee management should return 403
+GET {{baseUrl}}/api/v1/employees
+Authorization: Bearer {{restricted_access_token}}
+
+###
+
 # Member registration
 POST {{baseUrl}}/api/v1/members
 Content-Type: application/json

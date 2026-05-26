@@ -274,3 +274,4 @@ Cach sua:
 7. Da co route subscription va parser RFC3339.
 8. Da co auth login/refresh/logout, bootstrap admin, refresh-token hash storage, access-token
    middleware, va role guard cho route business.
+9. Da co employee management admin-only de tao/list/get/update/reset password staff account.

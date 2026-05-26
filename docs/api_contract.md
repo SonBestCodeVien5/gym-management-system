@@ -1,6 +1,6 @@
 # API Contract (Current)
 
-Cap nhat: 2026-05-25
+Cap nhat: 2026-05-26
 
 Muc tieu: chot ten endpoint + request/response co ban de FE va BE dung chung.
 
@@ -69,6 +69,15 @@ Muc tieu: chot ten endpoint + request/response co ban de FE va BE dung chung.
 | POST | /api/v1/auth/refresh | Rotate refresh token và cấp lại access token. | Implemented |
 | POST | /api/v1/auth/logout | Hủy refresh token. | Implemented |
 
+### Employees
+| Method | Endpoint | Code làm gì | Trạng thái |
+|---|---|---|---|
+| POST | /api/v1/employees | Admin tạo staff account với mật khẩu ban đầu. | Implemented |
+| GET | /api/v1/employees | Admin xem danh sách staff account, có filter role/status/branch. | Implemented |
+| GET | /api/v1/employees/:id | Admin xem chi tiết staff account. | Implemented |
+| PATCH | /api/v1/employees/:id | Admin cập nhật profile, role, branch, level, email, employee ID, hoặc status. | Implemented |
+| PATCH | /api/v1/employees/:id/password | Admin reset mật khẩu staff account. | Implemented |
+
 ---
 
 ## Endpoint details
@@ -98,6 +107,7 @@ Role guard matrix:
 | Subscription create/get/refund/suspend/unsuspend/expire | `admin`, `manager`, `receptionist` |
 | Attendance checkin/report/makeup/history | `admin`, `manager`, `receptionist` |
 | Session create/list/get/enroll/checkin | `admin`, `manager`, `trainer` |
+| Employee management | `admin` |
 
 Missing, malformed, expired, or inactive-employee access tokens return `401`. Authenticated staff
 without an allowed role returns `403`.
@@ -153,6 +163,162 @@ Notes:
 
 - The API never returns password hash.
 - The refresh token is stored only as a SHA-256 hash for revoke/rotation checks.
+
+### Employee management
+
+All employee management endpoints require an `admin` access token.
+
+Employee response shape never includes `password_hash` or `normalized_email`:
+
+```json
+{
+  "id": "69f20c000c4cd4cdf5768500",
+  "employee_id": "EMP001",
+  "full_name": "Tran Van Trainer",
+  "email": "trainer@gym.test",
+  "status": "active",
+  "role": ["trainer"],
+  "level": "advanced",
+  "phone": "0900000002",
+  "branch_id": ["69f20a180c4cd4cdf57684fe"],
+  "created_at": "2026-05-26T08:00:00Z",
+  "updated_at": "2026-05-26T08:00:00Z"
+}
+```
+
+#### Create employee
+
+`POST /api/v1/employees`
+
+Body:
+
+| Field | Type | Required | Rule |
+|---|---|---:|---|
+| `employee_id` | string | yes | Unique staff code. |
+| `full_name` | string | yes | Trimmed, cannot be empty. |
+| `email` | string | yes | Normalized before persistence and login lookup. |
+| `password` | string | yes | Minimum 8 characters; stored only as bcrypt hash. |
+| `role` | string array | yes | Allowed values: `admin`, `manager`, `trainer`, `receptionist`. |
+| `level` | string | conditional | Required for trainer; allowed values: `basic`, `advanced`, `professional`. |
+| `phone` | string | no | Trimmed. |
+| `branch_id` | ObjectID string array | no | Every supplied branch must exist. |
+| `status` | string | no | `active` or `inactive`; defaults to `active`. |
+
+Response `201`:
+
+```json
+{
+  "message": "employee created successfully",
+  "data": {
+    "id": "69f20c000c4cd4cdf5768500",
+    "employee_id": "EMP001",
+    "full_name": "Tran Van Trainer",
+    "email": "trainer@gym.test",
+    "status": "active",
+    "role": ["trainer"],
+    "level": "advanced",
+    "phone": "0900000002",
+    "branch_id": ["69f20a180c4cd4cdf57684fe"],
+    "created_at": "2026-05-26T08:00:00Z",
+    "updated_at": "2026-05-26T08:00:00Z"
+  }
+}
+```
+
+Status codes:
+
+- `201`: employee created.
+- `400`: invalid body, ObjectID, required field, role/status/level/password, or missing branch reference.
+- `409`: duplicate normalized email or employee ID.
+- `500`: storage/internal error.
+
+#### List employees
+
+`GET /api/v1/employees?role=trainer&status=active&branch_id=69f20a180c4cd4cdf57684fe`
+
+Optional query:
+
+| Field | Type | Rule |
+|---|---|---|
+| `role` | string | Must be an allowed role when supplied. |
+| `status` | string | Must be `active` or `inactive` when supplied. |
+| `branch_id` | ObjectID string | Must be a valid ObjectID when supplied. |
+
+Response `200`:
+
+```json
+{
+  "message": "employees fetched successfully",
+  "data": []
+}
+```
+
+#### Get employee
+
+`GET /api/v1/employees/:id`
+
+Status codes:
+
+- `200`: employee found.
+- `400`: invalid employee ID.
+- `404`: employee not found.
+- `500`: storage/internal error.
+
+#### Update employee
+
+`PATCH /api/v1/employees/:id`
+
+Body supports partial update:
+
+```json
+{
+  "full_name": "Tran Van Trainer Updated",
+  "role": ["trainer", "manager"],
+  "level": "professional",
+  "status": "inactive"
+}
+```
+
+Status codes:
+
+- `200`: employee updated.
+- `400`: invalid body, ObjectID, role/status/level, missing branch reference, or no mutable field.
+- `404`: employee not found.
+- `409`: duplicate normalized email/employee ID, self-deactivation, or self-removal of `admin` role.
+- `500`: storage/internal error.
+
+Notes:
+
+- Updating email recomputes `normalized_email`.
+- Updating status from `active` to `inactive` revokes active refresh tokens for that employee.
+- Inactive employees cannot login, refresh, or pass protected-route access-token validation.
+
+#### Reset employee password
+
+`PATCH /api/v1/employees/:id/password`
+
+Body:
+
+```json
+{
+  "password": "new-strong-password-123"
+}
+```
+
+Response `200`:
+
+```json
+{
+  "message": "employee password updated successfully"
+}
+```
+
+Status codes:
+
+- `200`: password hash replaced and active refresh tokens revoked.
+- `400`: invalid body, employee ID, or password policy violation.
+- `404`: employee not found.
+- `500`: storage/internal error.
 
 ### Auth refresh
 
@@ -365,3 +531,4 @@ Notes:
 | Sessions MVP | Đã có create/list/get/enroll/checkin; enrollment lưu trên session và check-in tạo attendance có `session_id`. |
 | Branch nearby | `GET /api/v1/branches/nearby` dùng `lng`, `lat`, optional `max_distance`, `limit`; trả thêm `distance_meters`. |
 | Course tags | `allowed_tags` của course là tập tag được phép dùng để ràng buộc session. |
+| Employee management | Admin-only; không hard delete employee, dùng `status=inactive`; password reset/deactivation revoke refresh token active. |
