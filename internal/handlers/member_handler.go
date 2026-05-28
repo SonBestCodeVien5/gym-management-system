@@ -43,10 +43,7 @@ func (h *MemberHandler) Register(c *gin.Context) {
 	// 1) Parse JSON body into request struct.
 	var req registerMemberRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "invalid request body",
-			"error":   err.Error(),
-		})
+		RespondInvalidRequestBody(c)
 		return
 	}
 
@@ -66,11 +63,11 @@ func (h *MemberHandler) Register(c *gin.Context) {
 		// 4) Translate service errors into HTTP status codes.
 		switch {
 		case errors.Is(err, service.ErrInvalidMemberInput):
-			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			RespondInvalidInput(c, err.Error())
 		case errors.Is(err, service.ErrMemberCCIDAlreadyExists):
-			c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
+			RespondConflict(c, err.Error())
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}
@@ -87,7 +84,7 @@ func (h *MemberHandler) GetByID(c *gin.Context) {
 	// 1) Validate member ID from URL.
 	id := c.Param("id")
 	if _, err := primitive.ObjectIDFromHex(id); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid member id"})
+		RespondInvalidID(c, "invalid member id")
 		return
 	}
 
@@ -97,9 +94,9 @@ func (h *MemberHandler) GetByID(c *gin.Context) {
 		// 3) Map not-found to 404, everything else to 500.
 		switch {
 		case errors.Is(err, service.ErrMemberNotFound):
-			c.JSON(http.StatusNotFound, gin.H{"message": "member not found"})
+			RespondNotFound(c, "member not found")
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}
@@ -115,7 +112,7 @@ func (h *MemberHandler) GetByID(c *gin.Context) {
 func (h *MemberHandler) ListSubscriptions(c *gin.Context) {
 	id := c.Param("id")
 	if _, err := primitive.ObjectIDFromHex(id); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid member id"})
+		RespondInvalidID(c, "invalid member id")
 		return
 	}
 
@@ -123,11 +120,11 @@ func (h *MemberHandler) ListSubscriptions(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidSubscriptionInput):
-			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			RespondInvalidInput(c, err.Error())
 		case errors.Is(err, service.ErrSubscriptionMemberNotFound):
-			c.JSON(http.StatusNotFound, gin.H{"message": "member not found"})
+			RespondNotFound(c, "member not found")
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}
@@ -143,26 +140,23 @@ func (h *MemberHandler) Activate(c *gin.Context) {
 	// Validate member ID from path param.
 	id := c.Param("id")
 	if _, err := primitive.ObjectIDFromHex(id); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid member id"})
+		RespondInvalidID(c, "invalid member id")
 		return
 	}
 
 	// 1) Body must include subscription_id to link payment to this member.
 	var req activateMemberRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "invalid request body",
-			"error":   err.Error(),
-		})
+		RespondInvalidRequestBody(c)
 		return
 	}
 	// 2) Validate subscription_id presence and format.
 	if req.SubscriptionID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "subscription_id is required"})
+		RespondInvalidInput(c, "subscription_id is required")
 		return
 	}
 	if _, err := primitive.ObjectIDFromHex(req.SubscriptionID); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid subscription id"})
+		RespondInvalidID(c, "invalid subscription id")
 		return
 	}
 
@@ -171,13 +165,13 @@ func (h *MemberHandler) Activate(c *gin.Context) {
 		// 4) Subscription errors are reported as not-found or conflict.
 		switch {
 		case errors.Is(err, service.ErrSubscriptionNotFound):
-			c.JSON(http.StatusNotFound, gin.H{"message": "subscription not found"})
+			RespondNotFound(c, "subscription not found")
 		case errors.Is(err, service.ErrSubscriptionAlreadyActive), errors.Is(err, service.ErrInvalidSubscriptionStatus):
-			c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
+			RespondConflict(c, err.Error())
 		case errors.Is(err, service.ErrSubscriptionMemberMismatch):
-			c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
+			RespondConflict(c, err.Error())
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}
@@ -187,9 +181,9 @@ func (h *MemberHandler) Activate(c *gin.Context) {
 		// 6) Not-found means member ID does not exist.
 		switch {
 		case errors.Is(err, service.ErrMemberNotFound):
-			c.JSON(http.StatusNotFound, gin.H{"message": "member not found"})
+			RespondNotFound(c, "member not found")
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}

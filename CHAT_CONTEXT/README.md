@@ -39,9 +39,9 @@ Implemented backend surfaces:
 | Sessions | Create, list, get, enroll, session check-in |
 | Auth | Login, refresh rotation, logout revoke, access-token middleware, role guard |
 | Employees | Admin-only create, list, get, update, password reset, deactivate |
+| Error handling | Shared HTTP error contract with stable `error.code`, sanitized `message`, and object `details` |
 
 Planned next surfaces:
-- Validation/error consistency hardening.
 - Index and data-integrity hardening.
 - Integration tests and fixtures.
 
@@ -60,6 +60,8 @@ Planned next surfaces:
   `BOOTSTRAP_ADMIN_*` env values only when the normalized email is absent.
 - Employee management is admin-only, stores bcrypt password hashes, never returns `password_hash` or
   `normalized_email`, and revokes active refresh tokens on password reset/deactivation.
+- Backend error responses use `{"error":{"code":"...","message":"...","details":{}}}` while success
+  responses keep the existing `message`/`data` shape.
 
 ## Where To Update
 
@@ -72,10 +74,11 @@ Planned next surfaces:
 
 ## Resume Point
 
-Cycle 05 employee management is complete. The next backend cycle is validation/error consistency
+Cycle 06 validation/error consistency is complete. The next backend cycle is index and data-integrity
 hardening.
 Start from:
 
-1. `backend_skills/plans/06_validation_error_consistency.md`
+1. `backend_skills/plans/07_indexes_data_integrity.md` if present, otherwise create it with
+   `$gym-plan`
 2. the requested phase skill for the next task
 3. only the source files needed for that task

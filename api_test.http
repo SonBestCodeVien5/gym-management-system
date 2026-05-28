@@ -44,6 +44,12 @@ GET {{baseUrl}}/api/v1/courses
 
 ###
 
+# Invalid access token should return 401 with error.code = UNAUTHORIZED
+GET {{baseUrl}}/api/v1/courses
+Authorization: Bearer invalid-token
+
+###
+
 # Forbidden role should return 403 when token role cannot manage courses
 POST {{baseUrl}}/api/v1/courses
 Content-Type: application/json
@@ -129,6 +135,23 @@ Content-Type: application/json
 # Non-admin employee management should return 403
 GET {{baseUrl}}/api/v1/employees
 Authorization: Bearer {{restricted_access_token}}
+
+###
+
+# Invalid employee ID should return 400 with error.code = INVALID_ID
+GET {{baseUrl}}/api/v1/employees/not-an-object-id
+Authorization: Bearer {{access_token}}
+
+###
+
+# Invalid employee body should return 400 with error.code = INVALID_INPUT and no raw bind error
+POST {{baseUrl}}/api/v1/employees
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+{
+  "employee_id": 123
+}
 
 ###
 
@@ -219,6 +242,21 @@ Authorization: Bearer {{access_token}}
 }
 
 ###
+
+# Invalid subscription date should return 400 with error.code = INVALID_DATE
+PATCH {{baseUrl}}/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/suspend
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+{
+  "start_date": "not-a-date",
+  "end_date": "2026-05-20T09:00:00Z",
+  "frozen_session": 4,
+  "reason": "Bad date sample"
+}
+
+###
+
 # Resume subscription
 PATCH {{baseUrl}}/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/unsuspend
 Authorization: Bearer {{access_token}}

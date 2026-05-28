@@ -53,42 +53,39 @@ func (h *SubscriptionHandler) Create(c *gin.Context) {
 	// 1) Parse JSON body into request struct.
 	var req createSubscriptionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "invalid request body",
-			"error":   err.Error(),
-		})
+		RespondInvalidRequestBody(c)
 		return
 	}
 
 	// 2) Validate and convert IDs from request body.
 	memberID, err := primitive.ObjectIDFromHex(req.MemberID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid member id"})
+		RespondInvalidID(c, "invalid member id")
 		return
 	}
 
 	courseID, err := primitive.ObjectIDFromHex(req.CourseID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid course id"})
+		RespondInvalidID(c, "invalid course id")
 		return
 	}
 
 	branchID, err := primitive.ObjectIDFromHex(req.HomeBranchID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid branch id"})
+		RespondInvalidID(c, "invalid branch id")
 		return
 	}
 
 	// 3) Parse RFC3339 dates from body.
 	startDate, err := parseTimeValue(req.StartDate)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid start_date format"})
+		RespondInvalidDate(c, "invalid start_date format")
 		return
 	}
 
 	endDate, err := parseTimeValue(req.EndDate)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid end_date format"})
+		RespondInvalidDate(c, "invalid end_date format")
 		return
 	}
 
@@ -111,11 +108,11 @@ func (h *SubscriptionHandler) Create(c *gin.Context) {
 		// 6) Map service validation/reference errors to HTTP status codes.
 		switch {
 		case errors.Is(err, service.ErrInvalidSubscriptionInput), errors.Is(err, service.ErrInvalidDiscount):
-			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			RespondInvalidInput(c, err.Error())
 		case errors.Is(err, service.ErrSubscriptionReferenceNotFound):
-			c.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
+			RespondNotFound(c, err.Error())
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}
@@ -132,7 +129,7 @@ func (h *SubscriptionHandler) GetByID(c *gin.Context) {
 	// 1) Validate subscription ID from URL.
 	id := c.Param("id")
 	if _, err := primitive.ObjectIDFromHex(id); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid subscription id"})
+		RespondInvalidID(c, "invalid subscription id")
 		return
 	}
 
@@ -142,9 +139,9 @@ func (h *SubscriptionHandler) GetByID(c *gin.Context) {
 		// 3) Not-found maps to 404, all other errors to 500.
 		switch {
 		case errors.Is(err, service.ErrSubscriptionNotFound):
-			c.JSON(http.StatusNotFound, gin.H{"message": "subscription not found"})
+			RespondNotFound(c, "subscription not found")
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}
@@ -161,28 +158,25 @@ func (h *SubscriptionHandler) Suspend(c *gin.Context) {
 	// 1) Validate subscription ID from URL.
 	id := c.Param("id")
 	if _, err := primitive.ObjectIDFromHex(id); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid subscription id"})
+		RespondInvalidID(c, "invalid subscription id")
 		return
 	}
 
 	// 2) Parse JSON body for suspension details.
 	var req suspendSubscriptionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "invalid request body",
-			"error":   err.Error(),
-		})
+		RespondInvalidRequestBody(c)
 		return
 	}
 
 	startDate, err := parseTimeValue(req.StartDate)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid start_date format"})
+		RespondInvalidDate(c, "invalid start_date format")
 		return
 	}
 	endDate, err := parseTimeValue(req.EndDate)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid end_date format"})
+		RespondInvalidDate(c, "invalid end_date format")
 		return
 	}
 
@@ -198,13 +192,13 @@ func (h *SubscriptionHandler) Suspend(c *gin.Context) {
 		// 4) Map service errors to HTTP status codes.
 		switch {
 		case errors.Is(err, service.ErrSubscriptionNotFound):
-			c.JSON(http.StatusNotFound, gin.H{"message": "subscription not found"})
+			RespondNotFound(c, "subscription not found")
 		case errors.Is(err, service.ErrInvalidSuspensionPeriod):
-			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			RespondInvalidInput(c, err.Error())
 		case errors.Is(err, service.ErrSubscriptionAlreadySuspended), errors.Is(err, service.ErrSubscriptionNotActive), errors.Is(err, service.ErrSubscriptionExpired):
-			c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
+			RespondConflict(c, err.Error())
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}
@@ -218,7 +212,7 @@ func (h *SubscriptionHandler) Resume(c *gin.Context) {
 	// 1) Validate subscription ID from URL.
 	id := c.Param("id")
 	if _, err := primitive.ObjectIDFromHex(id); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid subscription id"})
+		RespondInvalidID(c, "invalid subscription id")
 		return
 	}
 
@@ -227,11 +221,11 @@ func (h *SubscriptionHandler) Resume(c *gin.Context) {
 		// 3) Map service errors to HTTP status codes.
 		switch {
 		case errors.Is(err, service.ErrSubscriptionNotFound):
-			c.JSON(http.StatusNotFound, gin.H{"message": "subscription not found"})
+			RespondNotFound(c, "subscription not found")
 		case errors.Is(err, service.ErrInvalidSubscriptionStatus), errors.Is(err, service.ErrSubscriptionExpired):
-			c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
+			RespondConflict(c, err.Error())
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}
@@ -245,7 +239,7 @@ func (h *SubscriptionHandler) Expire(c *gin.Context) {
 	// 1) Validate subscription ID from URL.
 	id := c.Param("id")
 	if _, err := primitive.ObjectIDFromHex(id); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid subscription id"})
+		RespondInvalidID(c, "invalid subscription id")
 		return
 	}
 
@@ -254,9 +248,9 @@ func (h *SubscriptionHandler) Expire(c *gin.Context) {
 		// 3) Map service errors to HTTP status codes.
 		switch {
 		case errors.Is(err, service.ErrSubscriptionNotFound):
-			c.JSON(http.StatusNotFound, gin.H{"message": "subscription not found"})
+			RespondNotFound(c, "subscription not found")
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}
@@ -270,17 +264,14 @@ func (h *SubscriptionHandler) Refund(c *gin.Context) {
 	// 1) Validate subscription ID from URL.
 	id := c.Param("id")
 	if _, err := primitive.ObjectIDFromHex(id); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid subscription id"})
+		RespondInvalidID(c, "invalid subscription id")
 		return
 	}
 
 	// 2) Parse optional JSON body.
 	var req refundSubscriptionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "invalid request body",
-			"error":   err.Error(),
-		})
+		RespondInvalidRequestBody(c)
 		return
 	}
 
@@ -288,13 +279,13 @@ func (h *SubscriptionHandler) Refund(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidSubscriptionInput):
-			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			RespondInvalidInput(c, err.Error())
 		case errors.Is(err, service.ErrSubscriptionNotFound):
-			c.JSON(http.StatusNotFound, gin.H{"message": "subscription not found"})
+			RespondNotFound(c, "subscription not found")
 		case errors.Is(err, service.ErrSubscriptionCannotRefund), errors.Is(err, service.ErrSubscriptionNoRemaining), errors.Is(err, service.ErrRefundAlreadyExists):
-			c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
+			RespondConflict(c, err.Error())
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}

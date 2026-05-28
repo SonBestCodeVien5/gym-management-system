@@ -47,13 +47,13 @@ type employeePasswordRequest struct {
 func (h *EmployeeHandler) Create(c *gin.Context) {
 	var req employeeCreateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid request body", "error": err.Error()})
+		RespondInvalidRequestBody(c)
 		return
 	}
 
 	branchIDs, err := parseEmployeeBranchIDs(req.BranchID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid employee input"})
+		RespondInvalidID(c, "invalid branch id")
 		return
 	}
 
@@ -81,7 +81,7 @@ func (h *EmployeeHandler) List(c *gin.Context) {
 	if rawBranchID := c.Query("branch_id"); rawBranchID != "" {
 		parsed, err := primitive.ObjectIDFromHex(rawBranchID)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid branch id"})
+			RespondInvalidID(c, "invalid branch id")
 			return
 		}
 		branchID = parsed
@@ -103,7 +103,7 @@ func (h *EmployeeHandler) List(c *gin.Context) {
 func (h *EmployeeHandler) GetByID(c *gin.Context) {
 	id := c.Param("id")
 	if _, err := primitive.ObjectIDFromHex(id); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid employee id"})
+		RespondInvalidID(c, "invalid employee id")
 		return
 	}
 
@@ -119,13 +119,13 @@ func (h *EmployeeHandler) GetByID(c *gin.Context) {
 func (h *EmployeeHandler) Update(c *gin.Context) {
 	id := c.Param("id")
 	if _, err := primitive.ObjectIDFromHex(id); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid employee id"})
+		RespondInvalidID(c, "invalid employee id")
 		return
 	}
 
 	var req employeeUpdateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid request body", "error": err.Error()})
+		RespondInvalidRequestBody(c)
 		return
 	}
 
@@ -133,7 +133,7 @@ func (h *EmployeeHandler) Update(c *gin.Context) {
 	if req.BranchID != nil {
 		parsed, err := parseEmployeeBranchIDs(*req.BranchID)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid employee input"})
+			RespondInvalidID(c, "invalid branch id")
 			return
 		}
 		branchIDs = &parsed
@@ -141,12 +141,12 @@ func (h *EmployeeHandler) Update(c *gin.Context) {
 
 	actorID, ok := c.Get(AuthEmployeeIDKey)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "missing access token"})
+		RespondUnauthorized(c, "missing access token")
 		return
 	}
 	actorIDString, ok := actorID.(string)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "invalid access token"})
+		RespondUnauthorized(c, "invalid access token")
 		return
 	}
 
@@ -171,13 +171,13 @@ func (h *EmployeeHandler) Update(c *gin.Context) {
 func (h *EmployeeHandler) UpdatePassword(c *gin.Context) {
 	id := c.Param("id")
 	if _, err := primitive.ObjectIDFromHex(id); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid employee id"})
+		RespondInvalidID(c, "invalid employee id")
 		return
 	}
 
 	var req employeePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid request body", "error": err.Error()})
+		RespondInvalidRequestBody(c)
 		return
 	}
 
@@ -204,12 +204,12 @@ func parseEmployeeBranchIDs(rawBranchIDs []string) ([]primitive.ObjectID, error)
 func writeEmployeeError(c *gin.Context, err error) {
 	switch {
 	case errors.Is(err, service.ErrInvalidEmployeeInput):
-		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		RespondInvalidInput(c, err.Error())
 	case errors.Is(err, service.ErrEmployeeNotFound):
-		c.JSON(http.StatusNotFound, gin.H{"message": "employee not found"})
+		RespondNotFound(c, "employee not found")
 	case errors.Is(err, service.ErrEmployeeConflict):
-		c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
+		RespondConflict(c, err.Error())
 	default:
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+		RespondInternal(c)
 	}
 }

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -52,6 +53,7 @@ func TestAuthRequiredMissingTokenReturnsUnauthorized(t *testing.T) {
 	if res.Code != http.StatusUnauthorized {
 		t.Fatalf("status = %d, want %d", res.Code, http.StatusUnauthorized)
 	}
+	assertErrorResponse(t, res, string(ErrorCodeUnauthorized), "missing access token")
 }
 
 func TestAuthRequiredInvalidTokenReturnsUnauthorized(t *testing.T) {
@@ -66,6 +68,7 @@ func TestAuthRequiredInvalidTokenReturnsUnauthorized(t *testing.T) {
 	if res.Code != http.StatusUnauthorized {
 		t.Fatalf("status = %d, want %d", res.Code, http.StatusUnauthorized)
 	}
+	assertErrorResponse(t, res, string(ErrorCodeUnauthorized), "invalid access token")
 }
 
 func TestRequireRolesAllowsMatchingRole(t *testing.T) {
@@ -98,6 +101,7 @@ func TestRequireRolesRejectsNonMatchingRole(t *testing.T) {
 	if res.Code != http.StatusForbidden {
 		t.Fatalf("status = %d, want %d", res.Code, http.StatusForbidden)
 	}
+	assertErrorResponse(t, res, string(ErrorCodeForbidden), "forbidden")
 }
 
 func TestAuthRequiredUnexpectedServiceErrorReturnsServerError(t *testing.T) {
@@ -112,6 +116,7 @@ func TestAuthRequiredUnexpectedServiceErrorReturnsServerError(t *testing.T) {
 	if res.Code != http.StatusInternalServerError {
 		t.Fatalf("status = %d, want %d", res.Code, http.StatusInternalServerError)
 	}
+	assertErrorResponse(t, res, string(ErrorCodeInternalError), "internal server error")
 }
 
 func authMiddlewareTestRouter(authService service.AuthService, allowedRoles ...string) *gin.Engine {
@@ -121,4 +126,28 @@ func authMiddlewareTestRouter(authService service.AuthService, allowedRoles ...s
 		c.JSON(http.StatusOK, gin.H{"message": "ok"})
 	})
 	return router
+}
+
+func assertErrorResponse(t *testing.T, res *httptest.ResponseRecorder, code string, message string) {
+	t.Helper()
+
+	var body struct {
+		Error struct {
+			Code    string         `json:"code"`
+			Message string         `json:"message"`
+			Details map[string]any `json:"details"`
+		} `json:"error"`
+	}
+	if err := json.Unmarshal(res.Body.Bytes(), &body); err != nil {
+		t.Fatalf("response body is not JSON: %v", err)
+	}
+	if body.Error.Code != code {
+		t.Fatalf("error.code = %q, want %q", body.Error.Code, code)
+	}
+	if body.Error.Message != message {
+		t.Fatalf("error.message = %q, want %q", body.Error.Message, message)
+	}
+	if body.Error.Details == nil {
+		t.Fatalf("error.details is nil, want empty object")
+	}
 }

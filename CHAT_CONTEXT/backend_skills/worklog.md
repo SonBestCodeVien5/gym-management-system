@@ -9,9 +9,139 @@ Dùng file này để giữ roadmap và completion summary ngắn cho feature ba
 - [x] Attendance report/makeup endpoints nếu route còn thiếu
 - [x] Auth/login + role guard
 - [x] Employee management
-- [ ] Validation hardening & error consistency
+- [x] Validation hardening & error consistency
 - [ ] Indexes and data integrity
 - [ ] Integration tests & fixtures
+
+---
+
+# Feature - Validation hardening & error consistency
+
+## Status
+- Planned: yes
+- Implemented: yes
+- Reviewed: yes
+- Tested: yes
+- Docs updated: yes
+
+## Plan summary - 2026-05-26
+
+### Goal
+Chuẩn hóa toàn bộ backend error response sang contract ổn định:
+
+```json
+{
+  "error": {
+    "code": "INVALID_INPUT",
+    "message": "invalid input",
+    "details": {}
+  }
+}
+```
+
+### Key decisions
+- Giữ nguyên success response shape hiện tại để giảm tác động lên FE/manual clients.
+- Dùng enum lỗi chung: `INVALID_INPUT`, `INVALID_ID`, `INVALID_DATE`, `UNAUTHORIZED`,
+  `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, `INTERNAL_ERROR`.
+- Không trả raw bind/Mongo/JWT/bcrypt/storage errors ra API.
+- Handler tiếp tục chịu trách nhiệm parse HTTP input và map service errors sang status + code.
+- Service/repository không biết HTTP response shape.
+
+### Next action
+Use `$gym-implement` with `CHAT_CONTEXT/backend_skills/plans/06_validation_error_consistency.md`.
+
+## Implementation summary - 2026-05-26
+
+### Result
+- Added shared handler error response helpers with stable codes and nested `error` payloads.
+- Migrated auth middleware and all current handlers to the shared error contract.
+- Sanitized invalid request body responses so raw Gin bind errors are no longer returned.
+- Kept success response shapes unchanged.
+- Updated API contract and REST samples with the new error response contract.
+
+### Verification
+- `env GOCACHE=/tmp/gocache go test ./internal/handlers -count=1` - pass.
+- `env GOCACHE=/tmp/gocache go build ./...` - pass; Go printed a read-only module stat-cache warning
+  but exited `0`.
+- `env GOCACHE=/tmp/gocache go test ./...` - pass.
+- `git diff --check` - pass.
+
+### Next action
+Use `$gym-review` with `CHAT_CONTEXT/backend_skills/implementations/06_validation_error_consistency.md`.
+
+## Review summary - 2026-05-26
+
+### Result
+- Review passed with no blocking findings.
+- Checked shared error helper, auth middleware, handler mapping, service/repository boundaries,
+  old error-shape sweep, docs/API sample alignment, and focused middleware body assertions.
+
+### Verification
+- `env GOCACHE=/tmp/gocache go build ./...` - pass; Go printed a read-only module stat-cache warning
+  but exited `0`.
+- `env GOCACHE=/tmp/gocache go test ./internal/handlers -count=1` - pass.
+- `git diff --check` - pass.
+- `env GOCACHE=/tmp/gocache go test ./...` - pass.
+
+### Next action
+Use `$gym-test` with `CHAT_CONTEXT/backend_skills/reviews/06_validation_error_consistency.md`.
+
+## Test summary - 2026-05-26
+
+### Result
+- Automated build/tests passed.
+- Manual API verification passed for shared error response contract:
+  `UNAUTHORIZED`, `FORBIDDEN`, `INVALID_ID`, `INVALID_DATE`, `INVALID_INPUT`, `NOT_FOUND`, and
+  `CONFLICT`.
+- Every checked error response included nested `error.code` and object `error.details`.
+- Temporary receptionist employee used for `403` verification was deactivated after the check.
+
+### Verification
+- `env GOCACHE=/tmp/gocache go build ./...` - pass; Go printed a read-only module stat-cache warning
+  but exited `0`.
+- `env GOCACHE=/tmp/gocache go test ./...` - pass.
+- `git diff --check` - pass.
+- Manual API script against local server on `PORT=18082` - pass.
+
+### Next action
+Use `$gym-complete` with `CHAT_CONTEXT/backend_skills/tests/06_validation_error_consistency.md`.
+
+## Completion - 2026-05-26
+
+### Result
+- Validation/error consistency cycle completed end-to-end.
+- Added shared backend HTTP error contract:
+  `{"error":{"code":"...","message":"...","details":{}}}`.
+- Migrated all current handler error paths and auth middleware to stable public error codes.
+- Sanitized invalid body responses so raw Gin binding errors are not returned.
+- Preserved existing success response shapes.
+- Updated API contract and REST samples with representative error checks.
+
+### Verification
+- `env GOCACHE=/tmp/gocache go build ./...` - pass; Go printed a read-only module stat-cache warning
+  but exited `0`.
+- `env GOCACHE=/tmp/gocache go test ./...` - pass.
+- `git diff --check` - pass.
+- Manual API on `PORT=18082` - pass for `UNAUTHORIZED`, `FORBIDDEN`, `INVALID_ID`, `INVALID_DATE`,
+  `INVALID_INPUT`, `NOT_FOUND`, and `CONFLICT`.
+
+### Docs updated
+- [x] `docs/api_contract.md`
+- [x] `api_test.http`
+- [x] `README.md`
+- [x] `docs/code_reading_guide.md`
+- [x] `CHAT_CONTEXT/README.md`
+
+### Follow-up risks
+- Handler-wide automated body assertions are still limited; broader integration tests can cover the
+  full API contract later.
+- Existing MVP data-integrity limitations remain outside this cycle: last-active-admin enforcement,
+  trainer reference validation for sessions, and transactional refresh-token revocation.
+- Manual test created and deactivated temporary employee `6a15b633ac178aaaab1f83fe`.
+
+### Next action
+Use `$gym-plan` or `$gym-implement` for the next backend cycle:
+`CHAT_CONTEXT/backend_skills/plans/07_indexes_data_integrity.md`.
 
 ---
 

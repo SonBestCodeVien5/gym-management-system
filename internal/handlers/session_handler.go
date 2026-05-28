@@ -37,25 +37,25 @@ type sessionEnrollRequest struct {
 func (h *SessionHandler) Create(c *gin.Context) {
 	var req sessionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid request body", "error": err.Error()})
+		RespondInvalidRequestBody(c)
 		return
 	}
 
 	branchID, err := primitive.ObjectIDFromHex(req.BranchID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid branch id"})
+		RespondInvalidID(c, "invalid branch id")
 		return
 	}
 
 	trainerID, err := primitive.ObjectIDFromHex(req.TrainerID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid trainer id"})
+		RespondInvalidID(c, "invalid trainer id")
 		return
 	}
 
 	scheduledAt, err := time.Parse(time.RFC3339, req.ScheduledAt)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid scheduled_at format"})
+		RespondInvalidDate(c, "invalid scheduled_at format")
 		return
 	}
 
@@ -72,9 +72,9 @@ func (h *SessionHandler) Create(c *gin.Context) {
 	if err := h.sessionService.CreateSession(c.Request.Context(), session); err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidSessionInput):
-			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			RespondInvalidInput(c, err.Error())
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}
@@ -85,7 +85,7 @@ func (h *SessionHandler) Create(c *gin.Context) {
 func (h *SessionHandler) GetByID(c *gin.Context) {
 	id := c.Param("id")
 	if _, err := primitive.ObjectIDFromHex(id); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid session id"})
+		RespondInvalidID(c, "invalid session id")
 		return
 	}
 
@@ -93,9 +93,9 @@ func (h *SessionHandler) GetByID(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrSessionNotFound):
-			c.JSON(http.StatusNotFound, gin.H{"message": "session not found"})
+			RespondNotFound(c, "session not found")
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}
@@ -110,7 +110,7 @@ func (h *SessionHandler) List(c *gin.Context) {
 	if dateParam := c.Query("date"); dateParam != "" {
 		parsed, err := time.Parse(time.RFC3339, dateParam)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid date format"})
+			RespondInvalidDate(c, "invalid date format")
 			return
 		}
 		filter.Date = &parsed
@@ -120,9 +120,9 @@ func (h *SessionHandler) List(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidSessionInput):
-			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			RespondInvalidInput(c, err.Error())
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}
@@ -134,13 +134,13 @@ func (h *SessionHandler) List(c *gin.Context) {
 func (h *SessionHandler) Enroll(c *gin.Context) {
 	sessionID := c.Param("id")
 	if _, err := primitive.ObjectIDFromHex(sessionID); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid session id"})
+		RespondInvalidID(c, "invalid session id")
 		return
 	}
 
 	var req sessionEnrollRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid request body", "error": err.Error()})
+		RespondInvalidRequestBody(c)
 		return
 	}
 
@@ -148,13 +148,13 @@ func (h *SessionHandler) Enroll(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidSessionInput):
-			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			RespondInvalidInput(c, err.Error())
 		case errors.Is(err, service.ErrSessionNotFound):
-			c.JSON(http.StatusNotFound, gin.H{"message": "session not found"})
+			RespondNotFound(c, "session not found")
 		case errors.Is(err, service.ErrSessionTagNotAllowed), errors.Is(err, service.ErrSessionAlreadyEnrolled), errors.Is(err, service.ErrSessionAlreadyFull):
-			c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
+			RespondConflict(c, err.Error())
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}
@@ -166,13 +166,13 @@ func (h *SessionHandler) Enroll(c *gin.Context) {
 func (h *SessionHandler) CheckIn(c *gin.Context) {
 	sessionID := c.Param("id")
 	if _, err := primitive.ObjectIDFromHex(sessionID); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid session id"})
+		RespondInvalidID(c, "invalid session id")
 		return
 	}
 
 	var req sessionEnrollRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid request body", "error": err.Error()})
+		RespondInvalidRequestBody(c)
 		return
 	}
 
@@ -180,15 +180,15 @@ func (h *SessionHandler) CheckIn(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidSessionInput):
-			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			RespondInvalidInput(c, err.Error())
 		case errors.Is(err, service.ErrSessionNotFound):
-			c.JSON(http.StatusNotFound, gin.H{"message": "session not found"})
+			RespondNotFound(c, "session not found")
 		case errors.Is(err, service.ErrSessionNotEnrolled), errors.Is(err, service.ErrSessionCheckInClosed):
-			c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
+			RespondConflict(c, err.Error())
 		case errors.Is(err, service.ErrAttendanceCheckInNotAllowed), errors.Is(err, service.ErrSubscriptionExpired), errors.Is(err, service.ErrNoRemainingSessions), errors.Is(err, service.ErrWeeklySessionLimitReached):
-			c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
+			RespondConflict(c, err.Error())
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}

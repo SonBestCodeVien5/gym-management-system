@@ -41,7 +41,7 @@ func (h *BranchHandler) Create(c *gin.Context) {
 	// 1) Parse JSON body.
 	var req branchRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid request body", "error": err.Error()})
+		RespondInvalidRequestBody(c)
 		return
 	}
 
@@ -50,7 +50,7 @@ func (h *BranchHandler) Create(c *gin.Context) {
 	if req.ManagerID != "" {
 		parsed, err := primitive.ObjectIDFromHex(req.ManagerID)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid manager id"})
+			RespondInvalidID(c, "invalid manager id")
 			return
 		}
 		managerID = parsed
@@ -72,9 +72,9 @@ func (h *BranchHandler) Create(c *gin.Context) {
 	if err := h.branchService.CreateBranch(c.Request.Context(), branch); err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidBranchInput):
-			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			RespondInvalidInput(c, err.Error())
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}
@@ -86,7 +86,7 @@ func (h *BranchHandler) Create(c *gin.Context) {
 func (h *BranchHandler) GetByID(c *gin.Context) {
 	id := c.Param("id")
 	if _, err := primitive.ObjectIDFromHex(id); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid branch id"})
+		RespondInvalidID(c, "invalid branch id")
 		return
 	}
 
@@ -94,9 +94,9 @@ func (h *BranchHandler) GetByID(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrBranchNotFound):
-			c.JSON(http.StatusNotFound, gin.H{"message": "branch not found"})
+			RespondNotFound(c, "branch not found")
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}
@@ -108,7 +108,7 @@ func (h *BranchHandler) GetByID(c *gin.Context) {
 func (h *BranchHandler) List(c *gin.Context) {
 	branches, err := h.branchService.ListBranches(c.Request.Context())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+		RespondInternal(c)
 		return
 	}
 
@@ -119,13 +119,13 @@ func (h *BranchHandler) List(c *gin.Context) {
 func (h *BranchHandler) Nearby(c *gin.Context) {
 	lng, err := strconv.ParseFloat(c.Query("lng"), 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid branch input"})
+		RespondInvalidInput(c, "invalid branch input")
 		return
 	}
 
 	lat, err := strconv.ParseFloat(c.Query("lat"), 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid branch input"})
+		RespondInvalidInput(c, "invalid branch input")
 		return
 	}
 
@@ -133,7 +133,7 @@ func (h *BranchHandler) Nearby(c *gin.Context) {
 	if c.Query("max_distance") != "" {
 		maxDistance, err = strconv.ParseInt(c.Query("max_distance"), 10, 64)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid branch input"})
+			RespondInvalidInput(c, "invalid branch input")
 			return
 		}
 		if maxDistance <= 0 {
@@ -145,7 +145,7 @@ func (h *BranchHandler) Nearby(c *gin.Context) {
 	if c.Query("limit") != "" {
 		limit, err = strconv.ParseInt(c.Query("limit"), 10, 64)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid branch input"})
+			RespondInvalidInput(c, "invalid branch input")
 			return
 		}
 	}
@@ -154,9 +154,9 @@ func (h *BranchHandler) Nearby(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidBranchInput):
-			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			RespondInvalidInput(c, err.Error())
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}
@@ -168,13 +168,13 @@ func (h *BranchHandler) Nearby(c *gin.Context) {
 func (h *BranchHandler) Update(c *gin.Context) {
 	id := c.Param("id")
 	if _, err := primitive.ObjectIDFromHex(id); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid branch id"})
+		RespondInvalidID(c, "invalid branch id")
 		return
 	}
 
 	var req branchRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid request body", "error": err.Error()})
+		RespondInvalidRequestBody(c)
 		return
 	}
 
@@ -182,7 +182,7 @@ func (h *BranchHandler) Update(c *gin.Context) {
 	if req.ManagerID != "" {
 		parsed, err := primitive.ObjectIDFromHex(req.ManagerID)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid manager id"})
+			RespondInvalidID(c, "invalid manager id")
 			return
 		}
 		managerID = parsed
@@ -203,11 +203,11 @@ func (h *BranchHandler) Update(c *gin.Context) {
 	if err := h.branchService.UpdateBranch(c.Request.Context(), id, branch); err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidBranchInput):
-			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			RespondInvalidInput(c, err.Error())
 		case errors.Is(err, service.ErrBranchNotFound):
-			c.JSON(http.StatusNotFound, gin.H{"message": "branch not found"})
+			RespondNotFound(c, "branch not found")
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}
@@ -219,16 +219,16 @@ func (h *BranchHandler) Update(c *gin.Context) {
 func (h *BranchHandler) Delete(c *gin.Context) {
 	id := c.Param("id")
 	if _, err := primitive.ObjectIDFromHex(id); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid branch id"})
+		RespondInvalidID(c, "invalid branch id")
 		return
 	}
 
 	if err := h.branchService.DeleteBranch(c.Request.Context(), id); err != nil {
 		switch {
 		case errors.Is(err, service.ErrBranchNotFound):
-			c.JSON(http.StatusNotFound, gin.H{"message": "branch not found"})
+			RespondNotFound(c, "branch not found")
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}

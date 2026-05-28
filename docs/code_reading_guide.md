@@ -25,6 +25,9 @@ Khi doc mot feature, di theo luong:
 
 `route -> handler -> service -> repository -> model`
 
+HTTP error response shape dung helper chung trong `internal/handlers/response.go`. Handler map
+service error sang public `error.code`; service va repository khong biet HTTP response shape.
+
 ## 3. Luong Nen Doc Truoc
 
 | Feature | File chinh |
@@ -36,6 +39,7 @@ Khi doc mot feature, di theo luong:
 | Branch nearby | `branch_handler.go`, `branch_service.go`, `branch_repo.go`, `branch.go` |
 | Auth and role guard | `auth_handler.go`, `auth_middleware.go`, `auth_service.go`, `employee_repo.go`, `refresh_token_repo.go`, `employee.go`, `refresh_token.go` |
 | Employee management | `employee_handler.go`, `employee_service.go`, `employee_repo.go`, `refresh_token_repo.go`, `employee.go` |
+| Error response consistency | `response.go`, `auth_middleware.go`, cac `*_handler.go`, `api_contract.md` |
 
 ## 4. Rule Dang Co
 
@@ -52,6 +56,8 @@ Khi doc mot feature, di theo luong:
   fields.
 - Employee management is admin-only, hashes password in service, never returns password hash, and
   revokes active refresh tokens on password reset or deactivation.
+- Error responses use `{"error":{"code":"...","message":"...","details":{}}}`. Success responses
+  keep the current `message`/`data` shape.
 
 Doc rule trong service truoc khi sua handler hay repository.
 

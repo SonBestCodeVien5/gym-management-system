@@ -28,7 +28,7 @@ type refreshTokenRequest struct {
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req loginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid request body", "error": err.Error()})
+		RespondInvalidRequestBody(c)
 		return
 	}
 
@@ -36,11 +36,11 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidAuthInput):
-			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			RespondInvalidInput(c, err.Error())
 		case errors.Is(err, service.ErrInvalidCredentials), errors.Is(err, service.ErrInactiveEmployee):
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "invalid credentials"})
+			RespondUnauthorized(c, "invalid credentials")
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}
@@ -51,11 +51,11 @@ func (h *AuthHandler) Login(c *gin.Context) {
 func (h *AuthHandler) Refresh(c *gin.Context) {
 	var req refreshTokenRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid request body", "error": err.Error()})
+		RespondInvalidRequestBody(c)
 		return
 	}
 	if req.RefreshToken == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "refresh_token is required"})
+		RespondInvalidInput(c, "refresh_token is required")
 		return
 	}
 
@@ -63,9 +63,9 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidToken), errors.Is(err, service.ErrInactiveEmployee):
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "invalid refresh token"})
+			RespondUnauthorized(c, "invalid refresh token")
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}
@@ -76,20 +76,20 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 func (h *AuthHandler) Logout(c *gin.Context) {
 	var req refreshTokenRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid request body", "error": err.Error()})
+		RespondInvalidRequestBody(c)
 		return
 	}
 	if req.RefreshToken == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "refresh_token is required"})
+		RespondInvalidInput(c, "refresh_token is required")
 		return
 	}
 
 	if err := h.authService.Logout(c.Request.Context(), req.RefreshToken); err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidToken):
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "invalid refresh token"})
+			RespondUnauthorized(c, "invalid refresh token")
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}

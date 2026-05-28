@@ -49,19 +49,19 @@ func (h *AttendanceHandler) CheckIn(c *gin.Context) {
 	// 1) Parse JSON body.
 	var req checkInRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid request body", "error": err.Error()})
+		RespondInvalidRequestBody(c)
 		return
 	}
 
 	// 2) Validate and convert required IDs.
 	subID, err := primitive.ObjectIDFromHex(req.SubscriptionID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid subscription id"})
+		RespondInvalidID(c, "invalid subscription id")
 		return
 	}
 	branchID, err := primitive.ObjectIDFromHex(req.BranchID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid branch id"})
+		RespondInvalidID(c, "invalid branch id")
 		return
 	}
 
@@ -70,7 +70,7 @@ func (h *AttendanceHandler) CheckIn(c *gin.Context) {
 	if req.Date != "" {
 		parsed, err := time.Parse(time.RFC3339, req.Date)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid date format"})
+			RespondInvalidDate(c, "invalid date format")
 			return
 		}
 		attendanceDate = parsed
@@ -80,7 +80,7 @@ func (h *AttendanceHandler) CheckIn(c *gin.Context) {
 	if req.IsMakeupFor != "" {
 		parsed, err := time.Parse(time.RFC3339, req.IsMakeupFor)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid is_makeup_for format"})
+			RespondInvalidDate(c, "invalid is_makeup_for format")
 			return
 		}
 		makeupFor = &parsed
@@ -90,7 +90,7 @@ func (h *AttendanceHandler) CheckIn(c *gin.Context) {
 	if req.SessionID != "" {
 		parsed, err := primitive.ObjectIDFromHex(req.SessionID)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid session id"})
+			RespondInvalidID(c, "invalid session id")
 			return
 		}
 		sessionID = &parsed
@@ -109,17 +109,17 @@ func (h *AttendanceHandler) CheckIn(c *gin.Context) {
 		// 5) Map domain errors to HTTP status codes.
 		switch {
 		case errors.Is(err, service.ErrInvalidAttendanceInput):
-			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			RespondInvalidInput(c, err.Error())
 		case errors.Is(err, service.ErrSubscriptionNotFound):
-			c.JSON(http.StatusNotFound, gin.H{"message": "subscription not found"})
+			RespondNotFound(c, "subscription not found")
 		case errors.Is(err, service.ErrAttendanceCheckInNotAllowed), errors.Is(err, service.ErrSubscriptionExpired), errors.Is(err, service.ErrNoRemainingSessions):
-			c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
+			RespondConflict(c, err.Error())
 		case errors.Is(err, service.ErrWeeklySessionLimitReached):
-			c.JSON(http.StatusConflict, gin.H{"message": "weekly session limit reached"})
+			RespondConflict(c, "weekly session limit reached")
 		case errors.Is(err, service.ErrReportedMissedLimitReached), errors.Is(err, service.ErrMakeupReferenceInvalid), errors.Is(err, service.ErrMakeupReferenceNotFound), errors.Is(err, service.ErrMakeupAlreadyUsed):
-			c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
+			RespondConflict(c, err.Error())
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}
@@ -132,18 +132,18 @@ func (h *AttendanceHandler) CheckIn(c *gin.Context) {
 func (h *AttendanceHandler) ReportMissed(c *gin.Context) {
 	var req attendanceReportRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid request body", "error": err.Error()})
+		RespondInvalidRequestBody(c)
 		return
 	}
 
 	subID, err := primitive.ObjectIDFromHex(req.SubscriptionID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid subscription id"})
+		RespondInvalidID(c, "invalid subscription id")
 		return
 	}
 	branchID, err := primitive.ObjectIDFromHex(req.BranchID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid branch id"})
+		RespondInvalidID(c, "invalid branch id")
 		return
 	}
 
@@ -151,7 +151,7 @@ func (h *AttendanceHandler) ReportMissed(c *gin.Context) {
 	if req.Date != "" {
 		parsed, err := time.Parse(time.RFC3339, req.Date)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid date format"})
+			RespondInvalidDate(c, "invalid date format")
 			return
 		}
 		attendanceDate = parsed
@@ -175,18 +175,18 @@ func (h *AttendanceHandler) ReportMissed(c *gin.Context) {
 func (h *AttendanceHandler) Makeup(c *gin.Context) {
 	var req attendanceMakeupRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid request body", "error": err.Error()})
+		RespondInvalidRequestBody(c)
 		return
 	}
 
 	subID, err := primitive.ObjectIDFromHex(req.SubscriptionID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid subscription id"})
+		RespondInvalidID(c, "invalid subscription id")
 		return
 	}
 	branchID, err := primitive.ObjectIDFromHex(req.BranchID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid branch id"})
+		RespondInvalidID(c, "invalid branch id")
 		return
 	}
 
@@ -194,19 +194,19 @@ func (h *AttendanceHandler) Makeup(c *gin.Context) {
 	if req.Date != "" {
 		parsed, err := time.Parse(time.RFC3339, req.Date)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid date format"})
+			RespondInvalidDate(c, "invalid date format")
 			return
 		}
 		attendanceDate = parsed
 	}
 
 	if req.IsMakeupFor == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "is_makeup_for is required"})
+		RespondInvalidInput(c, "is_makeup_for is required")
 		return
 	}
 	makeupFor, err := time.Parse(time.RFC3339, req.IsMakeupFor)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid is_makeup_for format"})
+		RespondInvalidDate(c, "invalid is_makeup_for format")
 		return
 	}
 
@@ -228,17 +228,17 @@ func (h *AttendanceHandler) Makeup(c *gin.Context) {
 func (h *AttendanceHandler) handleAttendanceError(c *gin.Context, err error) {
 	switch {
 	case errors.Is(err, service.ErrInvalidAttendanceInput):
-		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		RespondInvalidInput(c, err.Error())
 	case errors.Is(err, service.ErrSubscriptionNotFound):
-		c.JSON(http.StatusNotFound, gin.H{"message": "subscription not found"})
+		RespondNotFound(c, "subscription not found")
 	case errors.Is(err, service.ErrAttendanceCheckInNotAllowed), errors.Is(err, service.ErrSubscriptionExpired), errors.Is(err, service.ErrNoRemainingSessions):
-		c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
+		RespondConflict(c, err.Error())
 	case errors.Is(err, service.ErrWeeklySessionLimitReached):
-		c.JSON(http.StatusConflict, gin.H{"message": "weekly session limit reached"})
+		RespondConflict(c, "weekly session limit reached")
 	case errors.Is(err, service.ErrReportedMissedLimitReached), errors.Is(err, service.ErrMakeupReferenceInvalid), errors.Is(err, service.ErrMakeupReferenceNotFound), errors.Is(err, service.ErrMakeupAlreadyUsed):
-		c.JSON(http.StatusConflict, gin.H{"message": err.Error()})
+		RespondConflict(c, err.Error())
 	default:
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+		RespondInternal(c)
 	}
 }
 
@@ -247,7 +247,7 @@ func (h *AttendanceHandler) ListBySubscription(c *gin.Context) {
 	// 1) Validate subscription ID in path.
 	subscriptionID := c.Param("id")
 	if _, err := primitive.ObjectIDFromHex(subscriptionID); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid subscription id"})
+		RespondInvalidID(c, "invalid subscription id")
 		return
 	}
 
@@ -256,9 +256,9 @@ func (h *AttendanceHandler) ListBySubscription(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidAttendanceInput):
-			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			RespondInvalidInput(c, err.Error())
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}

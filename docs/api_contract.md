@@ -80,6 +80,41 @@ Muc tieu: chot ten endpoint + request/response co ban de FE va BE dung chung.
 
 ---
 
+## Error response
+
+Tất cả lỗi HTTP dùng shape chung:
+
+```json
+{
+  "error": {
+    "code": "INVALID_INPUT",
+    "message": "invalid request body",
+    "details": {}
+  }
+}
+```
+
+Rules:
+
+- `error.code` là enum ổn định để FE xử lý.
+- `error.message` là message đã sanitize.
+- `error.details` luôn là object; mặc định `{}`.
+- API không trả raw JSON binder, MongoDB, JWT, bcrypt, hoặc storage error text.
+- Success response giữ shape hiện tại: `{"message":"...","data":...}` hoặc `{"message":"..."}`.
+
+Error codes:
+
+| Code | HTTP | Dùng khi |
+|---|---:|---|
+| `INVALID_INPUT` | 400 | Body sai, thiếu required field, enum sai, money/count âm, business validation input sai |
+| `INVALID_ID` | 400 | ObjectID trong path/query/body không hợp lệ |
+| `INVALID_DATE` | 400 | RFC3339 date/datetime không hợp lệ |
+| `UNAUTHORIZED` | 401 | Missing/malformed/expired/inactive access token, invalid credentials, invalid refresh token |
+| `FORBIDDEN` | 403 | Đã auth nhưng role không đủ quyền |
+| `NOT_FOUND` | 404 | Resource hoặc reference không tồn tại |
+| `CONFLICT` | 409 | Duplicate unique field hoặc business-state conflict |
+| `INTERNAL_ERROR` | 500 | Storage/token/internal failure không mong muốn |
+
 ## Endpoint details
 
 ### Authentication

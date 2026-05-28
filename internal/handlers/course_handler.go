@@ -35,7 +35,7 @@ func (h *CourseHandler) Create(c *gin.Context) {
 	// 1) Parse JSON body.
 	var req createCourseRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid request body", "error": err.Error()})
+		RespondInvalidRequestBody(c)
 		return
 	}
 
@@ -53,9 +53,9 @@ func (h *CourseHandler) Create(c *gin.Context) {
 	if err := h.courseService.CreateCourse(c.Request.Context(), course); err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidCourseInput):
-			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			RespondInvalidInput(c, err.Error())
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}
@@ -69,7 +69,7 @@ func (h *CourseHandler) GetByID(c *gin.Context) {
 	// 1) Validate path ID.
 	id := c.Param("id")
 	if _, err := primitive.ObjectIDFromHex(id); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid course id"})
+		RespondInvalidID(c, "invalid course id")
 		return
 	}
 
@@ -78,9 +78,9 @@ func (h *CourseHandler) GetByID(c *gin.Context) {
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrCourseNotFound):
-			c.JSON(http.StatusNotFound, gin.H{"message": "course not found"})
+			RespondNotFound(c, "course not found")
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}
@@ -93,7 +93,7 @@ func (h *CourseHandler) GetByID(c *gin.Context) {
 func (h *CourseHandler) List(c *gin.Context) {
 	courses, err := h.courseService.ListCourses(c.Request.Context())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+		RespondInternal(c)
 		return
 	}
 
@@ -105,14 +105,14 @@ func (h *CourseHandler) Update(c *gin.Context) {
 	// 1) Validate path ID.
 	id := c.Param("id")
 	if _, err := primitive.ObjectIDFromHex(id); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid course id"})
+		RespondInvalidID(c, "invalid course id")
 		return
 	}
 
 	// 2) Parse JSON body.
 	var req createCourseRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid request body", "error": err.Error()})
+		RespondInvalidRequestBody(c)
 		return
 	}
 
@@ -128,11 +128,11 @@ func (h *CourseHandler) Update(c *gin.Context) {
 	if err := h.courseService.UpdateCourse(c.Request.Context(), id, course); err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidCourseInput):
-			c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+			RespondInvalidInput(c, err.Error())
 		case errors.Is(err, service.ErrCourseNotFound):
-			c.JSON(http.StatusNotFound, gin.H{"message": "course not found"})
+			RespondNotFound(c, "course not found")
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}
@@ -144,16 +144,16 @@ func (h *CourseHandler) Update(c *gin.Context) {
 func (h *CourseHandler) Delete(c *gin.Context) {
 	id := c.Param("id")
 	if _, err := primitive.ObjectIDFromHex(id); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid course id"})
+		RespondInvalidID(c, "invalid course id")
 		return
 	}
 
 	if err := h.courseService.DeleteCourse(c.Request.Context(), id); err != nil {
 		switch {
 		case errors.Is(err, service.ErrCourseNotFound):
-			c.JSON(http.StatusNotFound, gin.H{"message": "course not found"})
+			RespondNotFound(c, "course not found")
 		default:
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "internal server error"})
+			RespondInternal(c)
 		}
 		return
 	}

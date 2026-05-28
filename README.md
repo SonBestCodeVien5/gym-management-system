@@ -11,6 +11,10 @@ This project follows a simple layered structure:
 - `repository`: data access to MongoDB.
 - `models`: domain data models.
 
+HTTP errors use a shared response contract:
+`{"error":{"code":"...","message":"...","details":{}}}`. Success responses keep the existing
+`message`/`data` shape.
+
 Documentation map: see [docs/README.md](docs/README.md).
 
 Current API contract: see [docs/api_contract.md](docs/api_contract.md).
@@ -118,6 +122,14 @@ Behavior:
 - Responses never expose `password_hash` or `normalized_email`.
 - Password reset and employee deactivation revoke active refresh tokens.
 - Offboarding uses `status = inactive`; no hard delete endpoint is exposed.
+
+### 9) Error Response Consistency
+
+- All backend error responses use stable `error.code` values such as `INVALID_INPUT`,
+  `INVALID_ID`, `INVALID_DATE`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, and
+  `INTERNAL_ERROR`.
+- Invalid request bodies are sanitized and no longer return raw Gin binding errors.
+- The shared error helper lives in `internal/handlers/response.go`.
 
 ## Run Locally
 
