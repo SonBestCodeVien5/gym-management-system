@@ -44,6 +44,11 @@ Use the repo-scoped skills under [../.codex/skills](../.codex/skills):
 | Backend review | `$gym-review` |
 | Backend verification | `$gym-test` |
 | Feature completion/docs-context sync | `$gym-complete` |
+| Frontend plan | `$gym-fe-plan` |
+| Frontend implementation | `$gym-fe-implement` |
+| Frontend review | `$gym-fe-review` |
+| Frontend verification | `$gym-fe-test` |
+| Frontend completion/docs-context sync | `$gym-fe-complete` |
 | Resume backend memory | `$gym-resume` |
 | Backend status | `$gym-status` |
 | Durable docs | `$gym-docs` |

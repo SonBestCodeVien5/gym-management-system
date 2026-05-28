@@ -1,0 +1,386 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;700;900&family=Playfair+Display:wght@400;700&family=Raleway:wght@300;400;600;800&family=Orbitron:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  .showcase { width: 100%; font-family: var(--font-sans); }
+
+  .tabs { display: flex; gap: 8px; padding: 1rem 0; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .tab-btn {
+    padding: 8px 20px;
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    background: var(--color-background-primary);
+    color: var(--color-text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tab-btn:hover { background: var(--color-background-secondary); color: var(--color-text-primary); }
+  .tab-btn.active {
+    background: var(--color-text-primary);
+    color: var(--color-background-primary);
+    border-color: var(--color-text-primary);
+  }
+
+  .preview-frame {
+    width: 100%;
+    border-radius: var(--border-radius-lg);
+    border: 0.5px solid var(--color-border-tertiary);
+    overflow: hidden;
+  }
+
+  .style-panel { display: none; }
+  .style-panel.active { display: block; }
+
+  /* ===== STYLE 1: IRON FORGE - Dark Industrial ===== */
+  .iron { background: #0d0d0d; color: #f0ece4; min-height: 520px; position: relative; overflow: hidden; }
+  .iron::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(255,255,255,0.015) 40px, rgba(255,255,255,0.015) 41px);
+    pointer-events: none;
+  }
+  .iron-nav {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1.2rem 2rem; border-bottom: 1px solid rgba(255,70,20,0.3);
+    position: relative; z-index: 2;
+  }
+  .iron-logo { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 4px; color: #ff4614; }
+  .iron-nav-links { display: flex; gap: 2rem; }
+  .iron-nav-links span { font-family: 'Barlow Condensed', sans-serif; font-size: 13px; letter-spacing: 2px; color: #888; cursor: pointer; text-transform: uppercase; }
+  .iron-nav-links span:hover { color: #ff4614; }
+  .iron-hero { padding: 3rem 2rem 2rem; position: relative; z-index: 2; }
+  .iron-eyebrow { font-family: 'Barlow Condensed', sans-serif; font-size: 12px; letter-spacing: 5px; color: #ff4614; margin-bottom: 1rem; text-transform: uppercase; }
+  .iron-headline {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 88px; line-height: 0.9;
+    color: #f0ece4;
+    letter-spacing: 2px;
+  }
+  .iron-headline .stroke { -webkit-text-stroke: 2px #ff4614; color: transparent; }
+  .iron-sub { font-family: 'Barlow Condensed', sans-serif; font-size: 16px; color: #888; margin-top: 1.5rem; max-width: 380px; line-height: 1.6; }
+  .iron-cta-row { display: flex; gap: 1rem; margin-top: 2rem; align-items: center; }
+  .iron-btn-primary {
+    font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 3px;
+    padding: 14px 36px; background: #ff4614; color: #0d0d0d; border: none; cursor: pointer;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 100%, 10px 100%);
+  }
+  .iron-btn-secondary { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; letter-spacing: 2px; color: #888; cursor: pointer; }
+  .iron-stats { display: flex; gap: 0; border-top: 1px solid rgba(255,255,255,0.08); margin: 0 2rem; }
+  .iron-stat { flex: 1; padding: 1.2rem; border-right: 1px solid rgba(255,255,255,0.08); }
+  .iron-stat:last-child { border-right: none; }
+  .iron-stat-num { font-family: 'Bebas Neue', sans-serif; font-size: 40px; color: #ff4614; line-height: 1; }
+  .iron-stat-label { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; letter-spacing: 2px; color: #666; text-transform: uppercase; margin-top: 4px; }
+  .iron-accent { position: absolute; right: 0; top: 0; width: 40%; height: 100%; background: linear-gradient(135deg, transparent 0%, rgba(255,70,20,0.05) 100%); pointer-events: none; }
+  .iron-grid-overlay { position: absolute; right: 2rem; top: 4rem; width: 200px; height: 200px; opacity: 0.06; pointer-events: none; }
+
+  /* ===== STYLE 2: APEX - Luxury Minimal ===== */
+  .apex { background: #faf8f3; color: #1a1814; min-height: 520px; }
+  .apex-nav {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1.5rem 2.5rem; 
+  }
+  .apex-logo-wrap { display: flex; align-items: center; gap: 10px; }
+  .apex-logo-icon { width: 28px; height: 28px; border: 2px solid #b8965a; transform: rotate(45deg); }
+  .apex-logo { font-family: 'Raleway', sans-serif; font-size: 18px; font-weight: 800; letter-spacing: 6px; color: #1a1814; text-transform: uppercase; }
+  .apex-nav-links { display: flex; gap: 2.5rem; }
+  .apex-nav-links span { font-family: 'Raleway', sans-serif; font-size: 12px; letter-spacing: 2px; color: #888; cursor: pointer; text-transform: uppercase; font-weight: 600; }
+  .apex-nav-links span:hover { color: #b8965a; }
+  .apex-hero { display: grid; grid-template-columns: 1fr 1fr; gap: 0; min-height: 380px; }
+  .apex-hero-left { padding: 3rem 2.5rem; display: flex; flex-direction: column; justify-content: center; }
+  .apex-tag { font-family: 'Raleway', sans-serif; font-size: 10px; letter-spacing: 4px; color: #b8965a; text-transform: uppercase; font-weight: 800; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 10px; }
+  .apex-tag::before { content: ''; width: 30px; height: 1px; background: #b8965a; }
+  .apex-headline { font-family: 'Playfair Display', serif; font-size: 52px; line-height: 1.1; color: #1a1814; font-weight: 700; }
+  .apex-headline em { font-style: italic; color: #b8965a; }
+  .apex-body { font-family: 'Raleway', sans-serif; font-size: 14px; line-height: 1.8; color: #888; margin-top: 1.5rem; max-width: 320px; font-weight: 400; }
+  .apex-cta-row { display: flex; gap: 1rem; margin-top: 2.5rem; align-items: center; }
+  .apex-btn {
+    font-family: 'Raleway', sans-serif; font-size: 11px; letter-spacing: 3px; font-weight: 700;
+    padding: 14px 30px; background: #1a1814; color: #faf8f3; border: none; cursor: pointer; text-transform: uppercase;
+  }
+  .apex-btn-outline {
+    font-family: 'Raleway', sans-serif; font-size: 11px; letter-spacing: 3px; font-weight: 700;
+    padding: 14px 30px; background: transparent; color: #1a1814; border: 1px solid #1a1814; cursor: pointer; text-transform: uppercase;
+  }
+  .apex-hero-right { background: #1a1814; position: relative; display: flex; flex-direction: column; justify-content: flex-end; padding: 2rem; }
+  .apex-hero-img-placeholder { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: repeating-linear-gradient(45deg, #1a1814, #1a1814 10px, #1e1c17 10px, #1e1c17 20px); opacity: 0.5; }
+  .apex-feature-card {
+    position: relative; z-index: 2; background: rgba(184,150,90,0.1); border: 1px solid rgba(184,150,90,0.3);
+    padding: 1rem 1.25rem; display: flex; gap: 1rem; align-items: center;
+  }
+  .apex-feature-num { font-family: 'Playfair Display', serif; font-size: 32px; color: #b8965a; font-weight: 700; line-height: 1; }
+  .apex-feature-text { font-family: 'Raleway', sans-serif; font-size: 12px; color: #ccc; letter-spacing: 1px; }
+  .apex-services { display: flex; border-top: 1px solid #e8e2d6; }
+  .apex-service { flex: 1; padding: 1.2rem 2.5rem; border-right: 1px solid #e8e2d6; }
+  .apex-service:last-child { border-right: none; }
+  .apex-service-title { font-family: 'Raleway', sans-serif; font-size: 11px; letter-spacing: 2px; font-weight: 700; color: #1a1814; text-transform: uppercase; margin-bottom: 6px; }
+  .apex-service-desc { font-family: 'Raleway', sans-serif; font-size: 12px; color: #999; line-height: 1.6; }
+
+  /* ===== STYLE 3: PULSE - Neon Tech ===== */
+  .pulse { background: #050a14; color: #e8f4ff; min-height: 520px; position: relative; overflow: hidden; }
+  .pulse::after {
+    content: '';
+    position: absolute; top: -50%; right: -20%; width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(0,240,160,0.06) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .pulse-nav {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 1.2rem 2rem; border-bottom: 1px solid rgba(0,240,160,0.15);
+    position: relative; z-index: 2;
+  }
+  .pulse-logo { font-family: 'Orbitron', sans-serif; font-size: 20px; letter-spacing: 6px; color: #00f0a0; font-weight: 700; }
+  .pulse-nav-links { display: flex; gap: 2rem; }
+  .pulse-nav-links span { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 1px; color: rgba(232,244,255,0.4); cursor: pointer; }
+  .pulse-nav-links span:hover { color: #00f0a0; }
+  .pulse-hero { padding: 2.5rem 2rem; position: relative; z-index: 2; }
+  .pulse-line { font-family: 'Space Mono', monospace; font-size: 11px; color: rgba(0,240,160,0.6); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+  .pulse-line::before { content: ''; display: inline-block; width: 8px; height: 8px; background: #00f0a0; border-radius: 50%; }
+  .pulse-headline { font-family: 'Orbitron', sans-serif; font-size: 54px; line-height: 1.0; color: #e8f4ff; font-weight: 900; letter-spacing: 2px; }
+  .pulse-headline .hi { color: #00f0a0; }
+  .pulse-sub { font-family: 'Space Mono', monospace; font-size: 12px; line-height: 1.9; color: rgba(232,244,255,0.45); margin-top: 1.5rem; max-width: 380px; }
+  .pulse-cta-row { display: flex; gap: 1rem; margin-top: 2rem; align-items: center; }
+  .pulse-btn {
+    font-family: 'Orbitron', sans-serif; font-size: 12px; letter-spacing: 2px;
+    padding: 14px 28px; background: transparent; color: #00f0a0;
+    border: 1px solid #00f0a0; cursor: pointer;
+    position: relative; overflow: hidden;
+  }
+  .pulse-btn-solid {
+    font-family: 'Orbitron', sans-serif; font-size: 12px; letter-spacing: 2px;
+    padding: 14px 28px; background: #00f0a0; color: #050a14;
+    border: 1px solid #00f0a0; cursor: pointer; font-weight: 700;
+  }
+  .pulse-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 1.5rem 2rem; }
+  .pulse-card {
+    padding: 1.2rem; border: 1px solid rgba(0,240,160,0.12);
+    background: rgba(0,240,160,0.03);
+    position: relative;
+  }
+  .pulse-card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: #00f0a0; opacity: 0.6; }
+  .pulse-card-label { font-family: 'Space Mono', monospace; font-size: 10px; color: rgba(0,240,160,0.6); letter-spacing: 2px; margin-bottom: 8px; }
+  .pulse-card-val { font-family: 'Orbitron', sans-serif; font-size: 28px; color: #e8f4ff; font-weight: 700; line-height: 1; }
+  .pulse-card-unit { font-family: 'Space Mono', monospace; font-size: 11px; color: rgba(232,244,255,0.3); margin-top: 4px; }
+
+  .info-row {
+    display: flex; gap: 12px; margin-top: 1.5rem; flex-wrap: wrap;
+  }
+  .info-tag {
+    padding: 6px 14px;
+    border-radius: var(--border-radius-md);
+    font-size: 12px; font-weight: 500;
+    border: 0.5px solid var(--color-border-secondary);
+    color: var(--color-text-secondary);
+    background: var(--color-background-secondary);
+  }
+  .info-tag strong { color: var(--color-text-primary); }
+
+  .try-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 1rem; padding: 10px 20px;
+    border: 0.5px solid var(--color-border-secondary);
+    border-radius: var(--border-radius-md);
+    background: var(--color-background-primary);
+    color: var(--color-text-primary);
+    font-size: 13px; cursor: pointer;
+    font-family: var(--font-sans);
+    transition: background 0.15s;
+  }
+  .try-btn:hover { background: var(--color-background-secondary); }
+
+  .desc-area { padding: 1rem 0 0.5rem; }
+  .desc-title { font-size: 15px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 4px; }
+  .desc-body { font-size: 13px; color: var(--color-text-secondary); line-height: 1.7; }
+</style>
+
+<h2 class="sr-only">Showcase 3 phong cách thiết kế website gym</h2>
+
+<div class="showcase">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchStyle('iron', this)">🔥 Style 1 — Iron Forge</button>
+    <button class="tab-btn" onclick="switchStyle('apex', this)">✦ Style 2 — Apex Luxury</button>
+    <button class="tab-btn" onclick="switchStyle('pulse', this)">⚡ Style 3 — Pulse Neon</button>
+  </div>
+
+  <!-- IRON FORGE -->
+  <div class="style-panel active" id="panel-iron">
+    <div class="preview-frame">
+      <div class="iron">
+        <div class="iron-accent"></div>
+        <nav class="iron-nav">
+          <div class="iron-logo">IRON FORGE</div>
+          <div class="iron-nav-links">
+            <span>Lịch Tập</span><span>Huấn Luyện</span><span>Gói Tập</span><span>Liên Hệ</span>
+          </div>
+        </nav>
+        <div class="iron-hero">
+          <div class="iron-eyebrow">— Hà Nội · Tập Luyện Chuyên Nghiệp</div>
+          <div class="iron-headline">
+            RÈN<br>
+            <span class="stroke">THÉP</span><br>
+            THÂN
+          </div>
+          <div class="iron-sub">Không gian luyện tập dành cho những người muốn thực sự thay đổi. Không phô trương. Chỉ là kết quả.</div>
+          <div class="iron-cta-row">
+            <button class="iron-btn-primary">ĐĂNG KÝ NGAY</button>
+            <span class="iron-btn-secondary">→ Xem chương trình</span>
+          </div>
+        </div>
+        <div class="iron-stats">
+          <div class="iron-stat">
+            <div class="iron-stat-num">12+</div>
+            <div class="iron-stat-label">Năm Kinh Nghiệm</div>
+          </div>
+          <div class="iron-stat">
+            <div class="iron-stat-num">3.8K</div>
+            <div class="iron-stat-label">Hội Viên</div>
+          </div>
+          <div class="iron-stat">
+            <div class="iron-stat-num">48</div>
+            <div class="iron-stat-label">PT Chuyên Nghiệp</div>
+          </div>
+          <div class="iron-stat">
+            <div class="iron-stat-num">24/7</div>
+            <div class="iron-stat-label">Mở Cửa</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="desc-area">
+      <div class="desc-title">Iron Forge — Dark Industrial / Brutalist</div>
+      <div class="desc-body">Phong cách mạnh mẽ, thô ráp. Typography "Bebas Neue" đậm chắc, màu cam-đỏ rực trên nền đen. Phù hợp gym bodybuilding, powerlifting, hay bất kỳ thương hiệu muốn tạo cảm giác <em>hardcore</em>.</div>
+    </div>
+    <div class="info-row">
+      <span class="info-tag"><strong>Font:</strong> Bebas Neue + Barlow Condensed</span>
+      <span class="info-tag"><strong>Màu:</strong> #0d0d0d + #ff4614</span>
+      <span class="info-tag"><strong>Mood:</strong> Mạnh mẽ, Raw, Hardcore</span>
+    </div>
+    <button class="try-btn" onclick="sendPrompt('Tạo code React Vite đầy đủ cho website gym phong cách Iron Forge: dark industrial, Bebas Neue font, màu đỏ cam trên nền đen, có hero section, stats, services section')">Tạo code đầy đủ phong cách này ↗</button>
+  </div>
+
+  <!-- APEX LUXURY -->
+  <div class="style-panel" id="panel-apex">
+    <div class="preview-frame">
+      <div class="apex">
+        <nav class="apex-nav">
+          <div class="apex-logo-wrap">
+            <div class="apex-logo-icon"></div>
+            <div class="apex-logo">APEX</div>
+          </div>
+          <div class="apex-nav-links">
+            <span>Chương Trình</span><span>PT</span><span>Gói Vip</span><span>Liên Hệ</span>
+          </div>
+        </nav>
+        <div class="apex-hero">
+          <div class="apex-hero-left">
+            <div class="apex-tag">Premium Fitness Club · Hà Nội</div>
+            <div class="apex-headline">Nơi Sức Mạnh<br>Gặp <em>Tinh Tế</em></div>
+            <div class="apex-body">Trải nghiệm luyện tập đẳng cấp với đội ngũ huấn luyện viên quốc tế, thiết bị cao cấp và không gian được thiết kế riêng cho bạn.</div>
+            <div class="apex-cta-row">
+              <button class="apex-btn">Trải Nghiệm Ngay</button>
+              <button class="apex-btn-outline">Xem Tour</button>
+            </div>
+          </div>
+          <div class="apex-hero-right">
+            <div class="apex-hero-img-placeholder"></div>
+            <div class="apex-feature-card">
+              <div class="apex-feature-num">01</div>
+              <div class="apex-feature-text">
+                <div style="font-weight:700;font-size:13px;color:#e8e0d0;margin-bottom:3px;">Tư Vấn Cá Nhân</div>
+                <div>Lộ trình tập luyện thiết kế riêng cho từng người</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="apex-services">
+          <div class="apex-service">
+            <div class="apex-service-title">Cardio Zone</div>
+            <div class="apex-service-desc">Thiết bị treadmill, bike cao cấp nhập khẩu</div>
+          </div>
+          <div class="apex-service">
+            <div class="apex-service-title">Strength Area</div>
+            <div class="apex-service-desc">Free weight & máy tập chuyên dụng</div>
+          </div>
+          <div class="apex-service">
+            <div class="apex-service-title">Yoga & Spa</div>
+            <div class="apex-service-desc">Phòng tập riêng, dịch vụ thư giãn toàn diện</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="desc-area">
+      <div class="desc-title">Apex — Luxury Minimal / Premium</div>
+      <div class="desc-body">Phong cách cao cấp, thanh lịch. Font serif "Playfair Display" kết hợp Raleway tinh tế. Màu vàng gold trên nền kem. Phù hợp gym cao cấp, fitness club VIP hoặc studio boutique.</div>
+    </div>
+    <div class="info-row">
+      <span class="info-tag"><strong>Font:</strong> Playfair Display + Raleway</span>
+      <span class="info-tag"><strong>Màu:</strong> #faf8f3 + #b8965a (gold)</span>
+      <span class="info-tag"><strong>Mood:</strong> Sang trọng, Tinh tế, Cao cấp</span>
+    </div>
+    <button class="try-btn" onclick="sendPrompt('Tạo code React Vite đầy đủ cho website gym phong cách Apex Luxury: nền kem #faf8f3, font Playfair Display serif, màu gold #b8965a, layout 2 cột hero, minimal elegant, có navbar, hero, services, pricing section')">Tạo code đầy đủ phong cách này ↗</button>
+  </div>
+
+  <!-- PULSE NEON -->
+  <div class="style-panel" id="panel-pulse">
+    <div class="preview-frame">
+      <div class="pulse">
+        <nav class="pulse-nav">
+          <div class="pulse-logo">PULSE</div>
+          <div class="pulse-nav-links">
+            <span>// training</span><span>// schedule</span><span>// plans</span><span>// contact</span>
+          </div>
+        </nav>
+        <div class="pulse-hero">
+          <div class="pulse-line">SYS_ACTIVE · HÀ NỘI FITNESS NETWORK</div>
+          <div class="pulse-headline">
+            PUSH<br>YOUR<br><span class="hi">LIMIT_</span>
+          </div>
+          <div class="pulse-sub">// Hệ thống luyện tập thế hệ mới<br>// AI workout tracking + Nutrition plan<br>// Kết nối cộng đồng 10,000+ members</div>
+          <div class="pulse-cta-row">
+            <button class="pulse-btn-solid">START NOW</button>
+            <button class="pulse-btn">EXPLORE →</button>
+          </div>
+        </div>
+        <div class="pulse-grid">
+          <div class="pulse-card">
+            <div class="pulse-card-label">MEMBERS</div>
+            <div class="pulse-card-val">10K+</div>
+            <div class="pulse-card-unit">active users</div>
+          </div>
+          <div class="pulse-card">
+            <div class="pulse-card-label">TRAINERS</div>
+            <div class="pulse-card-val">86</div>
+            <div class="pulse-card-unit">certified pro</div>
+          </div>
+          <div class="pulse-card">
+            <div class="pulse-card-label">UPTIME</div>
+            <div class="pulse-card-val">24/7</div>
+            <div class="pulse-card-unit">always open</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="desc-area">
+      <div class="desc-title">Pulse — Neon Tech / Cyberpunk</div>
+      <div class="desc-body">Phong cách công nghệ, tương lai. Font "Orbitron" + "Space Mono" monospace. Màu neon xanh lá (#00f0a0) trên nền đen-xanh navy. Phù hợp gym công nghệ cao, ứng dụng fitness, hay thương hiệu muốn nhắm tới Gen Z.</div>
+    </div>
+    <div class="info-row">
+      <span class="info-tag"><strong>Font:</strong> Orbitron + Space Mono</span>
+      <span class="info-tag"><strong>Màu:</strong> #050a14 + #00f0a0 (neon)</span>
+      <span class="info-tag"><strong>Mood:</strong> Tech, Futuristic, Gen Z</span>
+    </div>
+    <button class="try-btn" onclick="sendPrompt('Tạo code React Vite đầy đủ cho website gym phong cách Pulse Neon: nền đen #050a14, font Orbitron + Space Mono, màu neon xanh #00f0a0, cyberpunk tech style, có navbar, hero, stats cards, features section')">Tạo code đầy đủ phong cách này ↗</button>
+  </div>
+</div>
+
+<script>
+function switchStyle(name, btn) {
+  document.querySelectorAll('.style-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+</script>

@@ -10,6 +10,8 @@ Read this file when a new chat needs a short project handoff.
   [../docs/report-materials/README.md](../docs/report-materials/README.md).
 - Backend phase plans, implementation notes, reviews, and test notes stay in
   [backend_skills/README.md](backend_skills/README.md).
+- Frontend phase plans, implementation notes, reviews, and test notes stay in
+  [frontend_skills/README.md](frontend_skills/README.md).
 
 ## Read Order
 
@@ -17,7 +19,9 @@ Read this file when a new chat needs a short project handoff.
 2. Read [../docs/README.md](../docs/README.md) for the documentation map.
 3. For backend feature delivery, use the focused skill: `$gym-plan`, `$gym-implement`,
    `$gym-review`, `$gym-test`, `$gym-complete`, `$gym-resume`, or `$gym-status`.
-4. Read source code and current API docs for behavior that must be exact.
+4. For frontend feature delivery, use `$gym-fe-plan`, `$gym-fe-implement`, `$gym-fe-review`,
+   `$gym-fe-test`, or `$gym-fe-complete`.
+5. Read source code and current API docs for behavior that must be exact.
 
 ## Current State
 
@@ -47,6 +51,7 @@ Implemented backend surfaces:
 Planned next surfaces:
 - CI automation and expanded integration coverage for sessions/not-found cases remain follow-ups.
 - Frontend implementation can start using the current backend contract when ready.
+- Frontend delivery now has dedicated `$gym-fe-*` skills and `frontend_skills/` memory.
 
 ## Rules Worth Remembering
 

@@ -1,6 +1,8 @@
 .env
 bin/
 vendor/
+frontend/node_modules/
+frontend/dist/
 
 # Backend skill local scratch/session noise
 CHAT_CONTEXT/backend_skills/.scratch/
