@@ -11,7 +11,142 @@ Dùng file này để giữ roadmap và completion summary ngắn cho feature ba
 - [x] Employee management
 - [x] Validation hardening & error consistency
 - [x] Indexes and data integrity
-- [ ] Integration tests & fixtures
+- [x] Integration tests & fixtures
+
+---
+
+# Feature - Integration tests & fixtures
+
+## Status
+- Planned: yes
+- Implemented: yes
+- Reviewed: yes
+- Tested: yes
+- Docs updated: yes
+
+## Plan summary - 2026-05-28
+
+### Goal
+Add a reusable integration-test harness and fixtures so current backend behavior can be verified
+through Go tests with real HTTP routing, real services/repositories, and a real MongoDB test DB.
+
+### Key decisions
+- Do not add or change public API endpoints in this cycle.
+- Extract reusable router/dependency construction from `cmd/server/main.go` so production and tests
+  use the same route registration.
+- Add MongoDB test helpers that create a unique test database, run `pkg/database.EnsureIndexes`, and
+  drop only that test database in cleanup.
+- Keep `go test ./...` developer-friendly by skipping integration tests when MongoDB is not
+  reachable.
+- Cover auth/role guard, member-subscription activation, duplicate unique conflicts, attendance
+  makeup reuse, and branch nearby as the must-have integration flows.
+- Keep CI service setup, Testcontainers, exhaustive invalid-body matrices, and transaction work out
+  of this cycle.
+
+### Next action
+Use `$gym-implement` with `CHAT_CONTEXT/backend_skills/plans/08_integration_tests_fixtures.md`.
+
+## Implementation summary - 2026-05-28
+
+### Result
+- Extracted reusable route/dependency wiring into `internal/app`.
+- Kept production startup in `cmd/server/main.go` focused on env, MongoDB connection, index
+  bootstrap, app config, and server run.
+- Added `internal/testutil` for isolated MongoDB test DB setup, index bootstrap, HTTP helpers, auth
+  login, and fixtures.
+- Added `internal/integration` tests for auth/role guard, member-subscription activation, duplicate
+  conflicts, attendance makeup reuse, branch nearby, and refund audit count.
+- Updated local-dev/code-reading docs and README with the integration test surface.
+
+### Verification
+- `git diff --check` - pass.
+- `env GOCACHE=/tmp/gocache go build ./...` - pass; Go printed the existing read-only module
+  stat-cache warning but exited `0`.
+- `env GOCACHE=/tmp/gocache go test ./...` - pass.
+- `env GOCACHE=/tmp/gocache go test ./internal/integration -count=1` - pass.
+
+### Next action
+Use `$gym-review` with `CHAT_CONTEXT/backend_skills/implementations/08_integration_tests_fixtures.md`.
+
+## Review summary - 2026-05-28
+
+### Result
+- Review passed with no blocking findings.
+- Checked production route extraction, route order, role matrix, test DB cleanup guard,
+  integration-test coverage, docs alignment, and remaining coverage gaps.
+
+### Verification
+- `env GOCACHE=/tmp/gocache go build ./...` - pass; Go printed the existing read-only module
+  stat-cache warning but exited `0`.
+- `env GOCACHE=/tmp/gocache go test ./...` - pass.
+- `env GOCACHE=/tmp/gocache go test ./internal/integration -count=1` - pass.
+- `git diff --check` - pass.
+
+### Next action
+Use `$gym-test` with `CHAT_CONTEXT/backend_skills/reviews/08_integration_tests_fixtures.md`.
+
+## Test summary - 2026-05-28
+
+### Result
+- Automated build/tests passed.
+- Integration tests passed against real local MongoDB on `localhost:27017`.
+- Integration suite verified auth/role guard, token refresh/logout, member-subscription activation,
+  duplicate branch/member/refund conflicts, attendance makeup reuse, branch nearby, and invalid
+  nearby query behavior.
+- DB cleanup verification passed: no `gym_test_*` databases remained after tests.
+
+### Verification
+- `env GOCACHE=/tmp/gocache go build ./...` - pass; Go printed the existing read-only module
+  stat-cache warning but exited `0`.
+- `env GOCACHE=/tmp/gocache go test ./...` - pass in sandbox; integration package used cached
+  result in that run.
+- `go test ./internal/integration -count=1 -v` outside sandbox - pass with real MongoDB.
+- `go test ./...` outside sandbox - pass with real MongoDB.
+- `git diff --check` - pass.
+- `docker exec gym_mongodb mongosh ... listDatabases` - pass; no leftover `gym_test_*` databases.
+
+### Next action
+Use `$gym-complete` with `CHAT_CONTEXT/backend_skills/tests/08_integration_tests_fixtures.md`.
+
+## Completion - 2026-05-28
+
+### Result
+- Integration tests and fixtures cycle completed end-to-end.
+- Production route/dependency wiring now lives in `internal/app` and is reused by tests.
+- `cmd/server/main.go` remains the production entry point for env loading, MongoDB connection,
+  central index bootstrap, app config, and server run.
+- `internal/testutil` provides isolated MongoDB test DB setup, index bootstrap, auth login, HTTP
+  helpers, and core fixtures.
+- `internal/integration` verifies key HTTP behavior through real router/service/repository/MongoDB
+  paths.
+- Durable local-dev/code-reading docs, README, backend phase notes, and chat snapshot are aligned.
+- No public API contract or REST sample behavior changed, so `docs/api_contract.md` and
+  `api_test.http` did not need Cycle 08 edits.
+
+### Verification
+- `env GOCACHE=/tmp/gocache go build ./...` - pass; Go printed the existing read-only module
+  stat-cache warning but exited `0`.
+- `env GOCACHE=/tmp/gocache go test ./...` - pass in sandbox; integration package used cached
+  result in that run.
+- `go test ./internal/integration -count=1 -v` outside sandbox - pass with real MongoDB.
+- `go test ./...` outside sandbox - pass with real MongoDB.
+- `git diff --check` - pass.
+- `docker exec gym_mongodb mongosh ... listDatabases` - pass; no leftover `gym_test_*` databases.
+
+### Docs updated
+- [x] `docs/local_dev_guide.md`
+- [x] `docs/code_reading_guide.md`
+- [x] `README.md`
+- [x] `CHAT_CONTEXT/README.md`
+
+### Follow-up risks
+- Session create/enroll/check-in integration coverage remains a good follow-up.
+- HTTP not-found integration coverage is still limited.
+- CI automation is not configured yet.
+- Refund and attendance multi-write flows remain without MongoDB transactions.
+
+### Next action
+Use `$gym-git` to review/commit/push Cycle 08, or `$gym-plan` for the next backlog item.
 
 ---
 

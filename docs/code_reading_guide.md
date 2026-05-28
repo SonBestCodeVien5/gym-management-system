@@ -10,8 +10,9 @@ Bat dau o `cmd/server/main.go`:
 
 1. Xem `.env`, ket noi MongoDB va database name.
 2. Xem `pkg/database.EnsureIndexes` duoc goi truoc khi khoi tao repository.
-3. Xem repository -> service -> handler duoc khoi tao theo thu tu nao.
-4. Xem route Gin de biet feature nao dang duoc wire that.
+3. Xem `internal/app.NewRouter` de biet repository -> service -> handler duoc khoi tao theo thu tu
+   nao.
+4. Xem `internal/app.RegisterRoutes` de biet route Gin nao dang duoc wire that.
 
 ## 2. Lop Kien Truc
 
@@ -21,6 +22,8 @@ Bat dau o `cmd/server/main.go`:
 | `internal/service` | Business rules va orchestration |
 | `internal/repository` | MongoDB query/update |
 | `internal/models` | Struct DB/JSON |
+| `internal/app` | Dependency wiring va route registration dung chung cho server/test |
+| `internal/testutil` | MongoDB/HTTP/fixture helper cho integration tests |
 | `pkg/database` | MongoDB connect va startup index bootstrap |
 
 Khi doc mot feature, di theo luong:
@@ -42,6 +45,7 @@ service error sang public `error.code`; service va repository khong biet HTTP re
 | Auth and role guard | `auth_handler.go`, `auth_middleware.go`, `auth_service.go`, `employee_repo.go`, `refresh_token_repo.go`, `employee.go`, `refresh_token.go` |
 | Employee management | `employee_handler.go`, `employee_service.go`, `employee_repo.go`, `refresh_token_repo.go`, `employee.go` |
 | Error response consistency | `response.go`, `auth_middleware.go`, cac `*_handler.go`, `api_contract.md` |
+| Integration tests | `internal/app/router.go`, `internal/testutil`, `internal/integration` |
 
 ## 4. Rule Dang Co
 
@@ -69,7 +73,7 @@ Doc rule trong service truoc khi sua handler hay repository.
 
 ## 5. Cach Debug Theo Luong
 
-1. Tim route trong `cmd/server/main.go`.
+1. Tim route trong `internal/app/router.go`.
 2. Neu thay doi data integrity/query behavior, kiem tra `pkg/database/indexes.go`.
 3. Kiem tra handler nhan body, param, query va parse date/ObjectID dung chua.
 4. Kiem tra service tra domain error nao va business rule nao dang chan.
@@ -79,14 +83,15 @@ Doc rule trong service truoc khi sua handler hay repository.
 ## 6. Thu Tu Goi Y
 
 1. `cmd/server/main.go`
-2. `pkg/database/mongodb.go` va `pkg/database/indexes.go`
-3. member handler/service/repository/model
-4. course va branch handler/service/repository/model
-5. subscription handler/service/repository/model
-6. attendance handler/service/repository/model
-7. session handler/service/repository/model
-8. auth va employee handler/middleware/service/repository/model
-9. tests va API contract cho feature dang sua
+2. `internal/app/router.go`
+3. `pkg/database/mongodb.go` va `pkg/database/indexes.go`
+4. member handler/service/repository/model
+5. course va branch handler/service/repository/model
+6. subscription handler/service/repository/model
+7. attendance handler/service/repository/model
+8. session handler/service/repository/model
+9. auth va employee handler/middleware/service/repository/model
+10. tests va API contract cho feature dang sua
 
 ## 7. Tai Lieu Lien Quan
 

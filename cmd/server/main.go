@@ -6,12 +6,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 
-	// Import đúng tên module dự án của bạn!
-	"github.com/SonBestCodeVien5/gym-management-system/internal/handlers"
-	"github.com/SonBestCodeVien5/gym-management-system/internal/repository"
+	"github.com/SonBestCodeVien5/gym-management-system/internal/app"
 	"github.com/SonBestCodeVien5/gym-management-system/internal/service"
 	"github.com/SonBestCodeVien5/gym-management-system/pkg/database"
 )
@@ -45,129 +42,17 @@ func main() {
 	}
 	log.Println("MongoDB indexes ensured successfully")
 
-	// Build repositories.
-	memberRepo, err := repository.NewMemberRepository(db)
-	if err != nil {
-		log.Fatalf("Error: Failed to initialize member repository: %v", err)
-	}
-	courseRepo := repository.NewCourseRepository(db)
-	branchRepo, err := repository.NewBranchRepository(db)
-	if err != nil {
-		log.Fatalf("Error: Failed to initialize branch repository: %v", err)
-	}
-	subscriptionRepo := repository.NewSubscriptionRepository(db)
-	refundRepo := repository.NewRefundRepository(db)
-	attendanceRepo := repository.NewAttendanceRepository(db)
-	sessionRepo := repository.NewSessionRepository(db)
-	employeeRepo, err := repository.NewEmployeeRepository(db)
-	if err != nil {
-		log.Fatalf("Error: Failed to initialize employee repository: %v", err)
-	}
-	refreshTokenRepo, err := repository.NewRefreshTokenRepository(db)
-	if err != nil {
-		log.Fatalf("Error: Failed to initialize refresh token repository: %v", err)
-	}
-
-	// Build services.
-	subscriptionService := service.NewSubscriptionService(subscriptionRepo, refundRepo, memberRepo, courseRepo, branchRepo)
-	memberService := service.NewMemberService(memberRepo)
-	courseService := service.NewCourseService(courseRepo)
-	branchService := service.NewBranchService(branchRepo)
-	attendanceService := service.NewAttendanceService(attendanceRepo, subscriptionRepo, memberRepo)
-	sessionService := service.NewSessionService(sessionRepo, subscriptionRepo, attendanceRepo, attendanceService)
-	employeeService := service.NewEmployeeService(employeeRepo, branchRepo, refreshTokenRepo)
-	authService, err := service.NewAuthService(employeeRepo, refreshTokenRepo, service.AuthConfig{
-		AccessSecret:  os.Getenv("JWT_ACCESS_SECRET"),
-		RefreshSecret: os.Getenv("JWT_REFRESH_SECRET"),
-		AccessTTL:     durationFromEnv("JWT_ACCESS_TTL", 15*time.Minute),
-		RefreshTTL:    durationFromEnv("JWT_REFRESH_TTL", 7*24*time.Hour),
+	r, err := app.NewRouter(context.Background(), db, app.Config{
+		Auth: service.AuthConfig{
+			AccessSecret:  os.Getenv("JWT_ACCESS_SECRET"),
+			RefreshSecret: os.Getenv("JWT_REFRESH_SECRET"),
+			AccessTTL:     durationFromEnv("JWT_ACCESS_TTL", 15*time.Minute),
+			RefreshTTL:    durationFromEnv("JWT_REFRESH_TTL", 7*24*time.Hour),
+		},
+		BootstrapAdmin: bootstrapAdminFromEnv(),
 	})
 	if err != nil {
-		log.Fatalf("Error: Failed to initialize auth service: %v", err)
-	}
-	if err := authService.BootstrapAdmin(context.Background(), bootstrapAdminFromEnv()); err != nil {
-		log.Fatalf("Error: Failed to bootstrap admin employee: %v", err)
-	}
-
-	// Build HTTP handlers.
-	memberHandler := handlers.NewMemberHandler(memberService, subscriptionService)
-	subscriptionHandler := handlers.NewSubscriptionHandler(subscriptionService)
-	courseHandler := handlers.NewCourseHandler(courseService)
-	branchHandler := handlers.NewBranchHandler(branchService)
-	attendanceHandler := handlers.NewAttendanceHandler(attendanceService)
-	sessionHandler := handlers.NewSessionHandler(sessionService)
-	employeeHandler := handlers.NewEmployeeHandler(employeeService)
-	authHandler := handlers.NewAuthHandler(authService)
-
-	// Initialize Gin engine.
-	r := gin.Default()
-
-	// Health check.
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-			"status":  "Backend Go + MongoDB đã sẵn sàng và đang chờ lệnh!",
-		})
-	})
-	// API routes.
-	api := r.Group("/api/v1")
-	{
-		api.POST("/auth/login", authHandler.Login)
-		api.POST("/auth/refresh", authHandler.Refresh)
-		api.POST("/auth/logout", authHandler.Logout)
-
-		protected := api.Group("")
-		protected.Use(handlers.AuthRequired(authService))
-
-		employeeRoutes := protected.Group("", handlers.RequireRoles(service.RoleAdmin))
-		employeeRoutes.POST("/employees", employeeHandler.Create)
-		employeeRoutes.GET("/employees", employeeHandler.List)
-		employeeRoutes.GET("/employees/:id", employeeHandler.GetByID)
-		employeeRoutes.PATCH("/employees/:id/password", employeeHandler.UpdatePassword)
-		employeeRoutes.PATCH("/employees/:id", employeeHandler.Update)
-
-		memberRoutes := protected.Group("", handlers.RequireRoles(service.RoleAdmin, service.RoleManager, service.RoleReceptionist))
-		memberRoutes.POST("/members", memberHandler.Register)
-		memberRoutes.GET("/members/:id", memberHandler.GetByID)
-		memberRoutes.GET("/members/:id/subscriptions", memberHandler.ListSubscriptions)
-		memberRoutes.PATCH("/members/:id/activate", memberHandler.Activate)
-
-		courseRoutes := protected.Group("", handlers.RequireRoles(service.RoleAdmin, service.RoleManager))
-		courseRoutes.POST("/courses", courseHandler.Create)
-		courseRoutes.GET("/courses", courseHandler.List)
-		courseRoutes.GET("/courses/:id", courseHandler.GetByID)
-		courseRoutes.PATCH("/courses/:id", courseHandler.Update)
-		courseRoutes.DELETE("/courses/:id", courseHandler.Delete)
-
-		branchRoutes := protected.Group("", handlers.RequireRoles(service.RoleAdmin, service.RoleManager))
-		branchRoutes.POST("/branches", branchHandler.Create)
-		branchRoutes.GET("/branches", branchHandler.List)
-		branchRoutes.GET("/branches/nearby", branchHandler.Nearby)
-		branchRoutes.GET("/branches/:id", branchHandler.GetByID)
-		branchRoutes.PATCH("/branches/:id", branchHandler.Update)
-		branchRoutes.DELETE("/branches/:id", branchHandler.Delete)
-
-		subscriptionRoutes := protected.Group("", handlers.RequireRoles(service.RoleAdmin, service.RoleManager, service.RoleReceptionist))
-		subscriptionRoutes.POST("/subscriptions", subscriptionHandler.Create)
-		subscriptionRoutes.POST("/subscriptions/:id/refund", subscriptionHandler.Refund)
-		subscriptionRoutes.GET("/subscriptions/:id", subscriptionHandler.GetByID)
-		subscriptionRoutes.PATCH("/subscriptions/:id/suspend", subscriptionHandler.Suspend)
-		subscriptionRoutes.PATCH("/subscriptions/:id/unsuspend", subscriptionHandler.Resume)
-		subscriptionRoutes.PATCH("/subscriptions/:id/expire", subscriptionHandler.Expire)
-
-		attendanceRoutes := protected.Group("", handlers.RequireRoles(service.RoleAdmin, service.RoleManager, service.RoleReceptionist))
-		attendanceRoutes.POST("/attendance/checkin", attendanceHandler.CheckIn)
-		attendanceRoutes.POST("/attendance/report", attendanceHandler.ReportMissed)
-		attendanceRoutes.POST("/attendance/makeup", attendanceHandler.Makeup)
-		attendanceRoutes.GET("/subscriptions/:id/attendance", attendanceHandler.ListBySubscription)
-
-		sessionCreateRoutes := protected.Group("", handlers.RequireRoles(service.RoleAdmin, service.RoleManager, service.RoleTrainer))
-		sessionCreateRoutes.POST("/sessions", sessionHandler.Create)
-		sessionRoutes := protected.Group("", handlers.RequireRoles(service.RoleAdmin, service.RoleManager, service.RoleTrainer))
-		sessionRoutes.GET("/sessions", sessionHandler.List)
-		sessionRoutes.GET("/sessions/:id", sessionHandler.GetByID)
-		sessionRoutes.POST("/sessions/:id/enroll", sessionHandler.Enroll)
-		sessionRoutes.POST("/sessions/:id/checkin", sessionHandler.CheckIn)
+		log.Fatalf("Error: Failed to initialize app router: %v", err)
 	}
 
 	// Start HTTP server.

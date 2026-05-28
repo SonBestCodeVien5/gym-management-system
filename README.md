@@ -139,6 +139,15 @@ Behavior:
 - Query and TTL indexes support current subscription, attendance, session, employee, refund, and
   refresh-token flows.
 
+### 11) Integration Tests and Fixtures
+
+- `internal/app` builds the real router/dependency graph for both `cmd/server` and integration
+  tests.
+- `internal/testutil` creates isolated MongoDB test databases, bootstraps indexes, logs in fixture
+  users, and sends JSON HTTP requests through `httptest`.
+- `internal/integration` covers auth/role guard, subscription activation, duplicate conflicts,
+  attendance makeup reuse, and branch nearby behavior.
+
 ## Run Locally
 
 1. Set environment variables from `.env.example`, especially `MONGODB_URI`,
@@ -151,3 +160,11 @@ go run cmd/server/main.go
 
 3. Login with the bootstrap admin, paste the returned tokens into `api_test.http`, then run the
    protected API samples.
+
+Run tests:
+
+```bash
+go test ./...
+```
+
+Integration tests use local MongoDB when reachable and skip cleanly when it is not running.

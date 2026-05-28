@@ -41,9 +41,10 @@ Implemented backend surfaces:
 | Employees | Admin-only create, list, get, update, password reset, deactivate |
 | Error handling | Shared HTTP error contract with stable `error.code`, sanitized `message`, and object `details` |
 | Data integrity | Central MongoDB index bootstrap with unique/query/partial unique/TTL indexes |
+| Integration tests | `internal/app` shared router wiring, `internal/testutil` fixtures, and MongoDB-backed integration tests |
 
 Planned next surfaces:
-- Integration tests and fixtures.
+- CI automation and expanded integration coverage for sessions/not-found cases.
 
 ## Rules Worth Remembering
 
@@ -65,6 +66,8 @@ Planned next surfaces:
 - Startup runs `pkg/database.EnsureIndexes` before repository construction. Unique indexes enforce
   member CCID, branch code, employee email/ID, refresh-token hash, refund subscription, duplicate
   session check-in, and duplicate makeup reuse. Refresh-token TTL cleanup is eventual.
+- `internal/app.NewRouter` owns production/test dependency wiring and route registration. Integration
+  tests use isolated `gym_test_*` MongoDB databases and skip when MongoDB is not reachable.
 
 ## Where To Update
 
@@ -77,11 +80,11 @@ Planned next surfaces:
 
 ## Resume Point
 
-Cycle 07 indexes and data-integrity hardening is complete. The next backend cycle is integration
-tests and fixtures.
+Cycle 08 integration tests and fixtures is complete. The backend roadmap items tracked in
+`backend_skills/worklog.md` are complete.
 Start from:
 
-1. `backend_skills/plans/08_integration_tests_fixtures.md` if present, otherwise create it with
-   `$gym-plan`
-2. the requested phase skill for the next task
+1. `$gym-git` to review/commit/push the current Cycle 08 changes if requested
+2. `$gym-plan` for the next backlog item, likely CI automation or expanded session/not-found
+   integration coverage
 3. only the source files needed for that task

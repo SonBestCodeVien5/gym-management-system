@@ -12,17 +12,18 @@ Tai lieu API contract hien tai: [api_contract.md](api_contract.md)
 
 ## 2. Kien truc dang dung (ban rut gon)
 Luong xu ly hien tai:
-1. `cmd/server/main.go` khoi dong app, doc `.env`, ket noi MongoDB, mo route.
+1. `cmd/server/main.go` khoi dong app, doc `.env`, ket noi MongoDB, chay index bootstrap.
 2. `pkg/database/mongodb.go` quan ly ket noi DB (`ConnectMongoDB`).
-3. `internal/repository/member_repo.go` query vao collection `members`.
-4. `internal/service/member_service.go` xu ly logic dang ky member.
-5. `internal/handlers/member_handler.go` nhan request HTTP va tra JSON.
-6. `internal/repository/course_repo.go`, `branch_repo.go` query theo `_id` cho subscription.
-7. `internal/repository/subscription_repo.go`, `internal/service/subscription_service.go`, `internal/handlers/subscription_handler.go` phuc vu luong subscription.
-8. `internal/handlers/course_handler.go`, `branch_handler.go` xu ly CRUD course/branch.
-9. `internal/handlers/attendance_handler.go` xu ly check-in, report missed, makeup va history.
-10. `internal/handlers/session_handler.go` xu ly session create/list/get/enroll/check-in.
-11. `internal/handlers/auth_handler.go`, `auth_middleware.go`, `internal/service/auth_service.go`
+3. `internal/app/router.go` dung chung de khoi tao repository/service/handler va dang ky route.
+4. `internal/repository/member_repo.go` query vao collection `members`.
+5. `internal/service/member_service.go` xu ly logic dang ky member.
+6. `internal/handlers/member_handler.go` nhan request HTTP va tra JSON.
+7. `internal/repository/course_repo.go`, `branch_repo.go` query theo `_id` cho subscription.
+8. `internal/repository/subscription_repo.go`, `internal/service/subscription_service.go`, `internal/handlers/subscription_handler.go` phuc vu luong subscription.
+9. `internal/handlers/course_handler.go`, `branch_handler.go` xu ly CRUD course/branch.
+10. `internal/handlers/attendance_handler.go` xu ly check-in, report missed, makeup va history.
+11. `internal/handlers/session_handler.go` xu ly session create/list/get/enroll/check-in.
+12. `internal/handlers/auth_handler.go`, `auth_middleware.go`, `internal/service/auth_service.go`
     xu ly login, refresh, logout, access token va role guard.
 
 Luot request dang ky:
@@ -184,6 +185,28 @@ curl -s -X POST http://localhost:8080/api/v1/attendance/checkin \
   -d '{"subscription_id":"PUT_SUBSCRIPTION_OBJECT_ID","branch_id":"PUT_BRANCH_OBJECT_ID","date":"2026-05-10T08:00:00Z","status":"attended"}'
 ```
 
+### 4.3 Chay automated tests
+Unit tests khong can server dang chay:
+```bash
+go test ./...
+```
+
+Integration tests dung `httptest` + MongoDB that qua `internal/app` va `internal/testutil`.
+Neu MongoDB local khong reachable, cac integration tests se skip de `go test ./...` van chay duoc
+unit test.
+
+Chay MongoDB roi chay rieng integration tests:
+```bash
+docker compose up -d mongodb
+GYM_TEST_MONGODB_URI='mongodb://admin:password123@localhost:27017/?authSource=admin&directConnection=true' \
+  go test ./internal/integration -count=1
+```
+
+Luu y:
+- Test DB co ten dang `gym_test_<id>` va duoc drop trong cleanup.
+- Integration tests goi `pkg/database.EnsureIndexes` tren DB test truoc khi seed fixture.
+- Khong chay integration tests tren DB dev `gym_management`.
+
 ## 5. Xem record trong MongoDB
 ### 5.1 Cach 1 - one-shot, in ket qua ngay
 ```bash
@@ -281,3 +304,6 @@ Cach sua:
 8. Da co auth login/refresh/logout, bootstrap admin, refresh-token hash storage, access-token
    middleware, va role guard cho route business.
 9. Da co employee management admin-only de tao/list/get/update/reset password staff account.
+10. Da co `internal/app` de dung chung route/dependency wiring cho server va integration tests.
+11. Da co integration tests voi MongoDB test DB rieng cho auth, role guard, subscription,
+    duplicate conflict, attendance makeup, va branch nearby.
