@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -50,6 +51,7 @@ func main() {
 			RefreshTTL:    durationFromEnv("JWT_REFRESH_TTL", 7*24*time.Hour),
 		},
 		BootstrapAdmin: bootstrapAdminFromEnv(),
+		CORSOrigins:    csvFromEnv("CORS_ALLOWED_ORIGINS"),
 	})
 	if err != nil {
 		log.Fatalf("Error: Failed to initialize app router: %v", err)
@@ -89,4 +91,21 @@ func bootstrapAdminFromEnv() service.BootstrapAdminConfig {
 		Phone:      os.Getenv("BOOTSTRAP_ADMIN_PHONE"),
 		Level:      os.Getenv("BOOTSTRAP_ADMIN_LEVEL"),
 	}
+}
+
+func csvFromEnv(key string) []string {
+	raw := os.Getenv(key)
+	if raw == "" {
+		return nil
+	}
+
+	parts := strings.Split(raw, ",")
+	values := make([]string, 0, len(parts))
+	for _, part := range parts {
+		value := strings.TrimSpace(part)
+		if value != "" {
+			values = append(values, value)
+		}
+	}
+	return values
 }

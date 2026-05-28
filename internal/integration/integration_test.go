@@ -3,6 +3,7 @@ package integration
 import (
 	"context"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -21,6 +22,16 @@ func TestIntegrationAuthRoleGuardAndSmoke(t *testing.T) {
 
 	adminList := app.DoJSON(t, http.MethodGet, "/api/v1/employees", app.AdminToken, nil)
 	testutil.AssertStatus(t, adminList, http.StatusOK)
+
+	currentEmployee := app.DoJSON(t, http.MethodGet, "/api/v1/auth/me", app.AdminToken, nil)
+	testutil.AssertStatus(t, currentEmployee, http.StatusOK)
+	currentData := testutil.DataMap(t, currentEmployee)
+	if currentData["email"] != app.AdminEmail {
+		t.Fatalf("auth/me email = %#v, want %q", currentData["email"], app.AdminEmail)
+	}
+
+	missingMeToken := app.DoJSON(t, http.MethodGet, "/api/v1/auth/me", "", nil)
+	testutil.AssertError(t, missingMeToken, http.StatusUnauthorized, "UNAUTHORIZED")
 
 	staffEmail := testutil.Unique("receptionist") + "@gym.test"
 	staffPassword := "staff-password-123"
@@ -53,6 +64,38 @@ func TestIntegrationAuthRoleGuardAndSmoke(t *testing.T) {
 		"refresh_token": newRefreshToken,
 	})
 	testutil.AssertError(t, reuseLoggedOutToken, http.StatusUnauthorized, "UNAUTHORIZED")
+}
+
+func TestIntegrationCORSPreflight(t *testing.T) {
+	app := testutil.NewTestApp(t)
+
+	allowed := httptest.NewRequest(http.MethodOptions, "/api/v1/auth/me", nil)
+	allowed.Header.Set("Origin", "http://localhost:5173")
+	allowed.Header.Set("Access-Control-Request-Method", http.MethodGet)
+	allowed.Header.Set("Access-Control-Request-Headers", "Authorization, Content-Type")
+	allowedRes := httptest.NewRecorder()
+
+	app.Router.ServeHTTP(allowedRes, allowed)
+
+	testutil.AssertStatus(t, allowedRes, http.StatusNoContent)
+	if got := allowedRes.Header().Get("Access-Control-Allow-Origin"); got != "http://localhost:5173" {
+		t.Fatalf("allowed origin header = %q, want %q", got, "http://localhost:5173")
+	}
+	if got := allowedRes.Header().Get("Access-Control-Allow-Headers"); got != "Authorization, Content-Type" {
+		t.Fatalf("allowed headers = %q, want Authorization, Content-Type", got)
+	}
+
+	disallowed := httptest.NewRequest(http.MethodOptions, "/api/v1/auth/me", nil)
+	disallowed.Header.Set("Origin", "http://evil.test")
+	disallowed.Header.Set("Access-Control-Request-Method", http.MethodGet)
+	disallowedRes := httptest.NewRecorder()
+
+	app.Router.ServeHTTP(disallowedRes, disallowed)
+
+	testutil.AssertStatus(t, disallowedRes, http.StatusNoContent)
+	if got := disallowedRes.Header().Get("Access-Control-Allow-Origin"); got != "" {
+		t.Fatalf("disallowed origin header = %q, want empty", got)
+	}
 }
 
 func TestIntegrationMemberSubscriptionAndDataIntegrityConflicts(t *testing.T) {

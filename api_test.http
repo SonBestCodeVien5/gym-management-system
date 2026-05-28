@@ -19,6 +19,12 @@ Content-Type: application/json
 
 ###
 
+# Current employee
+GET {{baseUrl}}/api/v1/auth/me
+Authorization: Bearer {{access_token}}
+
+###
+
 # Refresh token
 POST {{baseUrl}}/api/v1/auth/refresh
 Content-Type: application/json

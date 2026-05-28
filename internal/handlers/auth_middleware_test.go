@@ -33,6 +33,10 @@ func (s *stubAuthService) Logout(ctx context.Context, refreshToken string) error
 	return nil
 }
 
+func (s *stubAuthService) CurrentEmployee(ctx context.Context, employeeID string) (*service.AuthEmployeeResponse, error) {
+	return nil, nil
+}
+
 func (s *stubAuthService) ValidateAccessToken(ctx context.Context, accessToken string) (*service.AuthClaims, error) {
 	if s.err != nil {
 		return nil, s.err

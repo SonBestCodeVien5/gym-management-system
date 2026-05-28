@@ -46,6 +46,7 @@ func NewTestApp(t *testing.T) *TestApp {
 			Email:      "admin.integration@gym.test",
 			Password:   "admin-password-123",
 		},
+		CORSOrigins: []string{"http://localhost:5173"},
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

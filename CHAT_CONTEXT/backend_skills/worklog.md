@@ -12,6 +12,138 @@ Dùng file này để giữ roadmap và completion summary ngắn cho feature ba
 - [x] Validation hardening & error consistency
 - [x] Indexes and data integrity
 - [x] Integration tests & fixtures
+- [x] Frontend readiness mini-cycle
+
+---
+
+# Feature - Frontend readiness mini-cycle
+
+## Status
+- Planned: yes
+- Implemented: yes
+- Reviewed: yes
+- Tested: yes
+- Docs updated: yes
+
+## Plan summary - 2026-05-28
+
+### Goal
+Prepare the backend for initial frontend integration without adding new business-domain behavior.
+
+### Key decisions
+- Add explicit allow-list CORS support through `CORS_ALLOWED_ORIGINS` for browser FE dev origins.
+- Apply CORS globally before auth guards so preflight requests do not fail on missing bearer tokens.
+- Add protected `GET /api/v1/auth/me` so FE can restore current staff context after reload or token
+  refresh.
+- Return the same compact employee shape as login and keep refresh-token behavior unchanged.
+- Do not add schema changes, indexes, migrations, or a seed command in this mini-cycle.
+- Update API/local-dev docs, `.env.example`, REST samples, and focused integration tests.
+
+### Next action
+Use `$gym-implement` with `CHAT_CONTEXT/backend_skills/plans/09_frontend_readiness.md`.
+
+## Implementation summary - 2026-05-28
+
+### Result
+- Added allow-list CORS support through `CORS_ALLOWED_ORIGINS`.
+- Added global preflight handling before auth guards.
+- Added protected `GET /api/v1/auth/me` using existing access-token validation and compact login
+  employee response shape.
+- Added service/unit and integration coverage for current employee lookup and CORS preflight.
+- Updated API contract, local-dev guide, `.env.example`, REST sample, and chat snapshot.
+
+### Verification
+- `env GOCACHE=/tmp/gocache go build ./...` - pass; Go printed the existing read-only module
+  stat-cache warning but exited `0`.
+- `env GOCACHE=/tmp/gocache go test ./...` - pass.
+- `env GOCACHE=/tmp/gocache go test ./internal/integration -count=1` - pass.
+
+### Next action
+Use `$gym-review` with `CHAT_CONTEXT/backend_skills/implementations/09_frontend_readiness.md`.
+
+## Review summary - 2026-05-28
+
+### Result
+- Review passed with no blocking findings.
+- Checked CORS middleware ordering, explicit origin allow-list, no wildcard/credentials, `/auth/me`
+  route placement, handler/service boundaries, error mapping, docs/API sample alignment, and focused
+  test coverage.
+
+### Verification
+- `git diff --check` - pass.
+- `env GOCACHE=/tmp/gocache go build ./...` - pass; Go printed the existing read-only module
+  stat-cache warning but exited `0`.
+- `env GOCACHE=/tmp/gocache go test ./...` - pass; integration package used cached result in that
+  full-suite run.
+- `env GOCACHE=/tmp/gocache go test ./internal/integration -count=1` - pass.
+
+### Next action
+Use `$gym-test` with `CHAT_CONTEXT/backend_skills/reviews/09_frontend_readiness.md`.
+
+## Test summary - 2026-05-28
+
+### Result
+- Automated build/tests passed.
+- Integration tests passed against real local MongoDB outside sandbox.
+- Manual local-server checks passed for allowed CORS preflight, disallowed-origin preflight, login
+  then `/auth/me`, and missing-token `/auth/me`.
+- Integration DB cleanup check passed: no leftover `gym_test_*` databases.
+
+### Verification
+- `git diff --check` - pass.
+- `env GOCACHE=/tmp/gocache go build ./...` - pass; Go printed the existing read-only module
+  stat-cache warning but exited `0`.
+- `env GOCACHE=/tmp/gocache go test ./...` - pass; integration package used cached result in that
+  full-suite run.
+- `env GOCACHE=/tmp/gocache go test ./internal/integration -count=1 -v` in sandbox - pass with all
+  integration cases skipped because sandbox could not open `localhost:27017`.
+- `env GOCACHE=/tmp/gocache go test ./internal/integration -count=1 -v` outside sandbox - pass
+  against real MongoDB.
+- Manual API checks against temporary server on `PORT=18084` - pass.
+- Direct MongoDB `gym_test_*` cleanup check - pass.
+
+### Next action
+Use `$gym-complete` with `CHAT_CONTEXT/backend_skills/tests/09_frontend_readiness.md`.
+
+## Completion - 2026-05-28
+
+### Result
+- Frontend readiness mini-cycle completed end-to-end.
+- Backend now supports explicit allow-list CORS through `CORS_ALLOWED_ORIGINS`.
+- Browser preflight requests are handled globally before auth guards.
+- Protected `GET /api/v1/auth/me` returns the current active employee from the bearer access token.
+- API contract, REST sample, `.env.example`, local-dev guide, code-reading guide, README, backend
+  phase notes, and chat snapshot are aligned.
+- No schema, index, migration, seed command, cookie auth, or FE implementation was added.
+
+### Verification
+- `git diff --check` - pass.
+- `env GOCACHE=/tmp/gocache go build ./...` - pass; Go printed the existing read-only module
+  stat-cache warning but exited `0`.
+- `env GOCACHE=/tmp/gocache go test ./...` - pass; integration package used cached result in that
+  full-suite run.
+- `env GOCACHE=/tmp/gocache go test ./internal/integration -count=1 -v` outside sandbox - pass
+  against real MongoDB.
+- Manual API checks against temporary server on `PORT=18084` - pass.
+- Direct MongoDB `gym_test_*` cleanup check - pass.
+
+### Docs updated
+- [x] `docs/api_contract.md`
+- [x] `docs/local_dev_guide.md`
+- [x] `docs/code_reading_guide.md`
+- [x] `README.md`
+- [x] `.env.example`
+- [x] `api_test.http`
+- [x] `CHAT_CONTEXT/README.md`
+
+### Follow-up risks
+- No browser UI has consumed the API yet; first FE pass should still verify real browser requests.
+- Seed/demo data remains a follow-up if frontend demos need predictable sample records.
+- CI automation is still not configured.
+- Expanded session/not-found integration coverage remains a good backlog item.
+
+### Next action
+Use `$gym-git` to review/commit/push Cycle 09, or `$gym-plan` for the next backlog item.
 
 ---
 

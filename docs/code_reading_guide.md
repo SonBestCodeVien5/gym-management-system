@@ -13,6 +13,7 @@ Bat dau o `cmd/server/main.go`:
 3. Xem `internal/app.NewRouter` de biet repository -> service -> handler duoc khoi tao theo thu tu
    nao.
 4. Xem `internal/app.RegisterRoutes` de biet route Gin nao dang duoc wire that.
+5. Xem `internal/app/cors.go` neu can debug browser FE preflight/CORS behavior.
 
 ## 2. Lop Kien Truc
 
@@ -46,6 +47,7 @@ service error sang public `error.code`; service va repository khong biet HTTP re
 | Employee management | `employee_handler.go`, `employee_service.go`, `employee_repo.go`, `refresh_token_repo.go`, `employee.go` |
 | Error response consistency | `response.go`, `auth_middleware.go`, cac `*_handler.go`, `api_contract.md` |
 | Integration tests | `internal/app/router.go`, `internal/testutil`, `internal/integration` |
+| Frontend readiness | `internal/app/cors.go`, `internal/app/router.go`, `auth_handler.go`, `auth_service.go`, `api_contract.md` |
 
 ## 4. Rule Dang Co
 
@@ -57,7 +59,9 @@ service error sang public `error.code`; service va repository khong biet HTTP re
   effects.
 - Nearby branch search depends on GeoJSON coordinates and MongoDB geo index behavior.
 - Auth normalizes employee email, verifies bcrypt password hash, signs access/refresh tokens, stores
-  refresh tokens as hashes, and reloads employee state during access-token validation.
+  refresh tokens as hashes, reloads employee state during access-token validation, and exposes
+  `/api/v1/auth/me` for the current active employee.
+- CORS uses an explicit `CORS_ALLOWED_ORIGINS` allow-list and handles preflight before auth guards.
 - Role guard checks trusted roles from auth middleware; handlers must not trust client-sent role
   fields.
 - Employee management is admin-only, hashes password in service, never returns password hash, and
@@ -74,11 +78,12 @@ Doc rule trong service truoc khi sua handler hay repository.
 ## 5. Cach Debug Theo Luong
 
 1. Tim route trong `internal/app/router.go`.
-2. Neu thay doi data integrity/query behavior, kiem tra `pkg/database/indexes.go`.
-3. Kiem tra handler nhan body, param, query va parse date/ObjectID dung chua.
-4. Kiem tra service tra domain error nao va business rule nao dang chan.
-5. Kiem tra repository query field, filter status, atomic update, va MongoDB index lien quan.
-6. Doi chieu `docs/api_contract.md`, `api_test.http`, va test hien co.
+2. Neu request den tu browser FE, kiem tra `internal/app/cors.go` va `CORS_ALLOWED_ORIGINS`.
+3. Neu thay doi data integrity/query behavior, kiem tra `pkg/database/indexes.go`.
+4. Kiem tra handler nhan body, param, query va parse date/ObjectID dung chua.
+5. Kiem tra service tra domain error nao va business rule nao dang chan.
+6. Kiem tra repository query field, filter status, atomic update, va MongoDB index lien quan.
+7. Doi chieu `docs/api_contract.md`, `api_test.http`, va test hien co.
 
 ## 6. Thu Tu Goi Y
 

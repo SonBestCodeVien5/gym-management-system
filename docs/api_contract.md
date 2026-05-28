@@ -66,6 +66,7 @@ Muc tieu: chot ten endpoint + request/response co ban de FE va BE dung chung.
 | Method | Endpoint | Code làm gì | Trạng thái |
 |---|---|---|---|
 | POST | /api/v1/auth/login | Đăng nhập employee/staff và cấp access + refresh token. | Implemented |
+| GET | /api/v1/auth/me | Lấy thông tin employee/staff hiện tại từ access token. | Implemented |
 | POST | /api/v1/auth/refresh | Rotate refresh token và cấp lại access token. | Implemented |
 | POST | /api/v1/auth/logout | Hủy refresh token. | Implemented |
 
@@ -126,7 +127,11 @@ Public routes:
 - `POST /api/v1/auth/refresh`
 - `POST /api/v1/auth/logout`
 
-All other `/api/v1/*` business routes require:
+Protected auth route:
+
+- `GET /api/v1/auth/me`
+
+All other `/api/v1/*` business routes also require:
 
 ```http
 Authorization: Bearer <access_token>
@@ -158,6 +163,10 @@ Startup creates:
 
 If `BOOTSTRAP_ADMIN_EMAIL` and `BOOTSTRAP_ADMIN_PASSWORD` are configured, startup creates the first
 admin account only when the normalized email does not already exist.
+
+Browser FE local development can enable CORS with `CORS_ALLOWED_ORIGINS`, for example
+`http://localhost:5173,http://127.0.0.1:5173`. The API reflects only configured origins and expects
+the FE to send bearer tokens through the `Authorization` header.
 
 ### Auth login
 
@@ -201,6 +210,44 @@ Notes:
 
 - The API never returns password hash.
 - The refresh token is stored only as a SHA-256 hash for revoke/rotation checks.
+
+### Auth current employee
+
+`GET /api/v1/auth/me`
+
+Headers:
+
+```http
+Authorization: Bearer <access_token>
+```
+
+Response `200`:
+
+```json
+{
+  "message": "current employee fetched successfully",
+  "data": {
+    "id": "69f20c000c4cd4cdf5768500",
+    "employee_id": "ADMIN001",
+    "email": "admin@gym.test",
+    "full_name": "Gym Admin",
+    "role": ["admin"],
+    "branch_id": []
+  }
+}
+```
+
+Status codes:
+
+- `200`: access token is valid and maps to an active employee.
+- `401`: missing, malformed, expired, invalid, deleted-employee, or inactive-employee access token.
+- `500`: storage/internal failure.
+
+Notes:
+
+- Response uses the same compact employee shape as login.
+- Client-provided role or employee payload is ignored; the employee is loaded from the authenticated
+  access token context.
 
 ### Employee management
 

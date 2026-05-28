@@ -14,6 +14,7 @@ import (
 type Config struct {
 	Auth           service.AuthConfig
 	BootstrapAdmin service.BootstrapAdminConfig
+	CORSOrigins    []string
 }
 
 func NewRouter(ctx context.Context, db *mongo.Database, cfg Config) (*gin.Engine, error) {
@@ -64,6 +65,7 @@ func NewRouter(ctx context.Context, db *mongo.Database, cfg Config) (*gin.Engine
 	authHandler := handlers.NewAuthHandler(authService)
 
 	r := gin.Default()
+	r.Use(corsMiddleware(cfg.CORSOrigins))
 	RegisterRoutes(r, Handlers{
 		Member:       memberHandler,
 		Subscription: subscriptionHandler,
@@ -106,6 +108,7 @@ func RegisterRoutes(r *gin.Engine, h Handlers) {
 
 		protected := api.Group("")
 		protected.Use(handlers.AuthRequired(h.AuthService))
+		protected.GET("/auth/me", h.Auth.Me)
 
 		employeeRoutes := protected.Group("", handlers.RequireRoles(service.RoleAdmin))
 		employeeRoutes.POST("/employees", h.Employee.Create)

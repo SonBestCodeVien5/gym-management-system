@@ -165,6 +165,41 @@ func TestAuthServiceLoginWrongPassword(t *testing.T) {
 	}
 }
 
+func TestAuthServiceCurrentEmployee(t *testing.T) {
+	employee := testAuthEmployee(t)
+	authService := newTestAuthService(
+		t,
+		&stubEmployeeAuthRepo{
+			byID:    map[string]*models.Employee{employee.ID.Hex(): employee},
+			byEmail: map[string]*models.Employee{employee.NormalizedEmail: employee},
+		},
+		&stubRefreshTokenAuthRepo{byHash: map[string]*models.RefreshToken{}},
+		time.Date(2026, 5, 25, 10, 0, 0, 0, time.UTC),
+	)
+
+	current, err := authService.CurrentEmployee(context.Background(), employee.ID.Hex())
+	if err != nil {
+		t.Fatalf("CurrentEmployee() error = %v", err)
+	}
+	if current.ID != employee.ID || current.EmployeeID != employee.EmployeeID || current.Email != employee.Email {
+		t.Fatalf("CurrentEmployee() = %#v, want employee %#v", current, employee)
+	}
+}
+
+func TestAuthServiceCurrentEmployeeMissingEmployee(t *testing.T) {
+	authService := newTestAuthService(
+		t,
+		&stubEmployeeAuthRepo{byID: map[string]*models.Employee{}, byEmail: map[string]*models.Employee{}},
+		&stubRefreshTokenAuthRepo{byHash: map[string]*models.RefreshToken{}},
+		time.Date(2026, 5, 25, 10, 0, 0, 0, time.UTC),
+	)
+
+	_, err := authService.CurrentEmployee(context.Background(), primitive.NewObjectID().Hex())
+	if !errors.Is(err, ErrInvalidToken) {
+		t.Fatalf("CurrentEmployee() error = %v, want %v", err, ErrInvalidToken)
+	}
+}
+
 func newTestAuthService(t *testing.T, employeeRepo *stubEmployeeAuthRepo, refreshRepo *stubRefreshTokenAuthRepo, now time.Time) AuthService {
 	t.Helper()
 

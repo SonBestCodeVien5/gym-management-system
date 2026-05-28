@@ -37,14 +37,16 @@ Implemented backend surfaces:
 | Branches | CRUD and nearby geo search |
 | Attendance | Free check-in, report missed, makeup, history by subscription |
 | Sessions | Create, list, get, enroll, session check-in |
-| Auth | Login, refresh rotation, logout revoke, access-token middleware, role guard |
+| Auth | Login, current employee, refresh rotation, logout revoke, access-token middleware, role guard |
 | Employees | Admin-only create, list, get, update, password reset, deactivate |
 | Error handling | Shared HTTP error contract with stable `error.code`, sanitized `message`, and object `details` |
 | Data integrity | Central MongoDB index bootstrap with unique/query/partial unique/TTL indexes |
+| Frontend readiness | Allow-list CORS for browser FE dev and current employee restore endpoint |
 | Integration tests | `internal/app` shared router wiring, `internal/testutil` fixtures, and MongoDB-backed integration tests |
 
 Planned next surfaces:
-- CI automation and expanded integration coverage for sessions/not-found cases.
+- CI automation and expanded integration coverage for sessions/not-found cases remain follow-ups.
+- Frontend implementation can start using the current backend contract when ready.
 
 ## Rules Worth Remembering
 
@@ -59,6 +61,8 @@ Planned next surfaces:
   rules.
 - Auth requires `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET`; bootstrap admin is created from
   `BOOTSTRAP_ADMIN_*` env values only when the normalized email is absent.
+- Browser FE dev can use `CORS_ALLOWED_ORIGINS` and `GET /api/v1/auth/me` to restore current staff
+  context from a bearer access token.
 - Employee management is admin-only, stores bcrypt password hashes, never returns `password_hash` or
   `normalized_email`, and revokes active refresh tokens on password reset/deactivation.
 - Backend error responses use `{"error":{"code":"...","message":"...","details":{}}}` while success
@@ -80,11 +84,9 @@ Planned next surfaces:
 
 ## Resume Point
 
-Cycle 08 integration tests and fixtures is complete. The backend roadmap items tracked in
-`backend_skills/worklog.md` are complete.
+Cycle 09 frontend readiness mini-cycle is complete.
 Start from:
 
-1. `$gym-git` to review/commit/push the current Cycle 08 changes if requested
-2. `$gym-plan` for the next backlog item, likely CI automation or expanded session/not-found
-   integration coverage
-3. only the source files needed for that task
+1. `$gym-git` to review/commit/push the current Cycle 09 changes if requested
+2. `$gym-plan` for the next backlog item, likely CI automation, expanded session/not-found coverage,
+   or the first frontend implementation pass

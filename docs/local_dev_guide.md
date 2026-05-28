@@ -24,7 +24,8 @@ Luong xu ly hien tai:
 10. `internal/handlers/attendance_handler.go` xu ly check-in, report missed, makeup va history.
 11. `internal/handlers/session_handler.go` xu ly session create/list/get/enroll/check-in.
 12. `internal/handlers/auth_handler.go`, `auth_middleware.go`, `internal/service/auth_service.go`
-    xu ly login, refresh, logout, access token va role guard.
+    xu ly login, current employee, refresh, logout, access token va role guard.
+13. `internal/app/cors.go` xu ly CORS allow-list va preflight cho browser FE local.
 
 Luot request dang ky:
 HTTP Request -> Handler -> Service -> Repository -> MongoDB -> JSON Response.
@@ -48,6 +49,7 @@ Noi dung can dung:
 ```env
 MONGODB_URI=mongodb://admin:password123@127.0.0.1:27017/?authSource=admin&directConnection=true
 PORT=8080
+CORS_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
 JWT_ACCESS_SECRET=replace-with-a-long-random-access-secret
 JWT_REFRESH_SECRET=replace-with-a-long-random-refresh-secret
 JWT_ACCESS_TTL=15m
@@ -61,6 +63,9 @@ BOOTSTRAP_ADMIN_PASSWORD=change-me-before-running
 `JWT_ACCESS_SECRET` va `JWT_REFRESH_SECRET` bat buoc phai co. Neu thieu, server se dung loi khi
 khoi tao auth service. `BOOTSTRAP_ADMIN_EMAIL` + `BOOTSTRAP_ADMIN_PASSWORD` tao admin dau tien neu
 email chua ton tai.
+
+`CORS_ALLOWED_ORIGINS` dung cho browser FE local. Neu chay Vite o `localhost:5173`, giu gia tri mau
+o tren. Neu bien nay rong, backend khong tra CORS header.
 
 ### 3.3 Build va run backend
 ```bash
@@ -76,6 +81,7 @@ Neu thanh cong, log se co:
 ### 3.4 Route hien co
 - `GET /ping`
 - `POST /api/v1/auth/login`
+- `GET /api/v1/auth/me`
 - `POST /api/v1/auth/refresh`
 - `POST /api/v1/auth/logout`
 - `POST /api/v1/members`
@@ -111,7 +117,8 @@ Neu thanh cong, log se co:
 
 Luu y auth:
 - Public: `/ping`, `/api/v1/auth/login`, `/api/v1/auth/refresh`, `/api/v1/auth/logout`.
-- Cac route business con lai can header `Authorization: Bearer <access_token>`.
+- Protected current-user route: `/api/v1/auth/me`.
+- Cac route protected con lai can header `Authorization: Bearer <access_token>`.
 - Role guard kiem quyen theo ma tran trong [api_contract.md](api_contract.md).
 
 ## 4. Test API
@@ -136,6 +143,7 @@ Luu y:
 - Bat buoc co `###` de REST Client nhan la 2 request rieng.
 - Neu khong co `###` thi co the khong hien `Send Request` cho request thu 2.
 - Sau khi login, copy `access_token` vao bien `@access_token` trong `api_test.http`.
+- Goi `GET /api/v1/auth/me` de kiem tra token va lay lai employee hien tai cho FE.
 
 ### 4.2 Test nhanh bang curl
 ```bash

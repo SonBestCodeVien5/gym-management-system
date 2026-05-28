@@ -80,6 +80,7 @@ type AuthService interface {
 	Login(ctx context.Context, email string, password string) (*AuthTokenPair, error)
 	Refresh(ctx context.Context, refreshToken string) (*AuthTokenPair, error)
 	Logout(ctx context.Context, refreshToken string) error
+	CurrentEmployee(ctx context.Context, employeeID string) (*AuthEmployeeResponse, error)
 	ValidateAccessToken(ctx context.Context, accessToken string) (*AuthClaims, error)
 }
 
@@ -220,6 +221,21 @@ func (s *authServiceImpl) Logout(ctx context.Context, refreshToken string) error
 		return err
 	}
 	return nil
+}
+
+func (s *authServiceImpl) CurrentEmployee(ctx context.Context, employeeID string) (*AuthEmployeeResponse, error) {
+	employee, err := s.employeeRepo.GetByID(ctx, employeeID)
+	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			return nil, ErrInvalidToken
+		}
+		return nil, err
+	}
+	if employee.Status != EmployeeStatusActive {
+		return nil, ErrInactiveEmployee
+	}
+
+	return employeeResponse(employee), nil
 }
 
 func (s *authServiceImpl) ValidateAccessToken(ctx context.Context, accessToken string) (*AuthClaims, error) {

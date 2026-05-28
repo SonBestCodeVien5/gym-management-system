@@ -96,3 +96,30 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "logout successful"})
 }
+
+func (h *AuthHandler) Me(c *gin.Context) {
+	rawEmployeeID, ok := c.Get(AuthEmployeeIDKey)
+	if !ok {
+		RespondUnauthorized(c, "invalid access token")
+		return
+	}
+
+	employeeID, ok := rawEmployeeID.(string)
+	if !ok || employeeID == "" {
+		RespondUnauthorized(c, "invalid access token")
+		return
+	}
+
+	employee, err := h.authService.CurrentEmployee(c.Request.Context(), employeeID)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrInvalidToken), errors.Is(err, service.ErrInactiveEmployee):
+			RespondUnauthorized(c, "invalid access token")
+		default:
+			RespondInternal(c)
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "current employee fetched successfully", "data": employee})
+}

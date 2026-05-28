@@ -97,15 +97,19 @@ Check-in effects (for `attended` or `makeup` status):
 ### 7) Auth and Role Guard
 
 - `POST /api/v1/auth/login`
+- `GET /api/v1/auth/me`
 - `POST /api/v1/auth/refresh`
 - `POST /api/v1/auth/logout`
 
 Behavior:
 
-- Business routes under `/api/v1/*` require `Authorization: Bearer <access_token>`.
+- Protected routes under `/api/v1/*` require `Authorization: Bearer <access_token>`.
+- `/api/v1/auth/me` returns the current active employee from the access token, using the same
+  compact employee shape as login.
 - Access tokens are short-lived; refresh tokens are rotated and stored only as hashes.
 - Role guard currently protects member, subscription, course, branch, attendance, and session routes.
 - First admin can be bootstrapped from `BOOTSTRAP_ADMIN_*` environment variables.
+- Browser FE dev can enable allow-list CORS with `CORS_ALLOWED_ORIGINS`.
 
 ### 8) Employee Management
 
@@ -139,7 +143,14 @@ Behavior:
 - Query and TTL indexes support current subscription, attendance, session, employee, refund, and
   refresh-token flows.
 
-### 11) Integration Tests and Fixtures
+### 11) Frontend Readiness
+
+- Explicit allow-list CORS support through `CORS_ALLOWED_ORIGINS`.
+- Global preflight handling before auth guards, so browser `OPTIONS` requests work without bearer
+  tokens.
+- `GET /api/v1/auth/me` lets FE restore current staff context after reload or token refresh.
+
+### 12) Integration Tests and Fixtures
 
 - `internal/app` builds the real router/dependency graph for both `cmd/server` and integration
   tests.
