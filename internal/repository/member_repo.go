@@ -9,7 +9,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // MemberRepository defines member database operations.
@@ -26,21 +25,9 @@ type memberRepoImpl struct {
 	collection *mongo.Collection
 }
 
-// NewMemberRepository creates the repo and ensures CCID is unique.
+// NewMemberRepository creates the repo. Indexes are bootstrapped centrally at startup.
 func NewMemberRepository(db *mongo.Database) (MemberRepository, error) {
 	collection := db.Collection("members")
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	indexModel := mongo.IndexModel{
-		Keys:    bson.D{{Key: "ccid", Value: 1}},
-		Options: options.Index().SetUnique(true),
-	}
-
-	if _, err := collection.Indexes().CreateOne(ctx, indexModel); err != nil {
-		return nil, err
-	}
-
 	return &memberRepoImpl{
 		collection: collection,
 	}, nil
@@ -49,6 +36,9 @@ func NewMemberRepository(db *mongo.Database) (MemberRepository, error) {
 // Create inserts a new member document.
 func (r *memberRepoImpl) Create(ctx context.Context, member *models.Member) error {
 	_, err := r.collection.InsertOne(ctx, member)
+	if mongo.IsDuplicateKeyError(err) {
+		return ErrDuplicate
+	}
 	return err
 }
 

@@ -9,8 +9,9 @@ Tai lieu nay chi giu ban do doc code ngan. Chi tiet endpoint nam trong
 Bat dau o `cmd/server/main.go`:
 
 1. Xem `.env`, ket noi MongoDB va database name.
-2. Xem repository -> service -> handler duoc khoi tao theo thu tu nao.
-3. Xem route Gin de biet feature nao dang duoc wire that.
+2. Xem `pkg/database.EnsureIndexes` duoc goi truoc khi khoi tao repository.
+3. Xem repository -> service -> handler duoc khoi tao theo thu tu nao.
+4. Xem route Gin de biet feature nao dang duoc wire that.
 
 ## 2. Lop Kien Truc
 
@@ -20,6 +21,7 @@ Bat dau o `cmd/server/main.go`:
 | `internal/service` | Business rules va orchestration |
 | `internal/repository` | MongoDB query/update |
 | `internal/models` | Struct DB/JSON |
+| `pkg/database` | MongoDB connect va startup index bootstrap |
 
 Khi doc mot feature, di theo luong:
 
@@ -58,27 +60,33 @@ service error sang public `error.code`; service va repository khong biet HTTP re
   revokes active refresh tokens on password reset or deactivation.
 - Error responses use `{"error":{"code":"...","message":"...","details":{}}}`. Success responses
   keep the current `message`/`data` shape.
+- Startup creates MongoDB indexes centrally in `pkg/database.EnsureIndexes`; repositories should not
+  hide index creation in constructors.
+- Unique indexes enforce member CCID, branch code, employee email/ID, refresh-token hash, refund
+  subscription, duplicate session check-in, and duplicate makeup reuse.
 
 Doc rule trong service truoc khi sua handler hay repository.
 
 ## 5. Cach Debug Theo Luong
 
 1. Tim route trong `cmd/server/main.go`.
-2. Kiem tra handler nhan body, param, query va parse date/ObjectID dung chua.
-3. Kiem tra service tra domain error nao va business rule nao dang chan.
-4. Kiem tra repository query field, filter status, atomic update, va MongoDB index lien quan.
-5. Doi chieu `docs/api_contract.md`, `api_test.http`, va test hien co.
+2. Neu thay doi data integrity/query behavior, kiem tra `pkg/database/indexes.go`.
+3. Kiem tra handler nhan body, param, query va parse date/ObjectID dung chua.
+4. Kiem tra service tra domain error nao va business rule nao dang chan.
+5. Kiem tra repository query field, filter status, atomic update, va MongoDB index lien quan.
+6. Doi chieu `docs/api_contract.md`, `api_test.http`, va test hien co.
 
 ## 6. Thu Tu Goi Y
 
 1. `cmd/server/main.go`
-2. member handler/service/repository/model
-3. course va branch handler/service/repository/model
-4. subscription handler/service/repository/model
-5. attendance handler/service/repository/model
-6. session handler/service/repository/model
-7. auth va employee handler/middleware/service/repository/model
-8. tests va API contract cho feature dang sua
+2. `pkg/database/mongodb.go` va `pkg/database/indexes.go`
+3. member handler/service/repository/model
+4. course va branch handler/service/repository/model
+5. subscription handler/service/repository/model
+6. attendance handler/service/repository/model
+7. session handler/service/repository/model
+8. auth va employee handler/middleware/service/repository/model
+9. tests va API contract cho feature dang sua
 
 ## 7. Tai Lieu Lien Quan
 

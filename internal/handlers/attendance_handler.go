@@ -116,7 +116,7 @@ func (h *AttendanceHandler) CheckIn(c *gin.Context) {
 			RespondConflict(c, err.Error())
 		case errors.Is(err, service.ErrWeeklySessionLimitReached):
 			RespondConflict(c, "weekly session limit reached")
-		case errors.Is(err, service.ErrReportedMissedLimitReached), errors.Is(err, service.ErrMakeupReferenceInvalid), errors.Is(err, service.ErrMakeupReferenceNotFound), errors.Is(err, service.ErrMakeupAlreadyUsed):
+		case errors.Is(err, service.ErrReportedMissedLimitReached), errors.Is(err, service.ErrMakeupReferenceInvalid), errors.Is(err, service.ErrMakeupReferenceNotFound), errors.Is(err, service.ErrMakeupAlreadyUsed), errors.Is(err, service.ErrSessionCheckInClosed):
 			RespondConflict(c, err.Error())
 		default:
 			RespondInternal(c)
@@ -235,7 +235,7 @@ func (h *AttendanceHandler) handleAttendanceError(c *gin.Context, err error) {
 		RespondConflict(c, err.Error())
 	case errors.Is(err, service.ErrWeeklySessionLimitReached):
 		RespondConflict(c, "weekly session limit reached")
-	case errors.Is(err, service.ErrReportedMissedLimitReached), errors.Is(err, service.ErrMakeupReferenceInvalid), errors.Is(err, service.ErrMakeupReferenceNotFound), errors.Is(err, service.ErrMakeupAlreadyUsed):
+	case errors.Is(err, service.ErrReportedMissedLimitReached), errors.Is(err, service.ErrMakeupReferenceInvalid), errors.Is(err, service.ErrMakeupReferenceNotFound), errors.Is(err, service.ErrMakeupAlreadyUsed), errors.Is(err, service.ErrSessionCheckInClosed):
 		RespondConflict(c, err.Error())
 	default:
 		RespondInternal(c)

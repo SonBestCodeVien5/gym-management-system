@@ -8,7 +8,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type BranchRepository interface {
@@ -27,16 +26,6 @@ type branchRepoImpl struct {
 // NewBranchRepository returns a repo bound to branches collection.
 func NewBranchRepository(db *mongo.Database) (BranchRepository, error) {
 	collection := db.Collection("branches")
-	indexModel := mongo.IndexModel{
-		Keys: bson.D{{Key: "location", Value: "2dsphere"}},
-		Options: options.Index().
-			SetName("location_2dsphere"),
-	}
-
-	if _, err := collection.Indexes().CreateOne(context.Background(), indexModel); err != nil {
-		return nil, err
-	}
-
 	return &branchRepoImpl{
 		collection: collection,
 	}, nil
@@ -45,6 +34,9 @@ func NewBranchRepository(db *mongo.Database) (BranchRepository, error) {
 // Create inserts a branch document.
 func (r *branchRepoImpl) Create(ctx context.Context, branch *models.Branch) error {
 	_, err := r.collection.InsertOne(ctx, branch)
+	if mongo.IsDuplicateKeyError(err) {
+		return ErrDuplicate
+	}
 	return err
 }
 
@@ -102,6 +94,9 @@ func (r *branchRepoImpl) UpdateByID(ctx context.Context, id string, branch *mode
 
 	result, err := r.collection.UpdateOne(ctx, bson.M{"_id": objID}, update)
 	if err != nil {
+		if mongo.IsDuplicateKeyError(err) {
+			return ErrDuplicate
+		}
 		return err
 	}
 	if result.MatchedCount == 0 {

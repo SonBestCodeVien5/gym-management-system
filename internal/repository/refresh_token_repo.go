@@ -9,7 +9,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type RefreshTokenRepository interface {
@@ -25,17 +24,6 @@ type refreshTokenRepoImpl struct {
 
 func NewRefreshTokenRepository(db *mongo.Database) (RefreshTokenRepository, error) {
 	collection := db.Collection("refresh_tokens")
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	indexModel := mongo.IndexModel{
-		Keys:    bson.D{{Key: "token_hash", Value: 1}},
-		Options: options.Index().SetName("token_hash_unique").SetUnique(true),
-	}
-	if _, err := collection.Indexes().CreateOne(ctx, indexModel); err != nil {
-		return nil, err
-	}
-
 	return &refreshTokenRepoImpl{collection: collection}, nil
 }
 

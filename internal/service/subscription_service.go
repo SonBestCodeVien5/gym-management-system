@@ -368,6 +368,9 @@ func (s *subscriptionServiceImpl) RefundSubscription(ctx context.Context, id str
 	}
 
 	if err := s.refundRepo.Create(ctx, refund); err != nil {
+		if errors.Is(err, repository.ErrDuplicate) {
+			return nil, ErrRefundAlreadyExists
+		}
 		return nil, err
 	}
 

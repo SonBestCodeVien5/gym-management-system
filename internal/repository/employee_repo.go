@@ -47,23 +47,6 @@ type employeeRepoImpl struct {
 
 func NewEmployeeRepository(db *mongo.Database) (EmployeeRepository, error) {
 	collection := db.Collection("employees")
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	indexes := []mongo.IndexModel{
-		{
-			Keys:    bson.D{{Key: "normalized_email", Value: 1}},
-			Options: options.Index().SetName("normalized_email_unique").SetUnique(true).SetSparse(true),
-		},
-		{
-			Keys:    bson.D{{Key: "employee_id", Value: 1}},
-			Options: options.Index().SetName("employee_id_unique").SetUnique(true).SetSparse(true),
-		},
-	}
-	if _, err := collection.Indexes().CreateMany(ctx, indexes); err != nil {
-		return nil, err
-	}
-
 	return &employeeRepoImpl{collection: collection}, nil
 }
 

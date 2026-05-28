@@ -10,8 +10,9 @@ import (
 )
 
 var (
-	ErrBranchNotFound     = errors.New("branch not found")
-	ErrInvalidBranchInput = errors.New("invalid branch input")
+	ErrBranchNotFound          = errors.New("branch not found")
+	ErrInvalidBranchInput      = errors.New("invalid branch input")
+	ErrBranchCodeAlreadyExists = errors.New("branch code already exists")
 )
 
 // BranchService defines business operations for branch management.
@@ -43,7 +44,14 @@ func (s *branchServiceImpl) CreateBranch(ctx context.Context, branch *models.Bra
 	}
 
 	branch.ID = primitive.NewObjectID()
-	return s.repo.Create(ctx, branch)
+	if err := s.repo.Create(ctx, branch); err != nil {
+		if errors.Is(err, repository.ErrDuplicate) {
+			return ErrBranchCodeAlreadyExists
+		}
+		return err
+	}
+
+	return nil
 }
 
 // GetBranchByID returns a branch by ID.
@@ -75,6 +83,9 @@ func (s *branchServiceImpl) UpdateBranch(ctx context.Context, id string, branch 
 	if err := s.repo.UpdateByID(ctx, id, branch); err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			return ErrBranchNotFound
+		}
+		if errors.Is(err, repository.ErrDuplicate) {
+			return ErrBranchCodeAlreadyExists
 		}
 		return err
 	}

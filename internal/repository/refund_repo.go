@@ -27,6 +27,9 @@ func NewRefundRepository(db *mongo.Database) RefundRepository {
 
 func (r *refundRepoImpl) Create(ctx context.Context, refund *models.Refund) error {
 	_, err := r.collection.InsertOne(ctx, refund)
+	if mongo.IsDuplicateKeyError(err) {
+		return ErrDuplicate
+	}
 	return err
 }
 

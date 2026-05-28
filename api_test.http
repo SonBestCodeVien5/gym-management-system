@@ -381,6 +381,25 @@ Authorization: Bearer {{access_token}}
 }
 
 ###
+
+# Duplicate branch_code should return 409 with error.code = CONFLICT
+POST {{baseUrl}}/api/v1/branches
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+{
+  "branch_code": "HCM01",
+  "name": "Duplicate Branch Code",
+  "address": "456 Nguyen Hue, District 1",
+  "province": "Ho Chi Minh",
+  "location": {
+    "type": "Point",
+    "coordinates": [106.7010, 10.7770]
+  }
+}
+
+###
+
 # Delete branch
 DELETE {{baseUrl}}/api/v1/branches/69f20a180c4cd4cdf57684fe
 Authorization: Bearer {{access_token}}

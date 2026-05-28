@@ -38,6 +38,12 @@ func main() {
 	defer dbClient.Disconnect(context.Background())
 
 	db := dbClient.Database("gym_management")
+	indexCtx, indexCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer indexCancel()
+	if err := database.EnsureIndexes(indexCtx, db); err != nil {
+		log.Fatalf("Error: Failed to ensure MongoDB indexes: %v", err)
+	}
+	log.Println("MongoDB indexes ensured successfully")
 
 	// Build repositories.
 	memberRepo, err := repository.NewMemberRepository(db)

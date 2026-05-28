@@ -69,6 +69,7 @@ go run cmd/server/main.go
 
 Neu thanh cong, log se co:
 - `Connected to MongoDB successfully`
+- `MongoDB indexes ensured successfully`
 - `Listening and serving HTTP on :8080`
 
 ### 3.4 Route hien co
@@ -224,9 +225,14 @@ mongodb://admin:password123@localhost:27017/?authSource=admin&directConnection=t
 6. Authentication DB: `admin`
 7. TLS/SSL: Off
 
-### 6.3 Luu y ve index `ccid`
-- `members.ccid` co unique index.
-- Neu insert member trung `ccid`, DB co the chong lai ngay ca khi service check chua truoc do.
+### 6.3 Luu y ve MongoDB indexes
+- Startup goi `pkg/database.EnsureIndexes` de tao index tap trung cho cac collection hien co.
+- Unique indexes quan trong: `members.ccid`, `branches.branch_code`, `refunds.subscription_id`,
+  `employees.normalized_email`, `employees.employee_id`, va `refresh_tokens.token_hash`.
+- Attendance co partial unique indexes de chan duplicate session check-in va duplicate makeup reuse.
+- Refresh token co TTL index tren `expires_at`; MongoDB xoa document het han theo co che eventual.
+- Neu DB local da co duplicate data, server co the dung khi tao unique index. Khi do can cleanup data
+  trung trong collection bi log bao loi, khong drop/rewrite data tu dong.
 
 ## 7. Loi thuong gap va cach xu ly
 ### 7.1 `Authentication failed`
@@ -270,7 +276,7 @@ Cach sua:
 3. Route `POST /api/v1/members` hoat dong.
 4. Member duoc insert vao `gym_management.members`.
 5. Da giam coupling nhe: service khong check `mongo.ErrNoDocuments` truc tiep, su dung loi trung lap tu repository.
-6. Da co unique index `ccid`.
+6. Da co central MongoDB index bootstrap cho unique/query/TTL indexes.
 7. Da co route subscription va parser RFC3339.
 8. Da co auth login/refresh/logout, bootstrap admin, refresh-token hash storage, access-token
    middleware, va role guard cho route business.

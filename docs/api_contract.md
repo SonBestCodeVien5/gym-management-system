@@ -1,6 +1,6 @@
 # API Contract (Current)
 
-Cap nhat: 2026-05-26
+Cap nhat: 2026-05-28
 
 Muc tieu: chot ten endpoint + request/response co ban de FE va BE dung chung.
 
@@ -149,9 +149,12 @@ without an allowed role returns `403`.
 
 Startup creates:
 
-- unique sparse index on `employees.normalized_email`
-- unique sparse index on `employees.employee_id`
-- unique index on `refresh_tokens.token_hash`
+- unique indexes on `members.ccid`, `branches.branch_code`, `refunds.subscription_id`, and
+  `refresh_tokens.token_hash`
+- unique sparse indexes on `employees.normalized_email` and `employees.employee_id`
+- query indexes for subscriptions, attendances, sessions, employees, refunds, and refresh tokens
+- partial unique indexes to prevent duplicate session check-in and duplicate makeup reuse
+- TTL index on `refresh_tokens.expires_at`; cleanup is eventual, so auth still checks token expiry
 
 If `BOOTSTRAP_ADMIN_EMAIL` and `BOOTSTRAP_ADMIN_PASSWORD` are configured, startup creates the first
 admin account only when the normalized email does not already exist.
@@ -539,7 +542,8 @@ Notes:
 - Coordinates use GeoJSON order `[lng, lat]`.
 - Route is registered before `/api/v1/branches/:id`.
 - Branch create/update require `location.type = "Point"` and valid coordinates.
-- Startup creates MongoDB `branches.location` 2dsphere index.
+- Startup creates MongoDB `branches.location` 2dsphere index and unique `branches.branch_code`
+  index. Duplicate branch codes return `409`.
 
 ---
 
@@ -551,7 +555,7 @@ Notes:
 - 401: Unauthorized (missing/invalid/expired token or invalid credentials)
 - 403: Forbidden (authenticated staff does not have an allowed role)
 - 404: Not found
-- 409: Conflict (status/logic conflict)
+- 409: Conflict (status/logic conflict or duplicate unique field)
 - 500: Internal server error
 
 ---
@@ -567,3 +571,4 @@ Notes:
 | Branch nearby | `GET /api/v1/branches/nearby` dùng `lng`, `lat`, optional `max_distance`, `limit`; trả thêm `distance_meters`. |
 | Course tags | `allowed_tags` của course là tập tag được phép dùng để ràng buộc session. |
 | Employee management | Admin-only; không hard delete employee, dùng `status=inactive`; password reset/deactivation revoke refresh token active. |
+| Index/data integrity | Startup bootstraps MongoDB indexes centrally. Unique indexes enforce member CCID, branch code, employee email/ID, refresh-token hash, refund subscription, duplicate session check-in, and duplicate makeup reuse. |

@@ -59,7 +59,14 @@ func (s *memberServiceImpl) RegisterMember(ctx context.Context, member *models.M
 	member.UpdatedAt = now
 
 	// Persist member record.
-	return s.repo.Create(ctx, member)
+	if err := s.repo.Create(ctx, member); err != nil {
+		if errors.Is(err, repository.ErrDuplicate) {
+			return ErrMemberCCIDAlreadyExists
+		}
+		return err
+	}
+
+	return nil
 }
 
 // GetMemberByID loads a member or returns not-found error.

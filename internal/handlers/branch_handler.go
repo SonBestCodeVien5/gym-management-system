@@ -73,6 +73,8 @@ func (h *BranchHandler) Create(c *gin.Context) {
 		switch {
 		case errors.Is(err, service.ErrInvalidBranchInput):
 			RespondInvalidInput(c, err.Error())
+		case errors.Is(err, service.ErrBranchCodeAlreadyExists):
+			RespondConflict(c, err.Error())
 		default:
 			RespondInternal(c)
 		}
@@ -206,6 +208,8 @@ func (h *BranchHandler) Update(c *gin.Context) {
 			RespondInvalidInput(c, err.Error())
 		case errors.Is(err, service.ErrBranchNotFound):
 			RespondNotFound(c, "branch not found")
+		case errors.Is(err, service.ErrBranchCodeAlreadyExists):
+			RespondConflict(c, err.Error())
 		default:
 			RespondInternal(c)
 		}

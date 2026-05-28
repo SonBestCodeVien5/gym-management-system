@@ -131,6 +131,14 @@ Behavior:
 - Invalid request bodies are sanitized and no longer return raw Gin binding errors.
 - The shared error helper lives in `internal/handlers/response.go`.
 
+### 10) Indexes and Data Integrity
+
+- Startup runs central MongoDB index bootstrap through `pkg/database.EnsureIndexes`.
+- Unique indexes enforce member CCID, branch code, employee email/ID, refresh-token hash, refund
+  subscription, duplicate session check-in, and duplicate makeup reuse.
+- Query and TTL indexes support current subscription, attendance, session, employee, refund, and
+  refresh-token flows.
+
 ## Run Locally
 
 1. Set environment variables from `.env.example`, especially `MONGODB_URI`,

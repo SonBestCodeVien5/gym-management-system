@@ -21,7 +21,7 @@ Read this file when a new chat needs a short project handoff.
 
 ## Current State
 
-Snapshot date: 2026-05-26.
+Snapshot date: 2026-05-28.
 
 Stack:
 - Go + Gin + MongoDB.
@@ -40,9 +40,9 @@ Implemented backend surfaces:
 | Auth | Login, refresh rotation, logout revoke, access-token middleware, role guard |
 | Employees | Admin-only create, list, get, update, password reset, deactivate |
 | Error handling | Shared HTTP error contract with stable `error.code`, sanitized `message`, and object `details` |
+| Data integrity | Central MongoDB index bootstrap with unique/query/partial unique/TTL indexes |
 
 Planned next surfaces:
-- Index and data-integrity hardening.
 - Integration tests and fixtures.
 
 ## Rules Worth Remembering
@@ -62,6 +62,9 @@ Planned next surfaces:
   `normalized_email`, and revokes active refresh tokens on password reset/deactivation.
 - Backend error responses use `{"error":{"code":"...","message":"...","details":{}}}` while success
   responses keep the existing `message`/`data` shape.
+- Startup runs `pkg/database.EnsureIndexes` before repository construction. Unique indexes enforce
+  member CCID, branch code, employee email/ID, refresh-token hash, refund subscription, duplicate
+  session check-in, and duplicate makeup reuse. Refresh-token TTL cleanup is eventual.
 
 ## Where To Update
 
@@ -74,11 +77,11 @@ Planned next surfaces:
 
 ## Resume Point
 
-Cycle 06 validation/error consistency is complete. The next backend cycle is index and data-integrity
-hardening.
+Cycle 07 indexes and data-integrity hardening is complete. The next backend cycle is integration
+tests and fixtures.
 Start from:
 
-1. `backend_skills/plans/07_indexes_data_integrity.md` if present, otherwise create it with
+1. `backend_skills/plans/08_integration_tests_fixtures.md` if present, otherwise create it with
    `$gym-plan`
 2. the requested phase skill for the next task
 3. only the source files needed for that task

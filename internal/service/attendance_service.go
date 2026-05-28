@@ -113,6 +113,14 @@ func (s *attendanceServiceImpl) CheckIn(ctx context.Context, attendance *models.
 	// 6) Create attendance record.
 	attendance.ID = primitive.NewObjectID()
 	if err := s.attendanceRepo.Create(ctx, attendance); err != nil {
+		if errors.Is(err, repository.ErrDuplicate) {
+			if attendance.Status == "makeup" {
+				return ErrMakeupAlreadyUsed
+			}
+			if attendance.SessionID != nil {
+				return ErrSessionCheckInClosed
+			}
+		}
 		return err
 	}
 

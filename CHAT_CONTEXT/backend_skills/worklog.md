@@ -10,8 +10,135 @@ Dùng file này để giữ roadmap và completion summary ngắn cho feature ba
 - [x] Auth/login + role guard
 - [x] Employee management
 - [x] Validation hardening & error consistency
-- [ ] Indexes and data integrity
+- [x] Indexes and data integrity
 - [ ] Integration tests & fixtures
+
+---
+
+# Feature - Indexes and data integrity
+
+## Status
+- Planned: yes
+- Implemented: yes
+- Reviewed: yes
+- Tested: yes
+- Docs updated: yes
+
+## Plan summary - 2026-05-28
+
+### Goal
+Add central MongoDB index bootstrap and harden DB-backed integrity for current API surfaces without
+adding new endpoints.
+
+### Key decisions
+- Prefer `pkg/database.EnsureIndexes(ctx, db)` called from startup before repository construction.
+- Keep startup idempotent and fail fast if unique indexes cannot be created because local data is
+  dirty.
+- Preserve current HTTP success shapes and shared error envelope.
+- Map duplicate-key errors to domain conflicts instead of returning raw Mongo errors.
+- Add unique indexes for `branches.branch_code` and `refunds.subscription_id`.
+- Add query indexes for subscriptions, attendances, sessions, employees, and refresh tokens.
+- Add partial unique attendance indexes for duplicate session check-in and makeup reuse.
+- Defer full Mongo transactions for refund/attendance multi-write flows unless implementation finds
+  a small, safe pattern.
+
+### Next action
+Use `$gym-implement` with `CHAT_CONTEXT/backend_skills/plans/07_indexes_data_integrity.md`.
+
+## Implementation summary - 2026-05-28
+
+### Result
+- Added central MongoDB index bootstrap at startup.
+- Moved existing repository-constructor index ownership into `pkg/database.EnsureIndexes`.
+- Added unique/query/partial unique/TTL indexes for current API surfaces.
+- Added duplicate-key normalization and conflict mapping for member, branch, refund, and attendance
+  paths.
+- Updated API docs, local dev guide, and REST samples for visible integrity behavior.
+
+### Verification
+- `env GOCACHE=/tmp/gocache go build ./...` - pass; Go printed a read-only module stat-cache warning
+  but exited `0`.
+- `env GOCACHE=/tmp/gocache go test ./...` - pass.
+- `git diff --check` - pass.
+
+### Next action
+Use `$gym-review` with `CHAT_CONTEXT/backend_skills/implementations/07_indexes_data_integrity.md`.
+
+## Review summary - 2026-05-28
+
+### Result
+- Review passed with no blocking findings.
+- Checked index definitions, startup ordering, repository/service/handler error mapping, docs/API
+  sample alignment, and known transaction/reference-hardening deferrals.
+
+### Verification
+- `env GOCACHE=/tmp/gocache go build ./...` - pass; Go printed a read-only module stat-cache warning
+  but exited `0`.
+- `env GOCACHE=/tmp/gocache go test ./...` - pass.
+- `git diff --check` - pass.
+
+### Next action
+Use `$gym-test` with `CHAT_CONTEXT/backend_skills/reviews/07_indexes_data_integrity.md`.
+
+## Test summary - 2026-05-28
+
+### Result
+- Automated build/tests passed.
+- Server startup against local MongoDB passed and logged central index bootstrap success.
+- Direct MongoDB index inspection passed for members, branches, subscriptions, attendances, sessions,
+  refunds, employees, and refresh tokens.
+- Manual API verification passed for auth, branch nearby, employee/session filters, subscription
+  list, duplicate member CCID, duplicate branch code, duplicate refund, duplicate session check-in,
+  and duplicate makeup reuse.
+- Refund DB state verification passed: duplicate refund left exactly one refund audit row and the
+  subscription stayed `refunded` with `remaining_sessions = 0`.
+
+### Verification
+- `env GOCACHE=/tmp/gocache go build ./...` - pass; Go printed a read-only module stat-cache warning
+  but exited `0`.
+- `env GOCACHE=/tmp/gocache go test ./...` - pass.
+- `git diff --check` - pass.
+- Manual API script against local server on `PORT=18083` - pass.
+- Direct MongoDB index/refund checks through `mongosh` - pass.
+
+### Next action
+Use `$gym-complete` with `CHAT_CONTEXT/backend_skills/tests/07_indexes_data_integrity.md`.
+
+## Completion - 2026-05-28
+
+### Result
+- Indexes and data-integrity hardening cycle completed end-to-end.
+- Centralized MongoDB index bootstrap in `pkg/database.EnsureIndexes`.
+- Startup now ensures indexes before repository construction and fails fast on dirty duplicate data.
+- Added unique, query, partial unique, and TTL indexes for current API surfaces.
+- Mapped duplicate-key races to public `409 CONFLICT` responses through repository/service/handler
+  layers.
+- Updated durable API/local-dev docs, REST sample, backend phase notes, and chat snapshot.
+
+### Verification
+- `env GOCACHE=/tmp/gocache go build ./...` - pass; Go printed a read-only module stat-cache warning
+  but exited `0`.
+- `env GOCACHE=/tmp/gocache go test ./...` - pass.
+- `git diff --check` - pass.
+- Manual API script against local server on `PORT=18083` - pass.
+- Direct MongoDB index/refund checks through `mongosh` - pass.
+
+### Docs updated
+- [x] `docs/api_contract.md`
+- [x] `docs/local_dev_guide.md`
+- [x] `docs/code_reading_guide.md`
+- [x] `README.md`
+- [x] `api_test.http`
+- [x] `CHAT_CONTEXT/README.md`
+
+### Follow-up risks
+- Refund and attendance side effects remain multi-write flows without Mongo transactions.
+- Branch manager and session branch/trainer reference hardening remains deferred.
+- Integration tests should cover startup index creation and duplicate-key API behavior.
+
+### Next action
+Use `$gym-plan` or `$gym-implement` for the next backend cycle:
+`CHAT_CONTEXT/backend_skills/plans/08_integration_tests_fixtures.md`.
 
 ---
 

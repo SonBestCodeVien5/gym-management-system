@@ -1,118 +1,252 @@
-# Cycle 07 — Indexes & Data Integrity
+# Cycle 07 - Indexes & Data Integrity
 
 ## Status
 
 - Status: planned
+- Feature: indexes and data-integrity hardening
+- Planned at: 2026-05-28
 - Priority: medium
-- Depends on: final set of collections/features known
+- Depends on: current feature set through cycle 06
+- Next phase: `$gym-implement`
 
 ## Goal
 
-Tạo index cần thiết và siết data integrity để MongoDB hỗ trợ business rules.
+Make MongoDB enforce the data rules that should not rely only on read-before-write checks, and add
+the query indexes needed by the current API surfaces.
 
-## Index plan
+This cycle is not an endpoint expansion. Existing HTTP routes and success response shapes should
+stay unchanged unless an integrity failure needs clearer conflict mapping.
 
-### Members
+## Current Baseline
 
-- unique `ccid`
+Already implemented:
 
-Already noted:
-- `members.ccid` unique index exists.
+- `members.ccid` unique index is created in `NewMemberRepository`.
+- `branches.location` 2dsphere index is created in `NewBranchRepository`.
+- `employees.normalized_email` and `employees.employee_id` unique sparse indexes are created in
+  `NewEmployeeRepository`.
+- `refresh_tokens.token_hash` unique index is created in `NewRefreshTokenRepository`.
+- `sessionRepo.ReserveEnrollment` uses an atomic `FindOneAndUpdate` with capacity and duplicate
+  enrollment guards.
+- `subscriptionRepo.RefundSubscription` atomically changes active subscriptions with remaining
+  sessions to `refunded`.
 
-### Branches
+Gaps:
 
-- unique `branch_code`
-- `location` 2dsphere
+- Index creation is split across repository constructors and is incomplete for subscriptions,
+  attendances, sessions, refunds, and several auth/list filters.
+- `branches.branch_code` is not unique at the DB layer.
+- `refunds.subscription_id` is not unique at the DB layer, so future direct writes or race paths can
+  create duplicate refund audit rows.
+- Duplicate key mapping is inconsistent: employee maps duplicate key to `repository.ErrDuplicate`,
+  but member/branch/refund create paths currently return raw Mongo duplicate errors.
+- Attendance duplicate prevention and remaining-session decrement still have race windows because
+  attendance insert and subscription/member counter updates are separate operations.
+- Refresh tokens have no TTL index on `expires_at`.
 
-### Subscriptions
+## API Contract
 
-- `member_id`
-- `course_id`
-- `home_branch_id`
-- `status`
-- compound `{member_id, status}`
+No new endpoints.
 
-### Attendance
+Expected visible behavior:
 
-- `subscription_id`
-- `member_id`
-- `session_id`
-- `reported_missed_ref_id`
-- optional compound to prevent duplicate check-in per business day/session
+- Existing duplicate member CCID, branch code, employee email/employee ID, refresh token hash, and
+  refund audit conflicts should map to the shared error contract with `409` and
+  `error.code = CONFLICT`.
+- Startup should fail fast with a clear log if index creation fails.
+- Success response shapes remain unchanged.
 
-### Sessions
+Docs to update if implemented:
 
-- `branch_id`
-- `start_time`
-- `tags`
-- compound `{branch_id, start_time}`
+- `docs/api_contract.md`: add/adjust notes about DB-enforced uniqueness where behavior is visible.
+- `docs/local_dev_guide.md`: mention startup index bootstrap and dirty-data duplicate-index failure.
+- `api_test.http`: add representative duplicate branch/refund conflict samples if useful.
 
-### Refunds
+## Business Rules To Enforce
 
-- unique `subscription_id`
-  - Source risk: `01_refund_pricing` review.
-  - Impact if missing: duplicate refund audit records can exist if manual DB writes or future code bypass current service guard.
-  - Priority: soon, before production or before adding more refund/payment flows.
-  - Expected behavior: second refund record for same `subscription_id` must fail with conflict-safe error mapping.
+### Unique Identity Fields
 
-### Employees/Auth
+- `members.ccid` remains unique.
+- `branches.branch_code` becomes unique.
+- `employees.normalized_email` and `employees.employee_id` remain unique sparse indexes.
+- `refresh_tokens.token_hash` remains unique.
+- Duplicate-key errors on API create/update flows must become service-level conflicts, not raw
+  storage errors.
 
-- unique `email` or `username`
-- refresh token hash unique
-- refresh token expiry TTL if using token collection
+### Refund Audit Integrity
 
-## Implementation plan
+- `refunds.subscription_id` must be unique.
+- `RefundRepository.Create` should map Mongo duplicate-key errors to `repository.ErrDuplicate`.
+- `SubscriptionService.RefundSubscription` should map refund duplicate insert to
+  `ErrRefundAlreadyExists`.
+- Keep the current subscription atomic status update guard.
+- Do not add a Mongo transaction in this cycle unless implementation discovers a simple local
+  pattern. Record the remaining risk: subscription update can still succeed before audit insert
+  fails if there is an unexpected write/storage failure after the status update.
 
-Create central bootstrap function or keep repo init constructors consistent.
+### Query Performance Indexes
 
-Option A:
-- `pkg/database/indexes.go`
-- `EnsureIndexes(ctx, db) error`
+Add indexes matching current query/filter paths:
 
-Option B:
-- each repository constructor creates its own indexes
+- `subscriptions.member_id`
+- `subscriptions.status`
+- compound `subscriptions.member_id + subscriptions.status`
+- optional supporting indexes on `subscriptions.course_id` and `subscriptions.home_branch_id`
+- `attendances.sub_id + date desc` for history and service scans
+- `attendances.session_id` for session check-in duplicate scans when a session exists
+- partial unique index for session check-in duplicate prevention:
+  `attendances.session_id + sub_id` where `session_id` exists
+- partial unique index for makeup reuse:
+  `attendances.sub_id + is_makeup_for + status` where `status = "makeup"` and `is_makeup_for`
+  exists
+- `sessions.branch_id + scheduled_at`
+- `sessions.course_level + scheduled_at`
+- `sessions.tags`
+- `employees.role + status + created_at desc`
+- `employees.branch_id + status`
+- `refresh_tokens.employee_id + revoked_at`
+- TTL index on `refresh_tokens.expires_at`
 
-Preferred:
-- central `EnsureIndexes` for visibility.
+### Attendance Race Windows
 
-Call from `cmd/server/main.go` after DB selection.
+Minimum for this cycle:
 
-## Data integrity rules
+- Add partial unique indexes that reject duplicate session check-ins and duplicate makeup reuse.
+- Map duplicate-key errors from attendance insert to existing conflict errors where the service can
+  identify the attempted operation:
+  - duplicate session check-in -> `ErrSessionCheckInClosed`
+  - duplicate makeup reuse -> `ErrMakeupAlreadyUsed`
 
-- Unique fields return conflict, not raw Mongo error.
-- Geo query index must exist before nearby endpoint.
-- Refund double-submit guarded by unique index and atomic update.
-- Refund audit integrity:
-  - Ensure `refunds.subscription_id` unique index.
-  - Add duplicate-key detection in refund repository/service and map to conflict.
-  - Keep subscription atomic status update as first guard.
-- Refund transaction risk:
-  - Current refund flow can update subscription to `refunded` before refund audit insert fails.
-  - For MVP this can remain recorded limitation.
-  - Before real payment/accounting integration, consider Mongo transaction/session around subscription update + refund insert.
-- Attendance makeup reuse guarded by query/index if possible.
-- Auth refresh tokens expire via TTL index if persisted.
+Out of scope unless explicitly expanded:
 
-## Docs/test plan
+- Full transaction for attendance insert + subscription remaining-session decrement + member
+  attended counter increment.
+- Atomic decrement of `remaining_sessions` based on status and session limit in one DB operation.
 
-Update:
-- `docs/local_dev_guide.md` if index bootstrapping matters.
-- `CHAT_CONTEXT/README.md`
-- `worklog.md`
+### Reference Integrity Hardening
 
-Run:
+Plan as service-level checks because MongoDB does not enforce foreign keys:
+
+- Session creation should verify `branch_id` exists.
+- Session creation should verify `trainer_id` exists, is active, and has trainer role.
+- Branch manager assignment should verify `manager_id` exists when provided.
+- Employee branch IDs are already validated by employee service; keep that behavior.
+
+These checks can be implemented in this cycle if scope allows after index work. If not, keep them as
+explicit follow-up notes in the implementation handoff.
+
+## Data / Index Design
+
+Preferred implementation:
+
+- Add `pkg/database/indexes.go` with `EnsureIndexes(ctx context.Context, db *mongo.Database) error`.
+- Call `database.EnsureIndexes` from `cmd/server/main.go` after selecting `gym_management` and
+  before repository construction.
+- Keep index definitions centralized with stable names.
+- Either remove repository-constructor index creation or keep it only when definitions are identical
+  and idempotent. Avoid creating the same key with different names/options.
+
+Suggested index names:
+
+| Collection | Index |
+|---|---|
+| `members` | `ccid_unique` |
+| `branches` | `branch_code_unique`, `location_2dsphere` |
+| `subscriptions` | `member_id_idx`, `status_idx`, `member_status_idx`, `course_id_idx`, `home_branch_id_idx` |
+| `attendances` | `sub_id_date_desc_idx`, `session_id_idx`, `session_sub_unique`, `makeup_sub_ref_unique` |
+| `sessions` | `branch_scheduled_at_idx`, `level_scheduled_at_idx`, `tags_idx` |
+| `refunds` | `subscription_id_unique`, `member_id_idx` |
+| `employees` | `normalized_email_unique`, `employee_id_unique`, `role_status_created_idx`, `branch_status_idx` |
+| `refresh_tokens` | `token_hash_unique`, `employee_revoked_idx`, `expires_at_ttl` |
+
+TTL detail:
+
+- `refresh_tokens.expires_at` should use `ExpireAfterSeconds(0)`.
+- TTL cleanup is eventual, so auth logic must continue checking `expires_at` directly.
+
+## Layer Plan
+
+### Database Bootstrap
+
+- Create a central index bootstrap function.
+- Use a bounded context, around 10 seconds, for startup index creation.
+- Return errors to `main` and log fatal with collection/index context.
+- Keep startup idempotent across repeated local runs.
+
+### Repository
+
+- Add duplicate-key normalization in create/update paths that can hit unique indexes:
+  - member create
+  - branch create/update
+  - refund create
+  - attendance create where partial unique indexes can fire
+- Keep `repository.ErrDuplicate` as the storage-agnostic duplicate signal.
+- Add focused repository tests if a Mongo test harness exists; otherwise cover behavior at service
+  level and manual API/DB checks.
+
+### Service
+
+- Map `repository.ErrDuplicate` to existing service conflicts:
+  - member -> `ErrMemberCCIDAlreadyExists`
+  - branch -> likely introduce `ErrBranchConflict` or reuse `ErrInvalidBranchInput` only if the API
+    should stay `400`; prefer new conflict error for duplicate branch code.
+  - refund -> `ErrRefundAlreadyExists`
+  - attendance makeup/session duplicates -> existing makeup/session conflict errors.
+- Add reference checks for session branch/trainer and branch manager only if repositories/interfaces
+  can support it without large refactors.
+
+### Handler
+
+- Preserve current error response shape.
+- Map any new service conflict sentinel to `RespondConflict`.
+- Do not expose index names or raw Mongo error text.
+
+### Docs / Context
+
+- Update API and local-dev docs if visible behavior changes.
+- Update implementation/review/test notes in later phases.
+- Update `CHAT_CONTEXT/README.md` and worklog at completion.
+
+## Verification Plan
+
+Automated:
+
 ```bash
-go build ./...
-go test ./...
+env GOCACHE=/tmp/gocache go build ./...
+env GOCACHE=/tmp/gocache go test ./...
+git diff --check
 ```
 
-Manual:
-- start app, verify no index creation error.
-- create duplicate ccid/branch_code/refund to confirm conflict behavior.
-- verify duplicate refund returns `409`/domain conflict, not raw Mongo error.
+Manual local API / DB checks:
 
-## Risks
+- Start app against local MongoDB and confirm startup succeeds with index bootstrap.
+- Verify indexes exist with `mongosh` / Compass for key collections.
+- Duplicate member CCID returns `409 CONFLICT`.
+- Duplicate branch code returns `409 CONFLICT`.
+- Duplicate refund for a subscription returns `409 CONFLICT`, with only one refund audit row.
+- Duplicate session check-in returns existing conflict response.
+- Duplicate makeup for the same reported-missed reference returns existing conflict response.
+- Existing nearby branch search still works with `location_2dsphere`.
+- Refresh-token login/refresh/logout still works; expired-token TTL is documented as eventual.
 
-- Creating unique indexes on dirty existing data can fail.
-- Need migration/cleanup if duplicate data already exists.
-- TTL index behavior not immediate.
+Dirty-data safety check:
+
+- If startup index creation fails because local data already contains duplicates, do not silently
+  drop or rewrite data. Record the duplicate collection/index and require cleanup.
+
+## Risks And Deferrals
+
+- Unique indexes can fail on existing dirty local data.
+- TTL deletion is not immediate and must not be treated as auth enforcement.
+- MongoDB transactions may require replica set configuration; this project currently runs a simple
+  local MongoDB container.
+- Attendance remaining-session updates and member counters remain multi-write operations unless a
+  future cycle adds transactions or atomic counter claims.
+- Centralizing indexes touches startup and repository constructors; keep the change narrow and avoid
+  unrelated repository refactors.
+
+## Implementation Handoff
+
+Start `$gym-implement` from this file:
+
+`CHAT_CONTEXT/backend_skills/plans/07_indexes_data_integrity.md`

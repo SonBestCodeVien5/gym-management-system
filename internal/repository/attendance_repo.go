@@ -28,6 +28,9 @@ func NewAttendanceRepository(db *mongo.Database) AttendanceRepository {
 // Create inserts a new attendance record.
 func (r *attendanceRepoImpl) Create(ctx context.Context, attendance *models.Attendance) error {
 	_, err := r.collection.InsertOne(ctx, attendance)
+	if mongo.IsDuplicateKeyError(err) {
+		return ErrDuplicate
+	}
 	return err
 }
 
