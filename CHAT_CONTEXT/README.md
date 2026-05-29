@@ -25,7 +25,7 @@ Read this file when a new chat needs a short project handoff.
 
 ## Current State
 
-Snapshot date: 2026-05-28.
+Snapshot date: 2026-05-29.
 
 Stack:
 - Go + Gin + MongoDB.
@@ -50,7 +50,8 @@ Implemented backend surfaces:
 
 Planned next surfaces:
 - CI automation and expanded integration coverage for sessions/not-found cases remain follow-ups.
-- Frontend implementation can start using the current backend contract when ready.
+- FE02 dashboard reference is complete with local limitations; FE03 app routing/API foundation is the
+  next frontend backlog item, unless the next pass should prioritize FE12 responsive/test hardening.
 - Frontend delivery now has dedicated `$gym-fe-*` skills and `frontend_skills/` memory.
 
 ## Rules Worth Remembering
@@ -89,9 +90,9 @@ Planned next surfaces:
 
 ## Resume Point
 
-Cycle 09 frontend readiness mini-cycle is complete.
+FE02 dashboard reference cycle is complete.
 Start from:
 
-1. `$gym-git` to review/commit/push the current Cycle 09 changes if requested
-2. `$gym-plan` for the next backlog item, likely CI automation, expanded session/not-found coverage,
-   or the first frontend implementation pass
+1. `$gym-git` to review/commit/push the current frontend changes if requested
+2. `$gym-fe-plan` for FE 03 App Routing And API Foundation, or FE 12 if the next pass should focus
+  on broader responsive/test hardening

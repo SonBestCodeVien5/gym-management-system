@@ -4,11 +4,33 @@ Use this file for short frontend roadmap and completion summaries.
 
 ## Current frontend roadmap
 
-- [x] React/Vite scaffold with Iron Forge style
-- [x] Auth UI and API client integration
-- [x] Dashboard layout and protected routing
-- [ ] Reference-inspired operational dashboard
-- [ ] Core member/subscription workflows
+- [x] FE 01 Auth Shell - staff login, API client, token restore, logout, protected shell
+- [x] FE 02 Dashboard Reference - adapt `fe-tham-khao/iron_forge_gym_dashboard.html` into `/app`
+- [ ] FE 03 App Routing And API Foundation - scalable routes, resource API helpers, shared UI states
+- [ ] FE 04 Brand Asset Integration - official logo/favicon/color/web assets from `iron-forge-brand-assets`
+- [ ] FE 05 Members - create/search/detail, activate offline payment, member subscriptions
+- [ ] FE 06 Courses And Branches - CRUD settings and selectable reference data for later forms
+- [ ] FE 07 Subscriptions - create pending subscription and lifecycle actions
+- [ ] FE 08 Attendance - check-in, report missed, makeup, subscription attendance history
+- [ ] FE 09 Sessions - session list/calendar, create, enroll, session check-in
+- [ ] FE 10 Employees - admin-only staff management and password reset
+- [ ] FE 11 Live Dashboard APIs - replace static dashboard metrics after backend report APIs exist
+- [ ] FE 12 UX/Test Hardening - browser automation, accessibility, mobile/desktop visual checks
+
+Roadmap source: `CHAT_CONTEXT/frontend_skills/plans/00_frontend_roadmap.md`.
+
+## Planned - 2026-05-29 - FE 00 Frontend Roadmap
+
+Created a top-level frontend roadmap covering dashboard reference work, brand asset integration,
+shared routing/API foundation, each backend-backed resource module, dashboard API gaps, and app-wide
+test/UX hardening.
+
+Feature-specific plans should reference `CHAT_CONTEXT/frontend_skills/plans/00_frontend_roadmap.md`
+before narrowing their own scope.
+
+Recommended next action: use `$gym-fe-implement` with
+`CHAT_CONTEXT/frontend_skills/plans/02_dashboard_reference.md`, or use `$gym-fe-plan` to expand FE 03
+or FE 04 first if the next cycle should prepare routing/assets before dashboard implementation.
 
 ## Planned - 2026-05-29 - FE 01 Auth Shell
 
@@ -78,3 +100,35 @@ KPI cards, revenue bars, plan donut, latest members table, and today's class sch
 frontend data until backend dashboard/report endpoints exist.
 
 Use `$gym-fe-implement` with `CHAT_CONTEXT/frontend_skills/plans/02_dashboard_reference.md`.
+
+## Implemented - 2026-05-29 - FE 02 Dashboard Reference
+
+Implemented the reference-inspired `/app` dashboard with static sample KPI data, revenue bars, plan
+donut, latest member table, today's class schedule, grouped sidebar placeholders, dashboard topbar
+tools, and staff context sourced from the live auth state.
+
+Build passed with `npm run build`.
+
+Use `$gym-fe-review` with `CHAT_CONTEXT/frontend_skills/implementations/02_dashboard_reference.md`.
+
+## Reviewed - 2026-05-29 - FE 02 Dashboard Reference
+
+Review found one low-priority accessibility issue: the notification and search topbar controls were
+focusable placeholders without a real action path or explicit coming-soon state.
+
+## Tested - 2026-05-29 - FE 02 Dashboard Reference
+
+Build, route smoke, dashboard render smoke, review-fix static checks, and whitespace checks passed.
+Browser viewport verification and authenticated backend flow verification were not run because
+local browser automation and a seeded backend were unavailable in this pass.
+
+## Completed - 2026-05-29 - FE 02 Dashboard Reference
+
+FE02 is complete as a frontend-only dashboard cycle.
+
+- `/app` now renders the reference-inspired operational dashboard with static sample metrics.
+- Live staff identity remains sourced from the auth session.
+- Remaining viewport/backend checks are documented as local limitations in the FE02 test note.
+
+Next suggested action: use `$gym-fe-plan` for FE 03 App Routing And API Foundation, or FE 12 if the
+next pass should focus on broader responsive/test hardening.
