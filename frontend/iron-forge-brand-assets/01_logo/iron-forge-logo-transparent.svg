@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="200" viewBox="0 0 600 200">
+
+  <g></g>
+  <polygon points="44,36 124,36 124,116 108,132 28,132 28,52" fill="#FF4614"/>
+  <text x="76" y="91" text-anchor="middle" dominant-baseline="middle" font-family="Bebas Neue, Impact, Arial Narrow, sans-serif" font-size="66" font-weight="900" fill="#FFFFFF">IF</text>
+  <text x="164" y="78" font-family="Bebas Neue, Impact, Arial Narrow, sans-serif" font-size="72" font-weight="900" fill="#0D0D0D" letter-spacing="1">IRON FORGE</text>
+  <rect x="164" y="111" width="330" height="6" fill="#FF4614"/>
+  <text x="164" y="142" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-size="21" font-weight="700" fill="#4A4A44">GYM / RÈN THÂN. RÈN TÂM. KHÔNG GIỚI HẠN.</text>
+</svg>
