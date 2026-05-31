@@ -17,15 +17,15 @@ function MemberTable({ members }) {
         <tbody>
           {members.map((member) => (
             <tr key={`${member.name}-${member.phone}`}>
-              <td>
+              <td data-label="Name">
                 <strong>{member.name}</strong>
                 <span>{member.phone}</span>
               </td>
-              <td>
+              <td data-label="Plan">
                 <span className={`status-badge status-badge--${member.planTone}`}>{member.plan}</span>
               </td>
-              <td>{member.trainer}</td>
-              <td>
+              <td data-label="Trainer">{member.trainer}</td>
+              <td data-label="Status">
                 <span className={`status-badge status-badge--${member.statusTone}`}>{member.status}</span>
               </td>
             </tr>

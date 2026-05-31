@@ -27,7 +27,9 @@ keeping backend-contract gaps explicit.
   - session restore through `GET /api/v1/auth/me`
   - one refresh retry through `POST /api/v1/auth/refresh`
   - logout through `POST /api/v1/auth/logout`
-  - protected shell, role-aware disabled navigation, and placeholder dashboard content
+  - protected shell, role-aware disabled navigation, and the FE02 static dashboard
+  - FE02.1 responsive repair completed as temporary containment because manual viewport review found
+    the dashboard layout visually poor
 - Current reference material:
   - `fe-tham-khao/iron_forge_gym_dashboard.html` - operational dashboard mockup.
   - `fe-tham-khao/iron-forge-gym/iron-forge-gym/` - marketing/brand React reference.
@@ -43,6 +45,7 @@ keeping backend-contract gaps explicit.
 |---|---|---|---|---|
 | 01 | Auth Shell | Staff login, restore, logout, protected shell | Live auth API | None |
 | 02 | Dashboard Reference | Replace placeholder dashboard with reference-inspired static ops dashboard | Static sample data + live staff identity | Live metrics/report APIs |
+| 02.1 | Dashboard Responsive Repair | Fix shell/dashboard mobile and tablet layout before adding more pages | Static sample data + live staff identity | None |
 | 03 | App Routing And API Foundation | Scale routes, API hooks, shared table/form/status patterns | Live auth + shared client | None |
 | 04 | Brand Asset Integration | Adopt official favicon/logo/color/web assets consistently | Static assets | None |
 | 05 | Members | Create/search/view members, activate offline payment, member subscriptions | Live member APIs | List/search endpoint may be needed if absent |
@@ -163,7 +166,7 @@ Follow-up:
 
 ### FE 02 Dashboard Reference
 
-Status: planned.
+Status: completed with responsive follow-up.
 
 Plan file: `CHAT_CONTEXT/frontend_skills/plans/02_dashboard_reference.md`
 
@@ -179,12 +182,38 @@ Implementation notes:
 - Do not copy the raw reference CSS wholesale.
 - Keep static data visibly internal/sample; do not imply metrics are live.
 - Use the current Iron Forge dark/orange token direction.
+- Manual viewport review found the current responsive layout visually poor, so FE 02.1 should run
+  before FE 03.
+
+### FE 02.1 Dashboard Responsive Repair
+
+Status: implemented and quick reviewed/tested.
+
+Plan file: `CHAT_CONTEXT/frontend_skills/plans/02_1_dashboard_responsive_repair.md`
+
+Scope:
+
+- Repair `/app` dashboard responsive behavior at 320px, 375px, 768px, and 1280px.
+- Keep FE02 dashboard content, static data, auth state, and route behavior unchanged.
+- Fix shared shell/topbar/mobile-nav issues before resource pages reuse the same app frame.
+- Make mobile dashboard sections readable without page-level horizontal overflow.
+
+Backend APIs:
+
+- No new backend API calls.
+- Auth flow may be manually checked if the backend is running, but this cycle is primarily layout
+  repair.
+
+Risks:
+
+- If this is skipped, FE03+ resource pages will inherit a poor shell/topbar/mobile foundation.
+- This is not the full FE12 hardening cycle; keep it focused on the current dashboard and shared shell.
 
 ### FE 03 App Routing And API Foundation
 
-Status: next foundation feature after FE 02.
+Status: planned.
 
-Plan file to create: `CHAT_CONTEXT/frontend_skills/plans/03_app_foundation.md`
+Plan file: `CHAT_CONTEXT/frontend_skills/plans/03_app_foundation.md`
 
 Scope:
 
@@ -464,6 +493,14 @@ Scope:
   browser interaction.
 - Include responsive bugfixes and viewport cleanup that were discovered during manual review so
   later feature plans can route layout issues back into this cycle.
+- Treat FE02.1 as a temporary containment pass, not the final responsive design. A future FE12 pass
+  should revisit dashboard/shell responsive UX with browser evidence instead of continuing to polish
+  FE02.1 ad hoc.
+- Define a reusable responsive pattern for operational dashboards and resource pages:
+  - when to use sidebar drawer vs persistent sidebar
+  - when dense charts become summary numbers
+  - when tables become cards, expandable sections, or horizontal scroll
+  - viewport acceptance criteria for 320px, 375px, 768px, 1080px, and desktop
 
 Risks:
 

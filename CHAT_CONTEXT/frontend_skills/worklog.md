@@ -6,7 +6,8 @@ Use this file for short frontend roadmap and completion summaries.
 
 - [x] FE 01 Auth Shell - staff login, API client, token restore, logout, protected shell
 - [x] FE 02 Dashboard Reference - adapt `fe-tham-khao/iron_forge_gym_dashboard.html` into `/app`
-- [ ] FE 03 App Routing And API Foundation - scalable routes, resource API helpers, shared UI states
+- [x] FE 02.1 Dashboard Responsive Repair - fix shell/dashboard mobile and tablet layout before FE03
+- [x] FE 03 App Routing And API Foundation - scalable routes, resource API helpers, shared UI states
 - [ ] FE 04 Brand Asset Integration - official logo/favicon/color/web assets from `iron-forge-brand-assets`
 - [ ] FE 05 Members - create/search/detail, activate offline payment, member subscriptions
 - [ ] FE 06 Courses And Branches - CRUD settings and selectable reference data for later forms
@@ -130,5 +131,98 @@ FE02 is complete as a frontend-only dashboard cycle.
 - Live staff identity remains sourced from the auth session.
 - Remaining viewport/backend checks are documented as local limitations in the FE02 test note.
 
-Next suggested action: use `$gym-fe-plan` for FE 03 App Routing And API Foundation, or FE 12 if the
-next pass should focus on broader responsive/test hardening.
+Manual viewport feedback later found the FE02 responsive layout visually poor, so FE02.1 is planned
+below before FE03.
+
+## Planned - 2026-05-31 - FE 02.1 Dashboard Responsive Repair
+
+Manual viewport review found the FE02 dashboard responsive layout visually poor. Added a narrow
+repair cycle before FE03 so the shared shell, topbar, mobile navigation, dashboard cards, charts,
+member table, schedule list, and staff context are fixed before more resource pages reuse the same
+layout foundation.
+
+Plan file: `CHAT_CONTEXT/frontend_skills/plans/02_1_dashboard_responsive_repair.md`.
+
+Recommended next action: use `$gym-fe-implement` with
+`CHAT_CONTEXT/frontend_skills/plans/02_1_dashboard_responsive_repair.md`.
+
+## Implemented - 2026-05-31 - FE 02.1 Dashboard Responsive Repair
+
+Implemented the responsive repair for the FE02 `/app` dashboard: raised the primary shell breakpoint
+to `1080px`, added a responsive Menu button for the grouped sidebar, moved the staff context card to
+the top on the normal dashboard, converted mobile KPIs into compact rows, replaced mobile chart panels
+with number summaries, and made Members/Classes expandable on narrow screens. Auth/API behavior stayed
+unchanged.
+
+Build passed with `npm run build`.
+
+Use `$gym-fe-review` with
+`CHAT_CONTEXT/frontend_skills/implementations/02_1_dashboard_responsive_repair.md`.
+
+## Reviewed/Tested - 2026-05-31 - FE 02.1 Dashboard Responsive Repair
+
+Quick review/test passed for build, whitespace, and SSR render smoke. No blocking code issue was
+found, but manual feedback says responsive still is not final. Broader responsive UX should move to
+FE12 instead of continuing to polish FE02.1.
+
+Review note: `CHAT_CONTEXT/frontend_skills/reviews/02_1_dashboard_responsive_repair.md`.
+Test note: `CHAT_CONTEXT/frontend_skills/tests/02_1_dashboard_responsive_repair.md`.
+
+## Planned - 2026-05-31 - FE 03 App Routing And API Foundation
+
+Planned the next foundation feature after FE02.1: route registry, simple dependency-free route
+matching, role-aware module navigation, protected placeholder pages, shared page/data/state UI
+primitives, and API-state conventions for later resource screens.
+
+Plan file: `CHAT_CONTEXT/frontend_skills/plans/03_app_foundation.md`.
+
+Recommended next action: use `$gym-fe-implement` with
+`CHAT_CONTEXT/frontend_skills/plans/03_app_foundation.md`.
+
+## Implemented - 2026-05-31 - FE 03 App Routing And API Foundation
+
+Implemented the route/API foundation: route registry, dependency-free route matcher, role helpers,
+route-driven `AppShell`, `/app` to `/app/dashboard` redirect, forbidden/not-found states, placeholder
+module pages, shared page/data/state UI primitives, and route matcher smoke checks.
+
+No business API calls or CRUD screens were added.
+
+Build passed with `npm run build`.
+
+Use `$gym-fe-review` with `CHAT_CONTEXT/frontend_skills/implementations/03_app_foundation.md`.
+
+## Reviewed - 2026-05-31 - FE 03 App Routing And API Foundation
+
+Review found one medium route matcher issue: malformed encoded detail params could throw
+`URIError` during render instead of falling through to the app not-found state.
+
+The finding was fixed in `frontend/src/routes/matchRoute.js` by safely decoding dynamic param
+segments and treating malformed params as an unmatched pattern.
+
+Review note: `CHAT_CONTEXT/frontend_skills/reviews/03_app_foundation.md`.
+
+## Tested - 2026-05-31 - FE 03 App Routing And API Foundation
+
+Build, route matcher smoke, permission smoke, whitespace check, Vite dev-server startup on
+`127.0.0.1:5174`, and HTTP SPA route checks passed. The malformed encoded detail URL regression is
+covered by the matcher smoke check; raw HTTP malformed URL is rejected by Vite before React runs.
+
+Browser DOM/manual auth flow was not run because no browser automation or local Chromium is present,
+and no backend credentials were provided. FE03 adds no new business API calls.
+
+Test note: `CHAT_CONTEXT/frontend_skills/tests/03_app_foundation.md`.
+
+## Completed - 2026-05-31 - FE 03 App Routing And API Foundation
+
+FE03 is complete as a frontend foundation cycle.
+
+- App routes now come from a shared route registry and matcher.
+- `/app` aliases to `/app/dashboard`; `/app/dashboard` renders the existing dashboard.
+- Members, subscriptions, attendance, sessions, reports, employees, courses, branches, and payments
+  routes render role-aware placeholders only.
+- Shared page header, data panel, state block, role helper, and resource-state primitives are in
+  place for later modules.
+- No backend API contract changed; planned API lists in placeholders are metadata only.
+
+Recommended next action: use `$gym-git` to review/commit the current frontend changes, or
+`$gym-fe-plan` to start FE04 Brand Asset Integration / FE05 Members.

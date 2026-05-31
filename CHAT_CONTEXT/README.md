@@ -25,7 +25,7 @@ Read this file when a new chat needs a short project handoff.
 
 ## Current State
 
-Snapshot date: 2026-05-29.
+Snapshot date: 2026-05-31.
 
 Stack:
 - Go + Gin + MongoDB.
@@ -50,8 +50,9 @@ Implemented backend surfaces:
 
 Planned next surfaces:
 - CI automation and expanded integration coverage for sessions/not-found cases remain follow-ups.
-- FE02 dashboard reference is complete with local limitations; FE03 app routing/API foundation is the
-  next frontend backlog item, unless the next pass should prioritize FE12 responsive/test hardening.
+- FE02 dashboard reference is complete functionally. FE02.1 dashboard responsive repair is a
+  temporary containment pass, with final responsive design deferred to FE12.
+- FE03 app routing/API foundation is implemented, reviewed, tested, and complete.
 - Frontend delivery now has dedicated `$gym-fe-*` skills and `frontend_skills/` memory.
 
 ## Rules Worth Remembering
@@ -90,9 +91,9 @@ Planned next surfaces:
 
 ## Resume Point
 
-FE02 dashboard reference cycle is complete.
+FE03 app routing/API foundation is complete.
 Start from:
 
 1. `$gym-git` to review/commit/push the current frontend changes if requested
-2. `$gym-fe-plan` for FE 03 App Routing And API Foundation, or FE 12 if the next pass should focus
-  on broader responsive/test hardening
+2. `$gym-fe-plan` for FE04 Brand Asset Integration or FE05 Members, depending on the next frontend
+   priority
