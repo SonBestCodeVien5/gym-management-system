@@ -6,13 +6,14 @@
 - Feature: 03 App Routing And API Foundation
 - Plan file: `CHAT_CONTEXT/frontend_skills/plans/03_app_foundation.md`
 - Implementation file: `CHAT_CONTEXT/frontend_skills/implementations/03_app_foundation.md`
-- Reviewed at: 2026-05-31
+- Reviewed at: 2026-06-01
 
 ## Review summary
 
-- Result: changes requested
+- Result: pass
 - Build status: pass (`cd frontend && npm run build`)
-- Test status: pass for route matcher and permission smoke checks; browser/manual auth flow not run
+- Test status: pass for route matcher, malformed route-param regression, permission smoke checks,
+  and whitespace check; browser/manual auth flow not run in this review pass
 
 ## Checklist
 
@@ -20,8 +21,9 @@
 - [x] Routes and components are scoped cleanly.
 - [x] API base URL/env handling is correct.
 - [x] Auth/session state is not hardcoded or leaked.
-- [x] Loading, empty, and error states are handled where relevant.
-- [x] Responsive layout works on mobile and desktop by code inspection; no browser screenshot run.
+- [x] Loading, empty, forbidden, and not-found states are handled where relevant.
+- [x] Responsive layout has code-level coverage for the new placeholder/state surfaces; no browser
+  screenshot run.
 - [x] Accessibility basics are covered.
 - [x] Docs/context are aligned.
 
@@ -29,11 +31,13 @@
 
 | Severity | File | Issue | Fix |
 |---|---|---|---|
-| medium | `frontend/src/routes/matchRoute.js:27` | `decodeURIComponent(pathPart)` can throw `URIError` for malformed encoded route params, e.g. `/app/members/%E0%A4%A`. Because `matchRoute()` runs during render in `App.jsx`, this crashes the app instead of showing the planned not-found/invalid route state. | Decode params through a safe helper that catches `URIError` and treats the route as unmatched, or stores the raw segment and lets the target page validate the ID. Add a smoke check for malformed detail URLs. |
+| none | FE03 review | No blocking issue found in the current code review and smoke checks. | Not applicable. |
 
-## Fixes applied during review
+## Prior finding status
 
-- None. This was a review-only pass.
+| Severity | File | Issue | Status |
+|---|---|---|---|
+| medium | `frontend/src/routes/matchRoute.js:12` | Malformed encoded route params previously could throw `URIError` during render, e.g. `/app/members/%E0%A4%A`. | Fixed. Dynamic params now decode through `decodeParamSegment()`, and malformed params return `null` so the route falls through to the app not-found state. |
 
 ## Verification run
 
@@ -46,33 +50,28 @@ Result: pass. Vite built 36 modules and emitted production assets.
 
 ```bash
 cd frontend
-node --input-type=module -e "<route matcher smoke check>"
+node --input-type=module -e "<route and permission smoke checks>"
 ```
 
-Result: pass for `/`, `/login`, `/app`, `/app/dashboard`, `/app/members/:id`, unknown `/app/*`, and non-app redirect behavior.
+Result: pass for `/`, `/login`, `/app`, `/app/dashboard`, module/detail routes, malformed encoded
+detail URL, unknown `/app/*`, non-app redirect behavior, and admin/manager/trainer/receptionist role
+access outcomes.
 
 ```bash
-cd frontend
-node --input-type=module -e "<permission smoke check>"
+git diff --check
 ```
 
-Result: pass for admin/manager/trainer/receptionist route access cases.
-
-```bash
-cd frontend
-node --input-type=module -e "<malformed encoded param check>"
-```
-
-Result: fails with `URIError: URI malformed`.
+Result: pass.
 
 ## Remaining risks
 
-- No browser route/manual auth flow was run in this review.
+- Browser DOM/manual auth flow was not run in this review pass.
 - No API integration was exercised because FE03 intentionally adds no new business API calls.
-- Dashboard responsive behavior remains the FE02.1 temporary state, with broader polish deferred to FE12.
+- Dashboard responsive behavior remains the FE02.1 temporary state, with broader polish deferred to
+  FE12.
 
 ## Handoff to test
 
-- Fix malformed route-param decoding before FE03 test signoff.
-- After the fix, rerun build, route matcher smoke checks, and manual browser checks for `/app`,
-  `/app/dashboard`, role-forbidden placeholders, unknown `/app/*`, browser back/forward, and logout.
+- FE03 is review-pass from the current code inspection and smoke checks.
+- Keep the existing FE03 test note limitations: run browser/manual auth checks later when local
+  browser automation and backend credentials are available.
