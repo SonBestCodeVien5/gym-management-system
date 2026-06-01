@@ -8,7 +8,7 @@ Use this file for short frontend roadmap and completion summaries.
 - [x] FE 02 Dashboard Reference - adapt `fe-tham-khao/iron_forge_gym_dashboard.html` into `/app`
 - [x] FE 02.1 Dashboard Responsive Repair - fix shell/dashboard mobile and tablet layout before FE03
 - [x] FE 03 App Routing And API Foundation - scalable routes, resource API helpers, shared UI states
-- [ ] FE 04 Brand Asset Integration - official logo/favicon/color/web assets from `iron-forge-brand-assets`
+- [x] FE 04 Brand Asset Integration - official logo/favicon/color/web assets from `iron-forge-brand-assets`
 - [ ] FE 05 Members - create/search/detail, activate offline payment, member subscriptions
 - [ ] FE 06 Courses And Branches - CRUD settings and selectable reference data for later forms
 - [ ] FE 07 Subscriptions - create pending subscription and lifecycle actions
@@ -226,3 +226,59 @@ FE03 is complete as a frontend foundation cycle.
 
 Recommended next action: use `$gym-git` to review/commit the current frontend changes, or
 `$gym-fe-plan` to start FE04 Brand Asset Integration / FE05 Members.
+
+## Planned - 2026-06-01 - FE 04 Brand Asset Integration
+
+Created the plan to integrate selected official Iron Forge runtime assets from
+`frontend/iron-forge-brand-assets`: favicon/logo/color tokens, optional loading and not-found
+illustrations, and page metadata. The cycle is frontend-only and should preserve the compact staff
+console layout without copying social/print/mockup assets into runtime output.
+
+Plan file: `CHAT_CONTEXT/frontend_skills/plans/04_brand_assets.md`.
+
+Recommended next action: use `$gym-fe-implement` with
+`CHAT_CONTEXT/frontend_skills/plans/04_brand_assets.md`.
+
+## Implemented - 2026-06-01 - FE 04 Brand Asset Integration
+
+Integrated selected official Iron Forge runtime assets into the React/Vite staff console: official
+favicon, metadata icons, OG image, shared `BrandMark`, sidebar/login/status branding, loading mark,
+and not-found illustration. Auth, routing, and backend API behavior stayed unchanged.
+
+Build passed with `npm run build`.
+
+Use `$gym-fe-review` with `CHAT_CONTEXT/frontend_skills/implementations/04_brand_assets.md`.
+
+## Reviewed - 2026-06-01 - FE 04 Brand Asset Integration
+
+Review passed with no blocking findings. Build and whitespace checks passed, and browser smoke covered
+login branding, mocked authenticated dashboard branding, mocked not-found illustration, and mobile
+layout for the FE04 surfaces.
+
+Use `$gym-fe-test` with `CHAT_CONTEXT/frontend_skills/reviews/04_brand_assets.md`.
+
+## Tested - 2026-06-01 - FE 04 Brand Asset Integration
+
+Build and whitespace checks passed. Vite served on alternate port `5174` because `5173` was busy.
+Browser verification covered `/login` desktop/mobile branding, mocked authenticated dashboard
+branding, mobile menu layout, mocked not-found illustration, loading/session-check branding, empty
+login validation, and public favicon/metadata assets.
+
+Live backend login/restore/logout was not run because no backend credentials or seeded local backend
+session were available. Ready for `$gym-fe-complete` with that residual risk recorded in
+`CHAT_CONTEXT/frontend_skills/tests/04_brand_assets.md`.
+
+## Completed - 2026-06-01 - FE 04 Brand Asset Integration
+
+FE04 is complete as a frontend-only brand asset cycle.
+
+- Official favicon, fallback icon, Apple touch icon, and OG image are present in `frontend/public`.
+- Runtime brand assets are limited to selected logo/status files under `frontend/src/assets/brand`.
+- `BrandMark` now drives login and sidebar branding, while `StatusMessage` and `StateBlock` use
+  official loading/not-found assets.
+- No backend API contract changed.
+- Remaining risk: live backend login/restore/logout was not verified in this cycle because no backend
+  credentials or seeded session were available.
+
+Recommended next action: use `$gym-git` to review/commit the FE04 changes, or use `$gym-fe-plan` for
+FE06 Courses And Branches / FE05 Members depending on the next frontend priority.

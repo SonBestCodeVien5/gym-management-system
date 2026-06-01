@@ -1,3 +1,5 @@
+import notFoundIllustration from '../assets/brand/404-illustration.svg'
+
 const STATE_TITLES = {
   empty: 'No data yet',
   error: 'Request failed',
@@ -8,8 +10,13 @@ const STATE_TITLES = {
 }
 
 function StateBlock({ tone = 'empty', title, message, details = null }) {
+  const shouldShowNotFoundImage = tone === 'notFound'
+
   return (
     <section className={`state-block state-block--${tone}`} aria-live={tone === 'error' ? 'polite' : undefined}>
+      {shouldShowNotFoundImage ? (
+        <img className="state-block__illustration" src={notFoundIllustration} alt="" aria-hidden="true" />
+      ) : null}
       <span>{tone}</span>
       <h2>{title || STATE_TITLES[tone] || 'Status'}</h2>
       {message ? <p>{message}</p> : null}

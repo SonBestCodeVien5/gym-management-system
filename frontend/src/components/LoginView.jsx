@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { API_BASE_URL } from '../lib/api.js'
 import { useAuth } from '../context/AuthContext.jsx'
+import BrandMark from './BrandMark.jsx'
 
 function LoginView({ navigate }) {
   const { login, notice, clearAuthMessage } = useAuth()
@@ -42,11 +43,7 @@ function LoginView({ navigate }) {
     <main className="login-page grid-bg">
       <section className="login-panel" aria-labelledby="login-title">
         <div className="login-brand">
-          <div className="brand-wordmark" aria-label="Iron Forge">
-            <span>IRON</span>
-            <strong>FORGE</strong>
-          </div>
-          <em>Staff Portal</em>
+          <BrandMark meta="Staff Portal" />
         </div>
 
         <div className="login-heading">

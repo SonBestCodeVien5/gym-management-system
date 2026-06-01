@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { hasAnyRole } from '../lib/permissions.js'
 import { APP_NAV_ITEMS, NAV_GROUPS } from '../routes/routeConfig.js'
+import BrandMark from './BrandMark.jsx'
 
 function AppShell({ navigate, activeRoute, children }) {
   const { employee, logout } = useAuth()
@@ -35,11 +36,7 @@ function AppShell({ navigate, activeRoute, children }) {
     <main className="app-shell">
       <aside className="app-sidebar" aria-label="Dieu huong staff portal">
         <div className="sidebar-header">
-          <div className="sidebar-brand brand-wordmark" aria-label="Iron Forge">
-            <span>IRON</span>
-            <strong>FORGE</strong>
-          </div>
-          <p>Admin Panel</p>
+          <BrandMark className="sidebar-brand" meta="Admin Panel" />
         </div>
 
         <nav className="sidebar-nav" aria-label="Dieu huong desktop">

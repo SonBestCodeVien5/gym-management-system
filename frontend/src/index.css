@@ -3,12 +3,16 @@
   --color-bg-alt: #111111;
   --color-surface: #161616;
   --color-surface-strong: #202020;
+  --color-border-base: #252525;
   --color-border: rgba(255, 255, 255, 0.08);
   --color-border-hot: rgba(255, 70, 20, 0.38);
   --color-accent: #ff4614;
+  --color-accent-strong: #cc3810;
+  --color-accent-glow: #ff7040;
   --color-accent-soft: rgba(255, 70, 20, 0.14);
   --color-text: #f0ece4;
   --color-text-muted: #a8a39a;
+  --color-brand-muted: #888880;
   --color-text-dim: #706b64;
   --color-danger: #ffb19c;
   --font-display: 'Bebas Neue', 'Impact', sans-serif;
@@ -172,7 +176,6 @@ code {
   padding: clamp(1.4rem, 4vw, 2rem);
 }
 
-.status-kicker,
 .panel-label,
 .login-meta span,
 .workspace-topbar p,
@@ -223,42 +226,64 @@ code {
 
 .login-brand {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
   padding-bottom: 1.1rem;
   border-bottom: 1px solid var(--color-border);
 }
 
-.brand-wordmark {
+.brand-mark {
+  min-width: 0;
   display: inline-flex;
-  align-items: baseline;
-  gap: 0.34rem;
-  font-family: var(--font-display);
-  font-size: 1.9rem;
-  line-height: 0.9;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.brand-mark__image {
+  display: block;
+  width: min(100%, 190px);
+  height: auto;
+  max-height: 64px;
+  object-fit: contain;
+}
+
+.brand-mark--compact .brand-mark__image {
+  width: 36px;
+  height: 36px;
+}
+
+.brand-mark__meta {
+  color: var(--color-brand-muted);
+  font-size: 0.82rem;
+  font-weight: 900;
+  line-height: 1;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
-.brand-wordmark span {
-  color: var(--color-text);
-  letter-spacing: 0.2em;
+.status-brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
-.brand-wordmark strong {
+.status-brand-row .brand-mark__meta {
   color: var(--color-accent);
-  font-weight: 400;
-  letter-spacing: 0.2em;
 }
 
-.login-brand em {
-  color: var(--color-text-muted);
-  font-size: 0.9rem;
-  font-style: normal;
-  font-weight: 800;
-  text-transform: uppercase;
-  white-space: nowrap;
+.status-spinner {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  animation: status-spin 1.2s linear infinite;
+}
+
+@keyframes status-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .login-heading {
@@ -342,10 +367,16 @@ code {
 }
 
 .sidebar-brand {
-  font-size: 2rem;
+  display: grid;
+  justify-items: start;
+  gap: 0.55rem;
 }
 
-.sidebar-header p,
+.sidebar-brand .brand-mark__image {
+  width: 178px;
+}
+
+.sidebar-brand .brand-mark__meta,
 .nav-group > p {
   color: var(--color-text-dim);
   font-size: 0.76rem;
@@ -1070,6 +1101,14 @@ code {
   padding: 1rem;
 }
 
+.state-block__illustration {
+  width: min(100%, 260px);
+  max-height: 190px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  object-fit: cover;
+}
+
 .state-block > span {
   color: var(--color-accent);
   font-size: 0.78rem;
@@ -1511,8 +1550,22 @@ code {
   .login-meta,
   .staff-context__details div {
     align-items: flex-start;
+    flex-direction: column;
     grid-template-columns: 1fr;
     gap: 0.25rem;
+  }
+
+  .brand-mark {
+    gap: 0.5rem;
+  }
+
+  .brand-mark__image {
+    width: min(100%, 168px);
+  }
+
+  .brand-mark--compact .brand-mark__image {
+    width: 34px;
+    height: 34px;
   }
 
   .topbar-actions button,

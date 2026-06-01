@@ -25,7 +25,7 @@ Read this file when a new chat needs a short project handoff.
 
 ## Current State
 
-Snapshot date: 2026-05-31.
+Snapshot date: 2026-06-01.
 
 Stack:
 - Go + Gin + MongoDB.
@@ -53,6 +53,11 @@ Planned next surfaces:
 - FE02 dashboard reference is complete functionally. FE02.1 dashboard responsive repair is a
   temporary containment pass, with final responsive design deferred to FE12.
 - FE03 app routing/API foundation is implemented, reviewed, tested, and complete.
+- FE04 brand asset integration is implemented, reviewed, tested, and complete. The frontend now uses
+  selected official Iron Forge runtime assets for favicon/metadata, login/sidebar/status branding,
+  loading state, and app not-found state. No backend API contract changed. Live backend
+  login/restore/logout was not re-smoked during FE04 because no credentials or seeded local session
+  were available.
 - Frontend delivery now has dedicated `$gym-fe-*` skills and `frontend_skills/` memory.
 
 ## Rules Worth Remembering
@@ -91,9 +96,9 @@ Planned next surfaces:
 
 ## Resume Point
 
-FE03 app routing/API foundation is complete.
+FE04 Brand Asset Integration is complete.
 Start from:
 
 1. `$gym-git` to review/commit/push the current frontend changes if requested
-2. `$gym-fe-plan` for FE04 Brand Asset Integration or FE05 Members, depending on the next frontend
+2. `$gym-fe-plan` for FE06 Courses And Branches or FE05 Members, depending on the next frontend
    priority
