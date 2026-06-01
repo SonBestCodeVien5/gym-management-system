@@ -24,6 +24,17 @@ description: Review React/Vite frontend feature changes for this gym management 
 - Verify implementation matches the plan or call out the mismatch.
 - Keep review evidence grounded in file and line references.
 
+## Browser Checks
+
+- When a change affects UI, routing, responsive behavior, auth flow, or form interaction, use MCP
+  Playwright when available for at least one real browser pass.
+- Prefer DOM/accessibility snapshots for interaction evidence; use screenshots when layout, visual
+  overlap, or responsive behavior matters.
+- Cover the smallest route set that proves the reviewed behavior: happy path, empty/error/forbidden
+  states when applicable, and one narrow viewport for responsive-sensitive work.
+- If Playwright or a dev server/backend prerequisite is unavailable, record the skip reason and keep
+  the risk in the review handoff.
+
 ## Output Rules
 
 - Update `CHAT_CONTEXT/frontend_skills/reviews/<feature>.md` with findings, fixes if applied,

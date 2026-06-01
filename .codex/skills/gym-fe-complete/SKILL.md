@@ -20,6 +20,8 @@ description: Finalize frontend feature documentation and context for this gym ma
 - Distinguish complete, skipped, planned, and remaining-risk work.
 - Keep chat context short and keep detailed phase evidence in feature memory notes.
 - Catch UI/API/docs drift before the feature leaves the cycle.
+- For UI-bearing features, confirm the test note includes MCP Playwright/browser evidence or a clear
+  skip reason before marking the cycle complete.
 
 ## Output Rules
 
