@@ -44,3 +44,10 @@ npm run build
 ## Handoff to review
 
 - Review role/level validation, password reset handling, self-deactivation/admin-removal conflict display, and admin-only route access.
+
+## Review fixes - 2026-06-02
+
+- Replaced branch assignment textarea/datalist with an input/datalist field so branch suggestions can
+  work while still accepting comma-separated ObjectIDs.
+- Added unchanged-update guard in employee detail before calling `PATCH`.
+- Build passed with `npm run build`.

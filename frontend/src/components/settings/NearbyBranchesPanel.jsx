@@ -12,16 +12,22 @@ const INITIAL_VALUES = {
 
 function validate(values) {
   const errors = {}
+  const lngText = values.lng.toString().trim()
+  const latText = values.lat.toString().trim()
   const lng = Number(values.lng)
   const lat = Number(values.lat)
   const maxDistance = Number(values.max_distance)
   const limit = Number(values.limit)
 
-  if (!Number.isFinite(lng) || lng < -180 || lng > 180) {
+  if (!lngText) {
+    errors.lng = 'Longitude is required.'
+  } else if (!Number.isFinite(lng) || lng < -180 || lng > 180) {
     errors.lng = 'Longitude must be between -180 and 180.'
   }
 
-  if (!Number.isFinite(lat) || lat < -90 || lat > 90) {
+  if (!latText) {
+    errors.lat = 'Latitude is required.'
+  } else if (!Number.isFinite(lat) || lat < -90 || lat > 90) {
     errors.lat = 'Latitude must be between -90 and 90.'
   }
 
@@ -45,6 +51,15 @@ function NearbyBranchesPanel({ accessToken, navigate }) {
     setValues((current) => ({ ...current, [name]: value }))
     setErrors((current) => ({ ...current, [name]: '' }))
     setState((current) => ({ ...current, error: null }))
+  }
+
+  function fieldErrorProps(name) {
+    return errors[name]
+      ? {
+        'aria-invalid': 'true',
+        'aria-describedby': `nearby-${name.replace(/_/g, '-')}-error`,
+      }
+      : {}
   }
 
   async function handleSubmit(event) {
@@ -77,23 +92,23 @@ function NearbyBranchesPanel({ accessToken, navigate }) {
         <div className="resource-form__grid resource-form__grid--compact">
           <div className="field-group">
             <label htmlFor="nearby-lng">Longitude</label>
-            <input id="nearby-lng" type="number" step="any" value={values.lng} onChange={(event) => updateField('lng', event.target.value)} />
-            {errors.lng ? <span>{errors.lng}</span> : null}
+            <input id="nearby-lng" type="number" step="any" value={values.lng} onChange={(event) => updateField('lng', event.target.value)} {...fieldErrorProps('lng')} />
+            {errors.lng ? <span id="nearby-lng-error">{errors.lng}</span> : null}
           </div>
           <div className="field-group">
             <label htmlFor="nearby-lat">Latitude</label>
-            <input id="nearby-lat" type="number" step="any" value={values.lat} onChange={(event) => updateField('lat', event.target.value)} />
-            {errors.lat ? <span>{errors.lat}</span> : null}
+            <input id="nearby-lat" type="number" step="any" value={values.lat} onChange={(event) => updateField('lat', event.target.value)} {...fieldErrorProps('lat')} />
+            {errors.lat ? <span id="nearby-lat-error">{errors.lat}</span> : null}
           </div>
           <div className="field-group">
             <label htmlFor="nearby-distance">Max distance</label>
-            <input id="nearby-distance" type="number" min="1" value={values.max_distance} onChange={(event) => updateField('max_distance', event.target.value)} />
-            {errors.max_distance ? <span>{errors.max_distance}</span> : null}
+            <input id="nearby-distance" type="number" min="1" value={values.max_distance} onChange={(event) => updateField('max_distance', event.target.value)} {...fieldErrorProps('max_distance')} />
+            {errors.max_distance ? <span id="nearby-max-distance-error">{errors.max_distance}</span> : null}
           </div>
           <div className="field-group">
             <label htmlFor="nearby-limit">Limit</label>
-            <input id="nearby-limit" type="number" min="1" max="100" value={values.limit} onChange={(event) => updateField('limit', event.target.value)} />
-            {errors.limit ? <span>{errors.limit}</span> : null}
+            <input id="nearby-limit" type="number" min="1" max="100" value={values.limit} onChange={(event) => updateField('limit', event.target.value)} {...fieldErrorProps('limit')} />
+            {errors.limit ? <span id="nearby-limit-error">{errors.limit}</span> : null}
           </div>
         </div>
         <div className="resource-form__actions">

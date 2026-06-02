@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import DataPanel from '../DataPanel.jsx'
 import { checkInAttendance } from '../../lib/attendanceApi.js'
 import { apiErrorText } from '../../lib/featureHelpers.js'
@@ -25,10 +25,28 @@ function CheckInPanel({ accessToken, branches = [], subscriptionId = '', onSucce
   const [errors, setErrors] = useState({})
   const [state, setState] = useState({ status: 'idle', error: null, notice: '' })
 
+  useEffect(() => {
+    setValues((current) => (
+      subscriptionId && current.subscription_id !== subscriptionId
+        ? { ...current, subscription_id: subscriptionId }
+        : current
+    ))
+    setErrors((current) => ({ ...current, subscription_id: '' }))
+  }, [subscriptionId])
+
   function updateField(name, value) {
     setValues((current) => ({ ...current, [name]: value }))
     setErrors((current) => ({ ...current, [name]: '' }))
     setState((current) => ({ ...current, error: null, notice: '' }))
+  }
+
+  function fieldErrorProps(name) {
+    return errors[name]
+      ? {
+        'aria-invalid': 'true',
+        'aria-describedby': `checkin-${name.replace(/_/g, '-')}-error`,
+      }
+      : {}
   }
 
   async function handleSubmit(event) {
@@ -57,13 +75,13 @@ function CheckInPanel({ accessToken, branches = [], subscriptionId = '', onSucce
         <div className="resource-form__grid">
           <div className="field-group">
             <label htmlFor="checkin-sub">Subscription ID</label>
-            <input id="checkin-sub" value={values.subscription_id} onChange={(event) => updateField('subscription_id', event.target.value)} />
-            {errors.subscription_id ? <span>{errors.subscription_id}</span> : null}
+            <input id="checkin-sub" value={values.subscription_id} onChange={(event) => updateField('subscription_id', event.target.value)} {...fieldErrorProps('subscription_id')} />
+            {errors.subscription_id ? <span id="checkin-subscription-id-error">{errors.subscription_id}</span> : null}
           </div>
           <div className="field-group">
             <label htmlFor="checkin-branch">Branch ID</label>
-            <input id="checkin-branch" list={branchListId} value={values.branch_id} onChange={(event) => updateField('branch_id', event.target.value)} />
-            {errors.branch_id ? <span>{errors.branch_id}</span> : null}
+            <input id="checkin-branch" list={branchListId} value={values.branch_id} onChange={(event) => updateField('branch_id', event.target.value)} {...fieldErrorProps('branch_id')} />
+            {errors.branch_id ? <span id="checkin-branch-id-error">{errors.branch_id}</span> : null}
           </div>
           <div className="field-group">
             <label htmlFor="checkin-date">Date</label>

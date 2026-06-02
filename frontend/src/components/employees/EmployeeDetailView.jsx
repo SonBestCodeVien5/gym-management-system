@@ -9,6 +9,7 @@ import { apiErrorText } from '../../lib/featureHelpers.js'
 import EmployeeForm from './EmployeeForm.jsx'
 import PasswordResetPanel from './PasswordResetPanel.jsx'
 import {
+  cleanEmployeePayload,
   compactId,
   employeeValuesFromEmployee,
   formatDateTime,
@@ -63,6 +64,13 @@ function EmployeeDetailView({ employeeId, navigate }) {
   }, [accessToken])
 
   async function handleUpdate(payload) {
+    const originalPayload = cleanEmployeePayload(employeeValuesFromEmployee(employeeState.data))
+
+    if (JSON.stringify(payload) === JSON.stringify(originalPayload)) {
+      setMutation({ status: 'success', error: null, notice: 'No employee changes to save.' })
+      return
+    }
+
     if (employeeState.data?.status === 'active' && payload.status === 'inactive' && !window.confirm('Deactivate this employee and revoke active refresh tokens?')) {
       return
     }

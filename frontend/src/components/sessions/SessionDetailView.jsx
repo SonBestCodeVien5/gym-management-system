@@ -19,7 +19,7 @@ function SessionDetailView({ sessionId, navigate }) {
   const { accessToken } = useAuth()
   const [sessionState, setSessionState] = useState({ status: 'loading', data: null, error: null })
 
-  const loadSession = useCallback(async () => {
+  const loadSession = useCallback(async ({ background = false } = {}) => {
     if (!isObjectId(sessionId)) {
       setSessionState({
         status: 'error',
@@ -29,12 +29,19 @@ function SessionDetailView({ sessionId, navigate }) {
       return
     }
 
-    setSessionState((current) => ({ ...current, status: 'loading', error: null }))
+    if (!background) {
+      setSessionState((current) => ({ ...current, status: 'loading', error: null }))
+    }
 
     try {
       const response = await getSession(accessToken, sessionId)
       setSessionState({ status: 'success', data: response.data, error: null })
     } catch (error) {
+      if (background) {
+        setSessionState((current) => ({ ...current, error }))
+        return
+      }
+
       setSessionState({ status: 'error', data: null, error })
     }
   }, [accessToken, sessionId])
@@ -104,8 +111,8 @@ function SessionDetailView({ sessionId, navigate }) {
       </DataPanel>
 
       <div className="module-page__grid">
-        <EnrollmentPanel accessToken={accessToken} sessionId={session.id} onChanged={loadSession} />
-        <SessionCheckInPanel accessToken={accessToken} sessionId={session.id} onChanged={loadSession} />
+        <EnrollmentPanel accessToken={accessToken} sessionId={session.id} onChanged={() => loadSession({ background: true })} />
+        <SessionCheckInPanel accessToken={accessToken} sessionId={session.id} onChanged={() => loadSession({ background: true })} />
       </div>
     </div>
   )

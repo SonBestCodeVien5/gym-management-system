@@ -96,6 +96,15 @@ function SubscriptionCreateView({ navigate }) {
     setSubmitState((current) => ({ ...current, error: null }))
   }
 
+  function fieldErrorProps(name) {
+    return errors[name]
+      ? {
+        'aria-invalid': 'true',
+        'aria-describedby': `subscription-${name.replace(/_/g, '-')}-error`,
+      }
+      : {}
+  }
+
   async function handleSubmit(event) {
     event.preventDefault()
     const nextErrors = validate(values)
@@ -142,44 +151,44 @@ function SubscriptionCreateView({ navigate }) {
           <div className="resource-form__grid">
             <div className="field-group">
               <label htmlFor="sub-member">Member ID</label>
-              <input id="sub-member" value={values.member_id} onChange={(event) => updateField('member_id', event.target.value)} />
-              {errors.member_id ? <span>{errors.member_id}</span> : null}
+              <input id="sub-member" value={values.member_id} onChange={(event) => updateField('member_id', event.target.value)} {...fieldErrorProps('member_id')} />
+              {errors.member_id ? <span id="subscription-member-id-error">{errors.member_id}</span> : null}
             </div>
 
             <div className="field-group">
               <label htmlFor="sub-course">Course ID</label>
-              <input id="sub-course" list="course-options" value={values.course_id} onChange={(event) => updateField('course_id', event.target.value)} />
+              <input id="sub-course" list="course-options" value={values.course_id} onChange={(event) => updateField('course_id', event.target.value)} {...fieldErrorProps('course_id')} />
               <datalist id="course-options">
                 {refs.courses.map((course) => <option key={course.id} value={course.id}>{course.title} · {formatMoney(course.base_price)}</option>)}
               </datalist>
-              {errors.course_id ? <span>{errors.course_id}</span> : null}
+              {errors.course_id ? <span id="subscription-course-id-error">{errors.course_id}</span> : null}
             </div>
 
             <div className="field-group">
               <label htmlFor="sub-branch">Home branch ID</label>
-              <input id="sub-branch" list="branch-options" value={values.home_branch_id} onChange={(event) => updateField('home_branch_id', event.target.value)} />
+              <input id="sub-branch" list="branch-options" value={values.home_branch_id} onChange={(event) => updateField('home_branch_id', event.target.value)} {...fieldErrorProps('home_branch_id')} />
               <datalist id="branch-options">
                 {refs.branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name} · {branch.branch_code}</option>)}
               </datalist>
-              {errors.home_branch_id ? <span>{errors.home_branch_id}</span> : null}
+              {errors.home_branch_id ? <span id="subscription-home-branch-id-error">{errors.home_branch_id}</span> : null}
             </div>
 
             <div className="field-group">
               <label htmlFor="sub-weekly">Sessions per week</label>
-              <input id="sub-weekly" type="number" min="1" value={values.session_per_week} onChange={(event) => updateField('session_per_week', event.target.value)} />
-              {errors.session_per_week ? <span>{errors.session_per_week}</span> : null}
+              <input id="sub-weekly" type="number" min="1" value={values.session_per_week} onChange={(event) => updateField('session_per_week', event.target.value)} {...fieldErrorProps('session_per_week')} />
+              {errors.session_per_week ? <span id="subscription-session-per-week-error">{errors.session_per_week}</span> : null}
             </div>
 
             <div className="field-group">
               <label htmlFor="sub-start">Start date</label>
-              <input id="sub-start" type="datetime-local" value={values.start_date} onChange={(event) => updateField('start_date', event.target.value)} />
-              {errors.start_date ? <span>{errors.start_date}</span> : null}
+              <input id="sub-start" type="datetime-local" value={values.start_date} onChange={(event) => updateField('start_date', event.target.value)} {...fieldErrorProps('start_date')} />
+              {errors.start_date ? <span id="subscription-start-date-error">{errors.start_date}</span> : null}
             </div>
 
             <div className="field-group">
               <label htmlFor="sub-end">End date</label>
-              <input id="sub-end" type="datetime-local" value={values.end_date} onChange={(event) => updateField('end_date', event.target.value)} />
-              {errors.end_date ? <span>{errors.end_date}</span> : null}
+              <input id="sub-end" type="datetime-local" value={values.end_date} onChange={(event) => updateField('end_date', event.target.value)} {...fieldErrorProps('end_date')} />
+              {errors.end_date ? <span id="subscription-end-date-error">{errors.end_date}</span> : null}
             </div>
 
             <div className="field-group">
@@ -193,8 +202,8 @@ function SubscriptionCreateView({ navigate }) {
 
             <div className="field-group">
               <label htmlFor="discount-value">Discount value</label>
-              <input id="discount-value" type="number" min="0" value={values.discount_value} onChange={(event) => updateField('discount_value', event.target.value)} disabled={values.discount_type === 'none'} />
-              {errors.discount_value ? <span>{errors.discount_value}</span> : null}
+              <input id="discount-value" type="number" min="0" value={values.discount_value} onChange={(event) => updateField('discount_value', event.target.value)} disabled={values.discount_type === 'none'} {...fieldErrorProps('discount_value')} />
+              {errors.discount_value ? <span id="subscription-discount-value-error">{errors.discount_value}</span> : null}
             </div>
 
             <div className="field-group">

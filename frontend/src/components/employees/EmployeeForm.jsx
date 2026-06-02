@@ -132,7 +132,13 @@ function EmployeeForm({
         </div>
         <div className="field-group field-group--wide">
           <label htmlFor="employee-branches">Branch IDs</label>
-          <textarea id="employee-branches" rows="3" list="employee-branch-options" value={values.branch_id} onChange={(event) => updateField('branch_id', event.target.value)} />
+          <input
+            id="employee-branches"
+            list="employee-branch-options"
+            value={values.branch_id}
+            onChange={(event) => updateField('branch_id', event.target.value)}
+            placeholder="One or more ObjectIDs, separated by commas"
+          />
           <datalist id="employee-branch-options">
             {branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name} · {branch.branch_code}</option>)}
           </datalist>

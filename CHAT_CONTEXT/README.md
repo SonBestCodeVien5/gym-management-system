@@ -25,7 +25,7 @@ Read this file when a new chat needs a short project handoff.
 
 ## Current State
 
-Snapshot date: 2026-06-01.
+Snapshot date: 2026-06-02.
 
 Stack:
 - Go + Gin + MongoDB.
@@ -58,6 +58,11 @@ Planned next surfaces:
   loading state, and app not-found state. No backend API contract changed. Live backend
   login/restore/logout was not re-smoked during FE04 because no credentials or seeded local session
   were available.
+- FE06-FE10 interfaces are implemented, reviewed, review-fixed, build-verified, and completed with
+  explicit skipped live verification notes. The batch covers courses/branches, subscriptions,
+  attendance, sessions, and admin employee management. Protected-route browser and live backend
+  CRUD/API smokes remain pending because no backend/auth session was available; the attempted Vite
+  route check redirected to `/login`.
 - Frontend delivery now has dedicated `$gym-fe-*` skills and `frontend_skills/` memory.
 
 ## Rules Worth Remembering
@@ -96,9 +101,9 @@ Planned next surfaces:
 
 ## Resume Point
 
-FE04 Brand Asset Integration is complete.
+FE06-FE10 interface completion notes are current.
 Start from:
 
-1. `$gym-git` to review/commit/push the current frontend changes if requested
-2. `$gym-fe-plan` for FE06 Courses And Branches or FE05 Members, depending on the next frontend
-   priority
+1. `$gym-git` to review/commit/push the current FE06-FE10 review, fix, test, and completion changes
+2. `$gym-fe-test` if a seeded backend/auth session is available for live browser/API smokes
+3. `$gym-fe-plan` for the next frontend cycle after the current tree is committed

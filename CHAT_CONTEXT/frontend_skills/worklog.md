@@ -10,11 +10,11 @@ Use this file for short frontend roadmap and completion summaries.
 - [x] FE 03 App Routing And API Foundation - scalable routes, resource API helpers, shared UI states
 - [x] FE 04 Brand Asset Integration - official logo/favicon/color/web assets from `iron-forge-brand-assets`
 - [ ] FE 05 Members - create/search/detail, activate offline payment, member subscriptions
-- [ ] FE 06 Courses And Branches - CRUD settings and selectable reference data for later forms
-- [ ] FE 07 Subscriptions - create pending subscription and lifecycle actions
-- [ ] FE 08 Attendance - check-in, report missed, makeup, subscription attendance history
-- [ ] FE 09 Sessions - session list/calendar, create, enroll, session check-in
-- [ ] FE 10 Employees - admin-only staff management and password reset
+- [x] FE 06 Courses And Branches - CRUD settings and selectable reference data for later forms
+- [x] FE 07 Subscriptions - create pending subscription and lifecycle actions
+- [x] FE 08 Attendance - check-in, report missed, makeup, subscription attendance history
+- [x] FE 09 Sessions - session list/calendar, create, enroll, session check-in
+- [x] FE 10 Employees - admin-only staff management and password reset
 - [ ] FE 11 Live Dashboard APIs - replace static dashboard metrics after backend report APIs exist
 - [ ] FE 12 UX/Test Hardening - browser automation, accessibility, mobile/desktop visual checks
 
@@ -380,3 +380,51 @@ Build passed with `npm run build`.
 
 Use `$gym-fe-review` on `CHAT_CONTEXT/frontend_skills/implementations/06_courses_branches.md`
 through `CHAT_CONTEXT/frontend_skills/implementations/10_employees.md`.
+
+## Reviewed - 2026-06-02 - FE 06 To FE 10 Interfaces
+
+Reviewed FE06-FE10 implementation notes and frontend source. Build passed with `npm run build`.
+Browser route check was attempted through Vite, but protected routes redirected to `/login` because
+no backend/auth session was available.
+
+Review notes:
+
+- `CHAT_CONTEXT/frontend_skills/reviews/06_courses_branches.md`
+- `CHAT_CONTEXT/frontend_skills/reviews/07_subscriptions.md`
+- `CHAT_CONTEXT/frontend_skills/reviews/08_attendance.md`
+- `CHAT_CONTEXT/frontend_skills/reviews/09_sessions.md`
+- `CHAT_CONTEXT/frontend_skills/reviews/10_employees.md`
+
+Use `$gym-fe-implement` to fix the review findings, then `$gym-fe-test`.
+
+## Implemented Review Fixes - 2026-06-02 - FE 06 To FE 10 Interfaces
+
+Fixed FE06-FE10 review findings:
+
+- FE06 blank coordinate validation and branch/nearby field ARIA wiring.
+- FE07 lifecycle/refund success feedback persistence and subscription create field ARIA wiring.
+- FE08 subscription-scoped attendance form route sync and field ARIA wiring.
+- FE09 enroll/check-in success feedback persistence and trainer default overwrite guard.
+- FE10 branch assignment datalist UX and unchanged employee update guard.
+
+Build passed with `npm run build`.
+
+Use `$gym-fe-test` for the FE06-FE10 batch.
+
+## Completed - 2026-06-02 - FE 06 To FE 10 Interfaces
+
+Completed the frontend context handoff for FE06-FE10 after review fixes.
+
+- Build evidence is recorded in `CHAT_CONTEXT/frontend_skills/tests/06_courses_branches.md`
+  through `CHAT_CONTEXT/frontend_skills/tests/10_employees.md`.
+- Browser protected-route and live backend CRUD/API checks are recorded as skipped because no
+  backend/auth session was available; the review route attempt redirected to `/login`.
+- No backend API contract changed.
+
+Residual risk: live browser/API smokes remain pending for course/branch CRUD, subscription
+lifecycle/refund, attendance commands/history, session create/enroll/check-in, and employee
+management.
+
+Recommended next action: use `$gym-git` to review/commit/push the FE06-FE10 review, fix, test, and
+completion notes. Use `$gym-fe-test` later if a seeded backend/auth session is available for live
+browser/API verification.

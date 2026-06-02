@@ -44,3 +44,10 @@ npm run build
 ## Handoff to review
 
 - Review status-aware lifecycle availability, refund response handling, invalid ID states, and create form date conversion.
+
+## Review fixes - 2026-06-02
+
+- Changed subscription detail refresh after lifecycle/refund mutations to background refresh so
+  success notices and refund amount feedback remain mounted.
+- Connected subscription create validation errors with `aria-invalid` and `aria-describedby`.
+- Build passed with `npm run build`.

@@ -44,3 +44,11 @@ npm run build
 ## Handoff to review
 
 - Review session filter date conversion, capacity/enrollment display, conflict handling, and current-trainer default behavior.
+
+## Review fixes - 2026-06-02
+
+- Changed session detail refresh after enroll/check-in mutations to background refresh so success
+  notices remain mounted.
+- Prevented session create form values from being overwritten by auth employee object refresh; trainer
+  ID now defaults only when the field is still empty.
+- Build passed with `npm run build`.

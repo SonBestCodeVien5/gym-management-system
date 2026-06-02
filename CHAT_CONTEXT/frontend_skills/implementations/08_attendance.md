@@ -44,3 +44,10 @@ npm run build
 ## Handoff to review
 
 - Review scoped history refresh after mutations, conflict/error display, and narrow viewport form stacking.
+
+## Review fixes - 2026-06-02
+
+- Synced subscription-scoped check-in, report missed, and makeup forms when route `subscriptionId`
+  changes.
+- Connected attendance command field errors with `aria-invalid` and `aria-describedby`.
+- Build passed with `npm run build`.

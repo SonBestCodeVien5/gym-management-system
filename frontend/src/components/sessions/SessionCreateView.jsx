@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import DataPanel from '../DataPanel.jsx'
 import PageHeader from '../PageHeader.jsx'
 import { useAuth } from '../../context/AuthContext.jsx'
@@ -52,18 +52,20 @@ function validate(values) {
 
 function SessionCreateView({ navigate }) {
   const { accessToken, employee } = useAuth()
-  const initialValues = useMemo(() => ({
-    ...INITIAL_VALUES,
-    trainer_id: employee?.role?.includes('trainer') ? employee.id || '' : '',
-  }), [employee])
-  const [values, setValues] = useState(initialValues)
+  const [values, setValues] = useState(INITIAL_VALUES)
   const [errors, setErrors] = useState({})
   const [refs, setRefs] = useState({ status: 'loading', branches: [], courses: [], error: null })
   const [submitState, setSubmitState] = useState({ status: 'idle', error: null })
 
   useEffect(() => {
-    setValues(initialValues)
-  }, [initialValues])
+    if (!employee?.role?.includes('trainer') || !employee.id) {
+      return
+    }
+
+    setValues((current) => (
+      current.trainer_id ? current : { ...current, trainer_id: employee.id }
+    ))
+  }, [employee])
 
   const loadRefs = useCallback(async () => {
     try {

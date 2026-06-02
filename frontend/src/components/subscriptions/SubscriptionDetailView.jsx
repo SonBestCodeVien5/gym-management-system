@@ -14,7 +14,7 @@ function SubscriptionDetailView({ subscriptionId, navigate }) {
   const { accessToken } = useAuth()
   const [subscriptionState, setSubscriptionState] = useState({ status: 'loading', data: null, error: null })
 
-  const loadSubscription = useCallback(async () => {
+  const loadSubscription = useCallback(async ({ background = false } = {}) => {
     if (!isObjectId(subscriptionId)) {
       setSubscriptionState({
         status: 'error',
@@ -24,12 +24,19 @@ function SubscriptionDetailView({ subscriptionId, navigate }) {
       return
     }
 
-    setSubscriptionState((current) => ({ ...current, status: 'loading', error: null }))
+    if (!background) {
+      setSubscriptionState((current) => ({ ...current, status: 'loading', error: null }))
+    }
 
     try {
       const response = await getSubscription(accessToken, subscriptionId)
       setSubscriptionState({ status: 'success', data: response.data, error: null })
     } catch (error) {
+      if (background) {
+        setSubscriptionState((current) => ({ ...current, error }))
+        return
+      }
+
       setSubscriptionState({ status: 'error', data: null, error })
     }
   }, [accessToken, subscriptionId])
@@ -80,8 +87,8 @@ function SubscriptionDetailView({ subscriptionId, navigate }) {
       <SubscriptionSummaryPanel subscription={subscription} navigate={navigate} />
 
       <div className="module-page__grid">
-        <SubscriptionLifecyclePanel accessToken={accessToken} subscription={subscription} onChanged={loadSubscription} />
-        <RefundPanel accessToken={accessToken} subscription={subscription} onChanged={loadSubscription} />
+        <SubscriptionLifecyclePanel accessToken={accessToken} subscription={subscription} onChanged={() => loadSubscription({ background: true })} />
+        <RefundPanel accessToken={accessToken} subscription={subscription} onChanged={() => loadSubscription({ background: true })} />
       </div>
     </div>
   )

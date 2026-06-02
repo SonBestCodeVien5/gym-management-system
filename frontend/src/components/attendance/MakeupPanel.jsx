@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import DataPanel from '../DataPanel.jsx'
 import { createMakeupAttendance } from '../../lib/attendanceApi.js'
 import { apiErrorText } from '../../lib/featureHelpers.js'
@@ -29,10 +29,28 @@ function MakeupPanel({ accessToken, branches = [], subscriptionId = '', onSucces
   const [errors, setErrors] = useState({})
   const [state, setState] = useState({ status: 'idle', error: null, notice: '' })
 
+  useEffect(() => {
+    setValues((current) => (
+      subscriptionId && current.subscription_id !== subscriptionId
+        ? { ...current, subscription_id: subscriptionId }
+        : current
+    ))
+    setErrors((current) => ({ ...current, subscription_id: '' }))
+  }, [subscriptionId])
+
   function updateField(name, value) {
     setValues((current) => ({ ...current, [name]: value }))
     setErrors((current) => ({ ...current, [name]: '' }))
     setState((current) => ({ ...current, error: null, notice: '' }))
+  }
+
+  function fieldErrorProps(name) {
+    return errors[name]
+      ? {
+        'aria-invalid': 'true',
+        'aria-describedby': `makeup-${name.replace(/_/g, '-')}-error`,
+      }
+      : {}
   }
 
   async function handleSubmit(event) {
@@ -61,13 +79,13 @@ function MakeupPanel({ accessToken, branches = [], subscriptionId = '', onSucces
         <div className="resource-form__grid">
           <div className="field-group">
             <label htmlFor="makeup-sub">Subscription ID</label>
-            <input id="makeup-sub" value={values.subscription_id} onChange={(event) => updateField('subscription_id', event.target.value)} />
-            {errors.subscription_id ? <span>{errors.subscription_id}</span> : null}
+            <input id="makeup-sub" value={values.subscription_id} onChange={(event) => updateField('subscription_id', event.target.value)} {...fieldErrorProps('subscription_id')} />
+            {errors.subscription_id ? <span id="makeup-subscription-id-error">{errors.subscription_id}</span> : null}
           </div>
           <div className="field-group">
             <label htmlFor="makeup-branch">Branch ID</label>
-            <input id="makeup-branch" list={branchListId} value={values.branch_id} onChange={(event) => updateField('branch_id', event.target.value)} />
-            {errors.branch_id ? <span>{errors.branch_id}</span> : null}
+            <input id="makeup-branch" list={branchListId} value={values.branch_id} onChange={(event) => updateField('branch_id', event.target.value)} {...fieldErrorProps('branch_id')} />
+            {errors.branch_id ? <span id="makeup-branch-id-error">{errors.branch_id}</span> : null}
           </div>
           <div className="field-group">
             <label htmlFor="makeup-date">Makeup date</label>
@@ -75,8 +93,8 @@ function MakeupPanel({ accessToken, branches = [], subscriptionId = '', onSucces
           </div>
           <div className="field-group">
             <label htmlFor="makeup-for">Missed date reference</label>
-            <input id="makeup-for" type="datetime-local" value={values.is_makeup_for} onChange={(event) => updateField('is_makeup_for', event.target.value)} />
-            {errors.is_makeup_for ? <span>{errors.is_makeup_for}</span> : null}
+            <input id="makeup-for" type="datetime-local" value={values.is_makeup_for} onChange={(event) => updateField('is_makeup_for', event.target.value)} {...fieldErrorProps('is_makeup_for')} />
+            {errors.is_makeup_for ? <span id="makeup-is-makeup-for-error">{errors.is_makeup_for}</span> : null}
           </div>
         </div>
         <datalist id={branchListId}>

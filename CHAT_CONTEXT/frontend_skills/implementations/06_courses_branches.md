@@ -46,3 +46,10 @@ npm run build
 ## Handoff to review
 
 - Review course/branch validation, delete confirmation flows, nearby search states, and mobile stacked records.
+
+## Review fixes - 2026-06-02
+
+- Fixed blank branch/nearby coordinate validation so empty longitude/latitude no longer passes as
+  numeric `0`.
+- Connected branch and nearby field errors with `aria-invalid` and `aria-describedby`.
+- Build passed with `npm run build`.
