@@ -350,3 +350,18 @@ in this turn.
 
 Not ready for `$gym-fe-complete` until a browser pass verifies activation success feedback,
 invalid-ID feedback, and narrow viewport layout.
+
+## Planned - 2026-06-02 - FE 06 To FE 10 Interface Plans
+
+Created the next five frontend interface plans:
+
+- FE06 Courses And Branches: `CHAT_CONTEXT/frontend_skills/plans/06_courses_branches.md`
+- FE07 Subscriptions: `CHAT_CONTEXT/frontend_skills/plans/07_subscriptions.md`
+- FE08 Attendance: `CHAT_CONTEXT/frontend_skills/plans/08_attendance.md`
+- FE09 Sessions: `CHAT_CONTEXT/frontend_skills/plans/09_sessions.md`
+- FE10 Employees: `CHAT_CONTEXT/frontend_skills/plans/10_employees.md`
+
+Recommended implementation order remains FE06 first because courses and branches become selectable
+reference data for subscription, attendance, and session forms.
+
+Use `$gym-fe-implement` with `CHAT_CONTEXT/frontend_skills/plans/06_courses_branches.md`.
