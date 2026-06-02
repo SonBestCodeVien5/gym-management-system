@@ -17,6 +17,10 @@ func EnsureIndexes(ctx context.Context, db *mongo.Database) error {
 				Keys:    bson.D{{Key: "ccid", Value: 1}},
 				Options: options.Index().SetName("ccid_1").SetUnique(true),
 			},
+			{
+				Keys:    bson.D{{Key: "created_at", Value: -1}},
+				Options: options.Index().SetName("created_at_desc_idx"),
+			},
 		},
 		"branches": {
 			{
@@ -52,8 +56,30 @@ func EnsureIndexes(ctx context.Context, db *mongo.Database) error {
 				Keys:    bson.D{{Key: "home_branch_id", Value: 1}},
 				Options: options.Index().SetName("home_branch_id_idx"),
 			},
+			{
+				Keys:    bson.D{{Key: "payment_date", Value: 1}},
+				Options: options.Index().SetName("payment_date_idx"),
+			},
+			{
+				Keys: bson.D{
+					{Key: "home_branch_id", Value: 1},
+					{Key: "payment_date", Value: 1},
+				},
+				Options: options.Index().SetName("home_branch_payment_date_idx"),
+			},
 		},
 		"attendances": {
+			{
+				Keys:    bson.D{{Key: "date", Value: 1}},
+				Options: options.Index().SetName("date_idx"),
+			},
+			{
+				Keys: bson.D{
+					{Key: "branch_id", Value: 1},
+					{Key: "date", Value: 1},
+				},
+				Options: options.Index().SetName("branch_date_idx"),
+			},
 			{
 				Keys: bson.D{
 					{Key: "sub_id", Value: 1},
@@ -92,6 +118,10 @@ func EnsureIndexes(ctx context.Context, db *mongo.Database) error {
 		},
 		"sessions": {
 			{
+				Keys:    bson.D{{Key: "scheduled_at", Value: 1}},
+				Options: options.Index().SetName("scheduled_at_idx"),
+			},
+			{
 				Keys: bson.D{
 					{Key: "branch_id", Value: 1},
 					{Key: "scheduled_at", Value: 1},
@@ -118,6 +148,10 @@ func EnsureIndexes(ctx context.Context, db *mongo.Database) error {
 			{
 				Keys:    bson.D{{Key: "member_id", Value: 1}},
 				Options: options.Index().SetName("member_id_idx"),
+			},
+			{
+				Keys:    bson.D{{Key: "processed_at", Value: 1}},
+				Options: options.Index().SetName("processed_at_idx"),
 			},
 		},
 		"employees": {

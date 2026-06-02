@@ -43,6 +43,7 @@ Implemented backend surfaces:
 | Sessions | Create, list, get, enroll, session check-in |
 | Auth | Login, current employee, refresh rotation, logout revoke, access-token middleware, role guard |
 | Employees | Admin-only create, list, get, update, password reset, deactivate |
+| Dashboard | Admin/manager summary KPIs, revenue buckets, plan distribution, recent members, today's sessions |
 | Error handling | Shared HTTP error contract with stable `error.code`, sanitized `message`, and object `details` |
 | Data integrity | Central MongoDB index bootstrap with unique/query/partial unique/TTL indexes |
 | Frontend readiness | Allow-list CORS for browser FE dev and current employee restore endpoint |
@@ -64,6 +65,9 @@ Planned next surfaces:
   background-refresh-failure alerts. The batch covers courses/branches, subscriptions, attendance,
   sessions, and admin employee management. Live backend CRUD/API smokes remain pending because no
   seeded backend credentials/session data were available.
+- Backend dashboard/report aggregate APIs are implemented and tested. FE11 can now wire the live
+  dashboard against `GET /api/v1/dashboard/summary`, `/revenue`, `/plans`, `/members/recent`, and
+  `/sessions/today`.
 - Frontend delivery now has dedicated `$gym-fe-*` skills and `frontend_skills/` memory.
 
 ## Rules Worth Remembering
@@ -81,6 +85,8 @@ Planned next surfaces:
   `BOOTSTRAP_ADMIN_*` env values only when the normalized email is absent.
 - Browser FE dev can use `CORS_ALLOWED_ORIGINS` and `GET /api/v1/auth/me` to restore current staff
   context from a bearer access token.
+- Dashboard/report endpoints are admin/manager-only. Net revenue is subscription payments minus
+  processed refunds; recent members are not branch-scoped because members have no branch field.
 - Employee management is admin-only, stores bcrypt password hashes, never returns `password_hash` or
   `normalized_email`, and revokes active refresh tokens on password reset/deactivation.
 - Backend error responses use `{"error":{"code":"...","message":"...","details":{}}}` while success
@@ -105,6 +111,7 @@ Planned next surfaces:
 FE07/FE09 refresh-alert fixes and FE05-FE10 mocked browser test notes are current.
 Start from:
 
-1. `$gym-git` to review/commit/push the current FE07/FE09 fix plus FE05-FE10 test/completion notes
+1. `$gym-fe-implement` for FE11 live dashboard APIs using
+   `CHAT_CONTEXT/frontend_skills/plans/11_live_dashboard_apis.md`
 2. `$gym-fe-test` if a seeded backend/auth session is available for live browser/API smokes
-3. `$gym-fe-plan` for the next frontend cycle after the current tree is committed
+3. `$gym-git` to review/commit/push the current backend dashboard and frontend planning/test notes

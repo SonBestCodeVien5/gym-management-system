@@ -210,3 +210,104 @@ func TestIntegrationBranchNearby(t *testing.T) {
 	invalidQuery := app.DoJSON(t, http.MethodGet, "/api/v1/branches/nearby?lng=200&lat=10.7769", app.AdminToken, nil)
 	testutil.AssertError(t, invalidQuery, http.StatusBadRequest, "INVALID_INPUT")
 }
+
+func TestIntegrationDashboardReports(t *testing.T) {
+	app := testutil.NewTestApp(t)
+	fixture := app.CreateActiveCoreFixture(t)
+
+	currentEmployee := app.DoJSON(t, http.MethodGet, "/api/v1/auth/me", app.AdminToken, nil)
+	testutil.AssertStatus(t, currentEmployee, http.StatusOK)
+	trainerID := testutil.DataString(t, testutil.DataMap(t, currentEmployee), "id")
+
+	checkIn := app.DoJSON(t, http.MethodPost, "/api/v1/attendance/checkin", app.AdminToken, map[string]any{
+		"subscription_id": fixture.SubscriptionID,
+		"branch_id":       fixture.BranchID,
+		"date":            "2026-05-16T08:00:00Z",
+	})
+	testutil.AssertStatus(t, checkIn, http.StatusCreated)
+
+	createSession := app.DoJSON(t, http.MethodPost, "/api/v1/sessions", app.AdminToken, map[string]any{
+		"branch_id":    fixture.BranchID,
+		"trainer_id":   trainerID,
+		"course_level": "basic",
+		"scheduled_at": "2026-05-16T09:00:00Z",
+		"duration_min": 60,
+		"capacity":     12,
+		"tags":         []string{"basic"},
+	})
+	testutil.AssertStatus(t, createSession, http.StatusCreated)
+
+	summary := app.DoJSON(t, http.MethodGet, "/api/v1/dashboard/summary?branch_id="+fixture.BranchID+"&from=2026-05-01T00:00:00Z&to=2026-05-16T23:00:00Z", app.AdminToken, nil)
+	testutil.AssertStatus(t, summary, http.StatusOK)
+	summaryData := testutil.DataMap(t, summary)
+	if got := numberValue(t, summaryData, "today_checkins"); got < 1 {
+		t.Fatalf("summary today_checkins = %v, want >= 1", got)
+	}
+	if got := numberValue(t, summaryData, "classes_this_week"); got < 1 {
+		t.Fatalf("summary classes_this_week = %v, want >= 1", got)
+	}
+
+	revenue := app.DoJSON(t, http.MethodGet, "/api/v1/dashboard/revenue?branch_id="+fixture.BranchID+"&from=2026-01-01T00:00:00Z&to=2027-01-01T00:00:00Z", app.AdminToken, nil)
+	testutil.AssertStatus(t, revenue, http.StatusOK)
+	revenueData := testutil.DataMap(t, revenue)
+	if items, ok := revenueData["items"].([]any); !ok || len(items) == 0 {
+		t.Fatalf("revenue items = %#v, want non-empty array", revenueData["items"])
+	}
+
+	plans := app.DoJSON(t, http.MethodGet, "/api/v1/dashboard/plans?branch_id="+fixture.BranchID, app.AdminToken, nil)
+	testutil.AssertStatus(t, plans, http.StatusOK)
+	planData := testutil.DataMap(t, plans)
+	if items, ok := planData["items"].([]any); !ok || len(items) != 1 {
+		t.Fatalf("plan items = %#v, want one item", planData["items"])
+	}
+
+	recentMembers := app.DoJSON(t, http.MethodGet, "/api/v1/dashboard/members/recent?limit=2", app.AdminToken, nil)
+	testutil.AssertStatus(t, recentMembers, http.StatusOK)
+	recentData := testutil.DataMap(t, recentMembers)
+	if items, ok := recentData["items"].([]any); !ok || len(items) == 0 {
+		t.Fatalf("recent member items = %#v, want non-empty array", recentData["items"])
+	}
+
+	todaySessions := app.DoJSON(t, http.MethodGet, "/api/v1/dashboard/sessions/today?branch_id="+fixture.BranchID+"&date=2026-05-16T00:00:00Z", app.AdminToken, nil)
+	testutil.AssertStatus(t, todaySessions, http.StatusOK)
+	sessionsData := testutil.DataMap(t, todaySessions)
+	if items, ok := sessionsData["items"].([]any); !ok || len(items) != 1 {
+		t.Fatalf("today session items = %#v, want one item", sessionsData["items"])
+	}
+
+	staffEmail := testutil.Unique("dashboard-receptionist") + "@gym.test"
+	staffPassword := "staff-password-123"
+	createStaff := app.DoJSON(t, http.MethodPost, "/api/v1/employees", app.AdminToken, map[string]any{
+		"employee_id": testutil.Unique("EMP"),
+		"full_name":   "Dashboard Receptionist",
+		"email":       staffEmail,
+		"password":    staffPassword,
+		"role":        []string{"receptionist"},
+	})
+	testutil.AssertStatus(t, createStaff, http.StatusCreated)
+	staffToken, _ := app.Login(t, staffEmail, staffPassword)
+	forbidden := app.DoJSON(t, http.MethodGet, "/api/v1/dashboard/summary", staffToken, nil)
+	testutil.AssertError(t, forbidden, http.StatusForbidden, "FORBIDDEN")
+
+	invalidBranch := app.DoJSON(t, http.MethodGet, "/api/v1/dashboard/summary?branch_id=not-an-id", app.AdminToken, nil)
+	testutil.AssertError(t, invalidBranch, http.StatusBadRequest, "INVALID_ID")
+
+	invalidRange := app.DoJSON(t, http.MethodGet, "/api/v1/dashboard/summary?from=2026-06-02T00:00:00Z&to=2026-06-01T00:00:00Z", app.AdminToken, nil)
+	testutil.AssertError(t, invalidRange, http.StatusBadRequest, "INVALID_DATE")
+
+	invalidBucket := app.DoJSON(t, http.MethodGet, "/api/v1/dashboard/revenue?bucket=month", app.AdminToken, nil)
+	testutil.AssertError(t, invalidBucket, http.StatusBadRequest, "INVALID_INPUT")
+
+	invalidLimit := app.DoJSON(t, http.MethodGet, "/api/v1/dashboard/members/recent?limit=99", app.AdminToken, nil)
+	testutil.AssertError(t, invalidLimit, http.StatusBadRequest, "INVALID_INPUT")
+}
+
+func numberValue(t *testing.T, data map[string]any, key string) float64 {
+	t.Helper()
+
+	value, ok := data[key].(float64)
+	if !ok {
+		t.Fatalf("data[%q] = %#v, want number", key, data[key])
+	}
+	return value
+}

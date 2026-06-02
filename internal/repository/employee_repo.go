@@ -198,11 +198,30 @@ func (r *employeeRepoImpl) BootstrapAdmin(ctx context.Context, employee *models.
 	if employee.ID.IsZero() {
 		employee.ID = primitive.NewObjectID()
 	}
-	employee.CreatedAt = now
-	employee.UpdatedAt = now
 
-	filter := bson.M{"normalized_email": employee.NormalizedEmail}
-	update := bson.M{"$setOnInsert": employee}
+	filter := bson.M{"$or": []bson.M{
+		{"normalized_email": employee.NormalizedEmail},
+		{"employee_id": employee.EmployeeID},
+	}}
+	update := bson.M{
+		"$set": bson.M{
+			"employee_id":      employee.EmployeeID,
+			"full_name":        employee.FullName,
+			"email":            employee.Email,
+			"normalized_email": employee.NormalizedEmail,
+			"password_hash":    employee.PasswordHash,
+			"status":           employee.Status,
+			"role":             employee.Role,
+			"level":            employee.Level,
+			"phone":            employee.Phone,
+			"branch_id":        employee.BranchID,
+			"updated_at":       now,
+		},
+		"$setOnInsert": bson.M{
+			"_id":        employee.ID,
+			"created_at": now,
+		},
+	}
 	_, err := r.collection.UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
 	if mongo.IsDuplicateKeyError(err) {
 		return ErrDuplicate

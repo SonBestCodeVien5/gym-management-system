@@ -5,7 +5,7 @@ function PlanDonut({ items }) {
   const total = items.reduce((sum, item) => sum + item.value, 0)
 
   if (!items.length || total === 0) {
-    return <p className="dashboard-empty">No plan distribution sample data.</p>
+    return <p className="dashboard-empty">No live plan distribution yet.</p>
   }
 
   let offset = 0
@@ -18,7 +18,7 @@ function PlanDonut({ items }) {
         height="116"
         viewBox="0 0 100 100"
         role="img"
-        aria-label="Sample member distribution by plan"
+        aria-label="Live subscription distribution by plan"
       >
         <circle cx="50" cy="50" r={RADIUS} fill="none" stroke="var(--color-border)" strokeWidth="13" />
         {items.map((item) => {
@@ -45,7 +45,7 @@ function PlanDonut({ items }) {
           {total.toLocaleString('en-US')}
         </text>
         <text x="50" y="61" textAnchor="middle" className="plan-donut__label">
-          members
+          subs
         </text>
       </svg>
 

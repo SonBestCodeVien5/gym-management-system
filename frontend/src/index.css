@@ -812,7 +812,23 @@ code {
   gap: 0.35rem;
 }
 
+.revenue-bar-track {
+  position: relative;
+  width: 100%;
+  height: 100px;
+}
+
+.revenue-bar-baseline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--color-border);
+}
+
 .revenue-bar {
+  position: absolute;
   width: 100%;
   min-height: 18px;
   border-radius: 4px 4px 0 0;
@@ -825,6 +841,11 @@ code {
 
 .revenue-bar--accent {
   background: var(--color-accent);
+}
+
+.revenue-bar--negative {
+  border-radius: 0 0 4px 4px;
+  background: rgba(255, 177, 156, 0.84);
 }
 
 .revenue-bar-wrap span,

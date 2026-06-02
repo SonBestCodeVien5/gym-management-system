@@ -20,8 +20,15 @@ export const APP_ROUTES = [
     group: 'Tong quan',
     roles: ALL_STAFF,
     status: 'ready',
-    description: 'Operational overview with sample metrics and live staff context.',
-    plannedApis: ['GET /api/v1/auth/me'],
+    description: 'Operational overview with live dashboard metrics for admin and manager roles.',
+    plannedApis: [
+      'GET /api/v1/auth/me',
+      'GET /api/v1/dashboard/summary',
+      'GET /api/v1/dashboard/revenue',
+      'GET /api/v1/dashboard/plans',
+      'GET /api/v1/dashboard/members/recent',
+      'GET /api/v1/dashboard/sessions/today',
+    ],
   },
   {
     key: 'members',

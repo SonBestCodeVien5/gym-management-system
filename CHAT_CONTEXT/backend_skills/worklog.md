@@ -13,6 +13,79 @@ Dùng file này để giữ roadmap và completion summary ngắn cho feature ba
 - [x] Indexes and data integrity
 - [x] Integration tests & fixtures
 - [x] Frontend readiness mini-cycle
+- [x] Dashboard/report aggregate APIs
+
+---
+
+# Feature - Dashboard/report aggregate APIs
+
+## Status
+- Planned: yes
+- Implemented: yes
+- Reviewed: no
+- Tested: yes
+- Docs updated: yes
+
+## Plan summary - 2026-06-02
+
+### Goal
+Add read-only dashboard/report aggregate endpoints for FE11 live dashboard data:
+summary KPIs, revenue buckets, plan distribution, recent members, and today's sessions.
+
+### Key decisions
+- Use protected `GET /api/v1/dashboard/*` endpoints for `admin` and `manager`.
+- Keep endpoints read-only and server-computed; clients cannot provide money totals.
+- Net revenue means paid subscription totals in range minus processed refund totals in range.
+- Add focused read indexes for dashboard date-range queries; no schema changes.
+- Keep recent members unscoped by branch because members do not currently store a branch field.
+
+### Next action
+Use `$gym-implement` with `CHAT_CONTEXT/backend_skills/plans/10_dashboard_reports.md`.
+
+## Implementation summary - 2026-06-02
+
+### Result
+- Added admin/manager-only dashboard aggregate endpoints:
+  - `GET /api/v1/dashboard/summary`
+  - `GET /api/v1/dashboard/revenue`
+  - `GET /api/v1/dashboard/plans`
+  - `GET /api/v1/dashboard/members/recent`
+  - `GET /api/v1/dashboard/sessions/today`
+- Added dashboard DTOs, repository aggregate/read queries, service defaults/deltas/validation, handler
+  query parsing, route wiring, and dashboard-supporting read indexes.
+- Revenue is net revenue: paid subscription totals minus processed refunds.
+- Updated `docs/api_contract.md` and `api_test.http`.
+
+### Verification
+- `env GOCACHE=/tmp/gocache go build ./...` - pass; Go printed the existing read-only module
+  stat-cache warning but exited `0`.
+- `env GOCACHE=/tmp/gocache go test ./...` - pass, including `internal/integration`.
+- `git diff --check` - pass.
+
+### Next action
+Use `$gym-fe-implement` with `CHAT_CONTEXT/frontend_skills/plans/11_live_dashboard_apis.md`.
+
+## Completion - 2026-06-02
+
+### Result
+- Dashboard/report aggregate API cycle completed with implementation and test evidence.
+- Backend now provides the FE11 live dashboard contract.
+- Review phase was not run separately in this chained pass; implementation and test notes record the
+  main review focus areas and residual risks.
+
+### Docs updated
+- [x] `docs/api_contract.md`
+- [x] `api_test.http`
+- [x] `CHAT_CONTEXT/backend_skills/worklog.md`
+- [x] `CHAT_CONTEXT/README.md`
+
+### Follow-up risks
+- Recent members are not branch-scoped because member documents have no branch field.
+- Revenue semantics are limited to subscription payments minus processed refunds.
+- Dashboard report export and broader `/api/v1/reports/*` APIs remain future work.
+
+### Next action
+Use `$gym-fe-implement` with `CHAT_CONTEXT/frontend_skills/plans/11_live_dashboard_apis.md`.
 
 ---
 

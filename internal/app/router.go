@@ -31,6 +31,7 @@ func NewRouter(ctx context.Context, db *mongo.Database, cfg Config) (*gin.Engine
 	refundRepo := repository.NewRefundRepository(db)
 	attendanceRepo := repository.NewAttendanceRepository(db)
 	sessionRepo := repository.NewSessionRepository(db)
+	dashboardRepo := repository.NewDashboardRepository(db)
 	employeeRepo, err := repository.NewEmployeeRepository(db)
 	if err != nil {
 		return nil, err
@@ -46,6 +47,7 @@ func NewRouter(ctx context.Context, db *mongo.Database, cfg Config) (*gin.Engine
 	branchService := service.NewBranchService(branchRepo)
 	attendanceService := service.NewAttendanceService(attendanceRepo, subscriptionRepo, memberRepo)
 	sessionService := service.NewSessionService(sessionRepo, subscriptionRepo, attendanceRepo, attendanceService)
+	dashboardService := service.NewDashboardService(dashboardRepo)
 	employeeService := service.NewEmployeeService(employeeRepo, branchRepo, refreshTokenRepo)
 	authService, err := service.NewAuthService(employeeRepo, refreshTokenRepo, cfg.Auth)
 	if err != nil {
@@ -61,6 +63,7 @@ func NewRouter(ctx context.Context, db *mongo.Database, cfg Config) (*gin.Engine
 	branchHandler := handlers.NewBranchHandler(branchService)
 	attendanceHandler := handlers.NewAttendanceHandler(attendanceService)
 	sessionHandler := handlers.NewSessionHandler(sessionService)
+	dashboardHandler := handlers.NewDashboardHandler(dashboardService)
 	employeeHandler := handlers.NewEmployeeHandler(employeeService)
 	authHandler := handlers.NewAuthHandler(authService)
 
@@ -73,6 +76,7 @@ func NewRouter(ctx context.Context, db *mongo.Database, cfg Config) (*gin.Engine
 		Branch:       branchHandler,
 		Attendance:   attendanceHandler,
 		Session:      sessionHandler,
+		Dashboard:    dashboardHandler,
 		Employee:     employeeHandler,
 		Auth:         authHandler,
 		AuthService:  authService,
@@ -87,6 +91,7 @@ type Handlers struct {
 	Branch       *handlers.BranchHandler
 	Attendance   *handlers.AttendanceHandler
 	Session      *handlers.SessionHandler
+	Dashboard    *handlers.DashboardHandler
 	Employee     *handlers.EmployeeHandler
 	Auth         *handlers.AuthHandler
 	AuthService  service.AuthService
@@ -116,6 +121,13 @@ func RegisterRoutes(r *gin.Engine, h Handlers) {
 		employeeRoutes.GET("/employees/:id", h.Employee.GetByID)
 		employeeRoutes.PATCH("/employees/:id/password", h.Employee.UpdatePassword)
 		employeeRoutes.PATCH("/employees/:id", h.Employee.Update)
+
+		dashboardRoutes := protected.Group("", handlers.RequireRoles(service.RoleAdmin, service.RoleManager))
+		dashboardRoutes.GET("/dashboard/summary", h.Dashboard.Summary)
+		dashboardRoutes.GET("/dashboard/revenue", h.Dashboard.Revenue)
+		dashboardRoutes.GET("/dashboard/plans", h.Dashboard.PlanDistribution)
+		dashboardRoutes.GET("/dashboard/members/recent", h.Dashboard.RecentMembers)
+		dashboardRoutes.GET("/dashboard/sessions/today", h.Dashboard.TodaySessions)
 
 		memberRoutes := protected.Group("", handlers.RequireRoles(service.RoleAdmin, service.RoleManager, service.RoleReceptionist))
 		memberRoutes.POST("/members", h.Member.Register)

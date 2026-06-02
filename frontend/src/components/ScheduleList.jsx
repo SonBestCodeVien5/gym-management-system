@@ -1,6 +1,6 @@
 function ScheduleList({ sessions }) {
   if (!sessions.length) {
-    return <p className="dashboard-empty">No classes scheduled in this sample.</p>
+    return <p className="dashboard-empty">No classes scheduled for today.</p>
   }
 
   return (
@@ -9,7 +9,7 @@ function ScheduleList({ sessions }) {
         const capacityLabel = `${session.capacity}/${session.maxCapacity}`
 
         return (
-          <article className="schedule-item" key={`${session.time}-${session.name}`}>
+          <article className="schedule-item" key={session.id || `${session.time}-${session.name}`}>
             <time>{session.time}</time>
             <span className={`schedule-dot schedule-dot--${session.tone}`} aria-hidden="true" />
             <div>

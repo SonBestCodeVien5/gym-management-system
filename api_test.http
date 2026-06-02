@@ -71,6 +71,48 @@ Authorization: Bearer {{restricted_access_token}}
 
 ###
 
+# Dashboard summary - admin/manager only
+GET {{baseUrl}}/api/v1/dashboard/summary?branch_id=69f20a180c4cd4cdf57684fe&from=2026-06-01T00:00:00Z&to=2026-06-30T23:59:59Z
+Authorization: Bearer {{access_token}}
+
+###
+
+# Dashboard revenue buckets - admin/manager only
+GET {{baseUrl}}/api/v1/dashboard/revenue?branch_id=69f20a180c4cd4cdf57684fe&from=2026-06-01T00:00:00Z&to=2026-06-30T23:59:59Z&bucket=day
+Authorization: Bearer {{access_token}}
+
+###
+
+# Dashboard plan distribution - admin/manager only
+GET {{baseUrl}}/api/v1/dashboard/plans?branch_id=69f20a180c4cd4cdf57684fe
+Authorization: Bearer {{access_token}}
+
+###
+
+# Dashboard recent members - admin/manager only
+GET {{baseUrl}}/api/v1/dashboard/members/recent?limit=5
+Authorization: Bearer {{access_token}}
+
+###
+
+# Dashboard today's sessions - admin/manager only
+GET {{baseUrl}}/api/v1/dashboard/sessions/today?branch_id=69f20a180c4cd4cdf57684fe&date=2026-06-02T00:00:00Z
+Authorization: Bearer {{access_token}}
+
+###
+
+# Dashboard forbidden role should return 403 for receptionist/trainer token
+GET {{baseUrl}}/api/v1/dashboard/summary
+Authorization: Bearer {{restricted_access_token}}
+
+###
+
+# Dashboard invalid date range should return 400 with error.code = INVALID_DATE
+GET {{baseUrl}}/api/v1/dashboard/summary?from=2026-06-30T00:00:00Z&to=2026-06-01T00:00:00Z
+Authorization: Bearer {{access_token}}
+
+###
+
 # Create employee - admin only
 POST {{baseUrl}}/api/v1/employees
 Content-Type: application/json

@@ -9,14 +9,14 @@ Use this file for short frontend roadmap and completion summaries.
 - [x] FE 02.1 Dashboard Responsive Repair - fix shell/dashboard mobile and tablet layout before FE03
 - [x] FE 03 App Routing And API Foundation - scalable routes, resource API helpers, shared UI states
 - [x] FE 04 Brand Asset Integration - official logo/favicon/color/web assets from `iron-forge-brand-assets`
-- [ ] FE 05 Members - create/search/detail, activate offline payment, member subscriptions
+- [x] FE 05 Members - create/search/detail, activate offline payment, member subscriptions
 - [x] FE 06 Courses And Branches - CRUD settings and selectable reference data for later forms
 - [x] FE 07 Subscriptions - create pending subscription and lifecycle actions
 - [x] FE 08 Attendance - check-in, report missed, makeup, subscription attendance history
 - [x] FE 09 Sessions - session list/calendar, create, enroll, session check-in
 - [x] FE 10 Employees - admin-only staff management and password reset
-- [ ] FE 11 Live Dashboard APIs - replace static dashboard metrics after backend report APIs exist
-- [ ] FE 12 UX/Test Hardening - browser automation, accessibility, mobile/desktop visual checks
+- [ ] FE 11 Live Dashboard APIs - implemented, awaiting frontend review/test completion
+- [ ] FE 12 UX/Test Hardening - limited hardening pass run; full matrix still pending
 
 Roadmap source: `CHAT_CONTEXT/frontend_skills/plans/00_frontend_roadmap.md`.
 
@@ -458,3 +458,100 @@ Completed the post-push FE07/FE09 review-fix cycle and frontend test handoff.
 
 Recommended next action: use `$gym-git` to commit and push the current frontend fix/test/completion
 changes.
+
+## Planned - 2026-06-02 - FE 11 And FE 12 Remaining Frontend Plans
+
+Created the final two frontend roadmap plans:
+
+- FE11 Live Dashboard APIs: `CHAT_CONTEXT/frontend_skills/plans/11_live_dashboard_apis.md`
+- FE12 UX/Test Hardening: `CHAT_CONTEXT/frontend_skills/plans/12_ux_test_hardening.md`
+
+FE11 remains blocked by missing backend dashboard/report aggregate endpoints, so the plan separates
+the suggested backend contract from the frontend wiring target. FE12 is frontend-focused and covers
+browser automation, mocked/live verification, accessibility, and final responsive cleanup across the
+implemented staff console.
+
+Also corrected the roadmap checkbox for FE05 Members to complete, matching the existing
+implementation/review/test notes and the FE05-FE10 mocked browser pass.
+
+Recommended next action: use `$gym-plan` for the backend dashboard/report API contract before FE11,
+or use `$gym-fe-implement` with `CHAT_CONTEXT/frontend_skills/plans/12_ux_test_hardening.md` if the
+frontend should harden now while live dashboard APIs are deferred.
+
+## Implemented - 2026-06-02 - FE 11 Live Dashboard APIs
+
+Implemented the FE11 live dashboard wiring after the backend dashboard/report aggregate API cycle:
+
+- Added `dashboardApi` helpers for summary, revenue, plan distribution, recent members, and today's
+  sessions.
+- Replaced dashboard sample metrics with live API query state and response mapping.
+- Added section-level failure alerts for non-summary dashboard sections.
+- Removed sample wording from dashboard charts, member table, and schedule list.
+- Updated dashboard route metadata to reference the live dashboard endpoints.
+
+`npm run build` passed. Live browser/API smoke was not run in this implementation pass.
+
+Use `$gym-fe-review` with
+`CHAT_CONTEXT/frontend_skills/implementations/11_live_dashboard_apis.md`, or continue to FE12
+hardening with `CHAT_CONTEXT/frontend_skills/plans/12_ux_test_hardening.md`.
+
+## Implemented/Tested - 2026-06-02 - FE 12 UX/Test Hardening Limited Pass
+
+Ran a limited FE12 hardening pass after FE11:
+
+- Removed unused `frontend/src/components/dashboardData.js` after live dashboard wiring made it stale.
+- Rebuilt the frontend successfully.
+- Started Vite on alternate port `5174` after sandbox blocked localhost and `5173` was busy.
+- Used MCP Playwright mocked auth/API to verify desktop live dashboard render, mobile `390x844`
+  no-overflow dashboard render, mobile classes expansion, and receptionist dashboard forbidden state.
+- Confirmed no browser console warning/error messages in the smoke pass.
+
+This is not full FE12 completion: the full route/viewport matrix, live backend browser/API smokes, and
+permanent Playwright automation remain follow-ups.
+
+Use `$gym-fe-review` with `CHAT_CONTEXT/frontend_skills/implementations/11_live_dashboard_apis.md`
+and `CHAT_CONTEXT/frontend_skills/implementations/12_ux_test_hardening.md`.
+
+## Reviewed - 2026-06-02 - FE 11 And FE 12 Limited Pass
+
+Reviewed FE11 live dashboard wiring and the FE12 limited hardening pass.
+
+Findings:
+
+- FE11 medium: recent member table maps backend member `level`/`id` into `Plan`/`Trainer` columns,
+  which labels live data as information the backend does not return.
+- FE11 medium: negative net revenue/refund-only ranges are clamped to zero and can render as "No net
+  revenue recorded."
+- FE11 low: stale-data branch can fall back to full error on a later summary refresh failure because
+  the code checks `status === 'success'` after setting status to `refreshing`.
+
+Verification during review:
+
+- `npm run build` passed.
+- Mocked browser review covered admin live dashboard happy path, mobile `390x844` no-overflow,
+  section-error alert, and receptionist forbidden state.
+- Vite review server was stopped after checks.
+
+Use `$gym-fe-implement` to fix
+`CHAT_CONTEXT/frontend_skills/reviews/11_live_dashboard_apis.md`, then `$gym-fe-test`.
+
+## Implemented Fix - 2026-06-02 - FE 11 Live Dashboard APIs Review Findings
+
+Fixed the FE11 review findings in the dashboard UI:
+
+- Recent members now show only real backend fields: name, level, joined time, and registration
+  status.
+- Revenue bars preserve signed net revenue values and render negative days below a zero baseline
+  instead of collapsing to empty state.
+- Summary refresh failures now keep the last successful snapshot as stale state when prior data
+  already exists.
+
+Verification:
+
+- `npm run build` passed.
+- Mocked Playwright dashboard smoke passed for the live admin dashboard, recent member table labels,
+  and negative revenue rendering.
+- The stale refresh branch was fixed in code, but there is no explicit refresh action in the current
+  UI, so that path was not forced separately in the browser smoke.
+
+Next step: `$gym-fe-test` for a final frontend verification pass.

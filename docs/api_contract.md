@@ -79,6 +79,15 @@ Muc tieu: chot ten endpoint + request/response co ban de FE va BE dung chung.
 | PATCH | /api/v1/employees/:id | Admin cập nhật profile, role, branch, level, email, employee ID, hoặc status. | Implemented |
 | PATCH | /api/v1/employees/:id/password | Admin reset mật khẩu staff account. | Implemented |
 
+### Dashboard
+| Method | Endpoint | Code làm gì | Trạng thái |
+|---|---|---|---|
+| GET | /api/v1/dashboard/summary | KPI tổng quan: active members, net revenue, check-ins hôm nay, classes tuần này. | Implemented |
+| GET | /api/v1/dashboard/revenue | Revenue bucket theo ngày, gồm gross/refund/net. | Implemented |
+| GET | /api/v1/dashboard/plans | Phân bổ gói tập theo course. | Implemented |
+| GET | /api/v1/dashboard/members/recent | Học viên mới tạo gần đây. | Implemented |
+| GET | /api/v1/dashboard/sessions/today | Lịch session trong ngày. | Implemented |
+
 ---
 
 ## Error response
@@ -148,6 +157,7 @@ Role guard matrix:
 | Attendance checkin/report/makeup/history | `admin`, `manager`, `receptionist` |
 | Session create/list/get/enroll/checkin | `admin`, `manager`, `trainer` |
 | Employee management | `admin` |
+| Dashboard/report aggregates | `admin`, `manager` |
 
 Missing, malformed, expired, or inactive-employee access tokens return `401`. Authenticated staff
 without an allowed role returns `403`.
@@ -592,6 +602,195 @@ Notes:
 - Startup creates MongoDB `branches.location` 2dsphere index and unique `branches.branch_code`
   index. Duplicate branch codes return `409`.
 
+### Dashboard summary
+
+`GET /api/v1/dashboard/summary`
+
+Requires `admin` or `manager`.
+
+Query:
+
+| Field | Type | Required | Rule |
+|---|---|---:|---|
+| `branch_id` | ObjectID string | no | Limits branch-scoped subscription, attendance, and session metrics. |
+| `from` | RFC3339 string | no | Range start for revenue/member deltas. Defaults to current month start. |
+| `to` | RFC3339 string | no | Range end. Defaults to server time. Must be after `from`. |
+
+Response `200`:
+
+```json
+{
+  "message": "dashboard summary fetched successfully",
+  "data": {
+    "active_members": 128,
+    "active_members_delta": 12,
+    "monthly_revenue": 142000000,
+    "monthly_revenue_delta": 12000000,
+    "today_checkins": 34,
+    "today_checkins_delta": -4,
+    "classes_this_week": 18,
+    "classes_this_week_delta": 3,
+    "range": {
+      "from": "2026-06-01T00:00:00Z",
+      "to": "2026-06-02T08:00:00Z"
+    }
+  }
+}
+```
+
+### Dashboard revenue
+
+`GET /api/v1/dashboard/revenue`
+
+Requires `admin` or `manager`.
+
+Query:
+
+| Field | Type | Required | Rule |
+|---|---|---:|---|
+| `branch_id` | ObjectID string | no | Limits subscription payments by `home_branch_id`; refunds are matched through their subscription. |
+| `from` | RFC3339 string | no | Defaults to start of the last 7-day window. |
+| `to` | RFC3339 string | no | Defaults to server time. Must be after `from`. |
+| `bucket` | string | no | Only `day` is supported; omitted means `day`. |
+
+Response `200`:
+
+```json
+{
+  "message": "dashboard revenue fetched successfully",
+  "data": {
+    "bucket": "day",
+    "from": "2026-05-27T00:00:00Z",
+    "to": "2026-06-02T08:00:00Z",
+    "items": [
+      {
+        "label": "2026-06-01",
+        "gross_amount": 15000000,
+        "refund_amount": 1000000,
+        "net_amount": 14000000
+      }
+    ]
+  }
+}
+```
+
+Notes:
+
+- Net revenue = paid subscription totals in range minus processed refund totals in range.
+- Date buckets use UTC labels in `YYYY-MM-DD` format.
+
+### Dashboard plan distribution
+
+`GET /api/v1/dashboard/plans`
+
+Requires `admin` or `manager`.
+
+Query:
+
+| Field | Type | Required | Rule |
+|---|---|---:|---|
+| `branch_id` | ObjectID string | no | Limits subscriptions by `home_branch_id`. |
+| `from` | RFC3339 string | no | Optional payment date range start. |
+| `to` | RFC3339 string | no | Optional payment date range end. Must be after `from` when supplied. |
+
+Response `200`:
+
+```json
+{
+  "message": "dashboard plan distribution fetched successfully",
+  "data": {
+    "items": [
+      {
+        "course_id": "69f20a180c4cd4cdf57684fe",
+        "label": "Advanced Strength",
+        "count": 42
+      }
+    ]
+  }
+}
+```
+
+Notes:
+
+- Counts `active`, `suspended`, and `expired` subscriptions.
+- Excludes `pending` and `refunded` subscriptions.
+
+### Dashboard recent members
+
+`GET /api/v1/dashboard/members/recent`
+
+Requires `admin` or `manager`.
+
+Query:
+
+| Field | Type | Required | Rule |
+|---|---|---:|---|
+| `limit` | integer | no | Defaults to `5`, valid range `1..20`. |
+
+Response `200`:
+
+```json
+{
+  "message": "dashboard recent members fetched successfully",
+  "data": {
+    "items": [
+      {
+        "id": "69f20c000c4cd4cdf5768500",
+        "full_name": "Nguyen Minh Khoa",
+        "phone": "0912345678",
+        "level": "advanced",
+        "is_registered": true,
+        "created_at": "2026-06-01T08:00:00Z"
+      }
+    ]
+  }
+}
+```
+
+### Dashboard today's sessions
+
+`GET /api/v1/dashboard/sessions/today`
+
+Requires `admin` or `manager`.
+
+Query:
+
+| Field | Type | Required | Rule |
+|---|---|---:|---|
+| `branch_id` | ObjectID string | no | Limits sessions by branch. |
+| `date` | RFC3339 string | no | Defaults to server date; date portion defines the day window. |
+
+Response `200`:
+
+```json
+{
+  "message": "dashboard today sessions fetched successfully",
+  "data": {
+    "items": [
+      {
+        "id": "69f20c000c4cd4cdf5768500",
+        "branch_id": "69f20a180c4cd4cdf57684fe",
+        "trainer_id": "69f20c000c4cd4cdf5768501",
+        "course_level": "advanced",
+        "scheduled_at": "2026-06-02T09:00:00Z",
+        "duration_min": 60,
+        "capacity": 15,
+        "enrolled_count": 12,
+        "tags": ["strength"]
+      }
+    ]
+  }
+}
+```
+
+Dashboard status codes:
+
+- `200`: success, including zero counts and empty arrays.
+- `400`: invalid ObjectID, invalid RFC3339 date, invalid range, invalid bucket, or invalid limit.
+- `401`: missing or invalid access token.
+- `403`: authenticated staff role is not `admin` or `manager`.
+- `500`: internal server error.
+
 ---
 
 ## Status code mac dinh
@@ -618,4 +817,5 @@ Notes:
 | Branch nearby | `GET /api/v1/branches/nearby` dùng `lng`, `lat`, optional `max_distance`, `limit`; trả thêm `distance_meters`. |
 | Course tags | `allowed_tags` của course là tập tag được phép dùng để ràng buộc session. |
 | Employee management | Admin-only; không hard delete employee, dùng `status=inactive`; password reset/deactivation revoke refresh token active. |
+| Dashboard | Admin/manager-only read API; net revenue = paid subscription totals minus processed refund totals; recent members are not branch-scoped because member documents do not store branch. |
 | Index/data integrity | Startup bootstraps MongoDB indexes centrally. Unique indexes enforce member CCID, branch code, employee email/ID, refresh-token hash, refund subscription, duplicate session check-in, and duplicate makeup reuse. |

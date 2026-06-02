@@ -452,9 +452,9 @@ UX states:
 
 ### FE 11 Live Dashboard APIs
 
-Status: blocked by backend contract.
+Status: implemented, awaiting frontend review/test completion.
 
-Plan file to create after backend planning: `CHAT_CONTEXT/frontend_skills/plans/11_live_dashboard.md`
+Plan file: `CHAT_CONTEXT/frontend_skills/plans/11_live_dashboard_apis.md`
 
 Frontend target:
 
@@ -469,11 +469,12 @@ Frontend target:
   - recent members
   - today's sessions
 
-Backend-contract gap:
+Backend contract:
 
-- Need new backend dashboard/report endpoints. Suggested future API shape:
+- Backend dashboard aggregate endpoints now exist:
   - `GET /api/v1/dashboard/summary`
   - `GET /api/v1/dashboard/revenue`
+  - `GET /api/v1/dashboard/plans`
   - `GET /api/v1/dashboard/members/recent`
   - `GET /api/v1/dashboard/sessions/today`
 
@@ -481,7 +482,7 @@ Backend-contract gap:
 
 Status: planned.
 
-Plan file to create: `CHAT_CONTEXT/frontend_skills/plans/12_ux_test_hardening.md`
+Plan file: `CHAT_CONTEXT/frontend_skills/plans/12_ux_test_hardening.md`
 
 Scope:
 
@@ -595,5 +596,5 @@ When a feature calls backend APIs:
 
 ## Next Action
 
-Use `$gym-fe-implement` with `CHAT_CONTEXT/frontend_skills/plans/02_dashboard_reference.md`, or use
-`$gym-fe-plan` to expand the next chosen roadmap item into its own detailed plan before coding.
+Use `$gym-fe-review` with `CHAT_CONTEXT/frontend_skills/implementations/11_live_dashboard_apis.md`
+and `CHAT_CONTEXT/frontend_skills/implementations/12_ux_test_hardening.md`.
