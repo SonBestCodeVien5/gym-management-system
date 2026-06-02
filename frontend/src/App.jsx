@@ -3,12 +3,27 @@ import AppShell from './components/AppShell.jsx'
 import DashboardHome from './components/DashboardHome.jsx'
 import LoginView from './components/LoginView.jsx'
 import ModulePlaceholder from './components/ModulePlaceholder.jsx'
+import AttendanceHistoryView from './components/attendance/AttendanceHistoryView.jsx'
+import AttendancePage from './components/attendance/AttendancePage.jsx'
+import EmployeeCreateView from './components/employees/EmployeeCreateView.jsx'
+import EmployeeDetailView from './components/employees/EmployeeDetailView.jsx'
+import EmployeesPage from './components/employees/EmployeesPage.jsx'
 import MemberCreateView from './components/members/MemberCreateView.jsx'
 import MemberDetailView from './components/members/MemberDetailView.jsx'
 import MembersPage from './components/members/MembersPage.jsx'
 import RouteGuard from './components/RouteGuard.jsx'
+import BranchDetailView from './components/settings/BranchDetailView.jsx'
+import BranchesPage from './components/settings/BranchesPage.jsx'
+import CourseDetailView from './components/settings/CourseDetailView.jsx'
+import CoursesPage from './components/settings/CoursesPage.jsx'
+import SessionCreateView from './components/sessions/SessionCreateView.jsx'
+import SessionDetailView from './components/sessions/SessionDetailView.jsx'
+import SessionsPage from './components/sessions/SessionsPage.jsx'
 import StatusMessage from './components/StatusMessage.jsx'
 import StateBlock from './components/StateBlock.jsx'
+import SubscriptionCreateView from './components/subscriptions/SubscriptionCreateView.jsx'
+import SubscriptionDetailView from './components/subscriptions/SubscriptionDetailView.jsx'
+import SubscriptionsPage from './components/subscriptions/SubscriptionsPage.jsx'
 import { AuthProvider, useAuth } from './context/AuthContext.jsx'
 import { canAccessRoute } from './lib/permissions.js'
 import { matchRoute, normalizePath } from './routes/matchRoute.js'
@@ -103,6 +118,66 @@ function AppRoutes() {
 
     if (matchedRoute.route.key === 'member-detail') {
       return <MemberDetailView memberId={matchedRoute.params.id} navigate={navigate} />
+    }
+
+    if (matchedRoute.route.key === 'attendance') {
+      return <AttendancePage navigate={navigate} />
+    }
+
+    if (matchedRoute.route.key === 'subscription-attendance') {
+      return <AttendanceHistoryView subscriptionId={matchedRoute.params.id} navigate={navigate} />
+    }
+
+    if (matchedRoute.route.key === 'sessions') {
+      return <SessionsPage navigate={navigate} />
+    }
+
+    if (matchedRoute.route.key === 'session-new') {
+      return <SessionCreateView navigate={navigate} />
+    }
+
+    if (matchedRoute.route.key === 'session-detail') {
+      return <SessionDetailView sessionId={matchedRoute.params.id} navigate={navigate} />
+    }
+
+    if (matchedRoute.route.key === 'subscriptions') {
+      return <SubscriptionsPage navigate={navigate} />
+    }
+
+    if (matchedRoute.route.key === 'subscription-new') {
+      return <SubscriptionCreateView navigate={navigate} />
+    }
+
+    if (matchedRoute.route.key === 'subscription-detail') {
+      return <SubscriptionDetailView subscriptionId={matchedRoute.params.id} navigate={navigate} />
+    }
+
+    if (matchedRoute.route.key === 'employees') {
+      return <EmployeesPage navigate={navigate} />
+    }
+
+    if (matchedRoute.route.key === 'employee-new') {
+      return <EmployeeCreateView navigate={navigate} />
+    }
+
+    if (matchedRoute.route.key === 'employee-detail') {
+      return <EmployeeDetailView employeeId={matchedRoute.params.id} navigate={navigate} />
+    }
+
+    if (matchedRoute.route.key === 'courses') {
+      return <CoursesPage navigate={navigate} />
+    }
+
+    if (matchedRoute.route.key === 'course-detail') {
+      return <CourseDetailView courseId={matchedRoute.params.id} navigate={navigate} />
+    }
+
+    if (matchedRoute.route.key === 'branches') {
+      return <BranchesPage navigate={navigate} />
+    }
+
+    if (matchedRoute.route.key === 'branch-detail') {
+      return <BranchDetailView branchId={matchedRoute.params.id} navigate={navigate} />
     }
 
     return <ModulePlaceholder route={matchedRoute.route} params={matchedRoute.params} />
