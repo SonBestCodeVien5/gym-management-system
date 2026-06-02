@@ -365,3 +365,18 @@ Recommended implementation order remains FE06 first because courses and branches
 reference data for subscription, attendance, and session forms.
 
 Use `$gym-fe-implement` with `CHAT_CONTEXT/frontend_skills/plans/06_courses_branches.md`.
+
+## Implemented - 2026-06-02 - FE 06 To FE 10 Interfaces
+
+Implemented the planned FE06-FE10 interface batch:
+
+- FE06 Courses And Branches settings CRUD and nearby search.
+- FE07 Subscription lookup, create, lifecycle, and refund workspace.
+- FE08 Attendance command center and subscription-scoped history route.
+- FE09 Session list/create/detail, enrollment, and session check-in workspace.
+- FE10 Admin-only employee list/create/detail/update/password reset workspace.
+
+Build passed with `npm run build`.
+
+Use `$gym-fe-review` on `CHAT_CONTEXT/frontend_skills/implementations/06_courses_branches.md`
+through `CHAT_CONTEXT/frontend_skills/implementations/10_employees.md`.
