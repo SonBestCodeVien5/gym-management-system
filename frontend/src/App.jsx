@@ -3,6 +3,9 @@ import AppShell from './components/AppShell.jsx'
 import DashboardHome from './components/DashboardHome.jsx'
 import LoginView from './components/LoginView.jsx'
 import ModulePlaceholder from './components/ModulePlaceholder.jsx'
+import MemberCreateView from './components/members/MemberCreateView.jsx'
+import MemberDetailView from './components/members/MemberDetailView.jsx'
+import MembersPage from './components/members/MembersPage.jsx'
 import RouteGuard from './components/RouteGuard.jsx'
 import StatusMessage from './components/StatusMessage.jsx'
 import StateBlock from './components/StateBlock.jsx'
@@ -88,6 +91,18 @@ function AppRoutes() {
           activeItem={matchedRoute.route.navKey}
         />
       )
+    }
+
+    if (matchedRoute.route.key === 'members') {
+      return <MembersPage navigate={navigate} />
+    }
+
+    if (matchedRoute.route.key === 'member-new') {
+      return <MemberCreateView navigate={navigate} />
+    }
+
+    if (matchedRoute.route.key === 'member-detail') {
+      return <MemberDetailView memberId={matchedRoute.params.id} navigate={navigate} />
     }
 
     return <ModulePlaceholder route={matchedRoute.route} params={matchedRoute.params} />

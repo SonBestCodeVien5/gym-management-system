@@ -282,3 +282,71 @@ FE04 is complete as a frontend-only brand asset cycle.
 
 Recommended next action: use `$gym-git` to review/commit the FE04 changes, or use `$gym-fe-plan` for
 FE06 Courses And Branches / FE05 Members depending on the next frontend priority.
+
+## Planned - 2026-06-01 - FE 05 Members
+
+Created the plan for the first backend-backed member workspace: live member creation, direct
+ObjectID lookup, member detail, member-scoped subscriptions, and offline payment confirmation through
+the existing member activation endpoint.
+
+Plan file: `CHAT_CONTEXT/frontend_skills/plans/05_members.md`.
+
+Important scope decision: the current backend has no `GET /api/v1/members` list/search endpoint, so
+FE05 should not fake a directory. The first implementation should use a direct-ID lookup MVP and
+record member list/search as a backend-contract gap.
+
+Recommended next action: use `$gym-fe-implement` with
+`CHAT_CONTEXT/frontend_skills/plans/05_members.md`.
+
+## Implemented - 2026-06-01 - FE 05 Members
+
+Implemented the live Members workspace: `/app/members` command center with direct ObjectID lookup,
+`/app/members/new` create form, `/app/members/:id` detail view, member-scoped subscriptions, and
+offline payment confirmation through `PATCH /api/v1/members/:id/activate`.
+
+Build passed with `npm run build`. Vite is running on `http://127.0.0.1:5174/` because `5173` was
+already in use. HTTP SPA route smoke returned `200 OK` for the FE05 routes, and mocked browser smoke
+passed for member command center, create, and detail screens.
+
+The backend list/search gap remains explicit: no fake member directory was added because the current
+API has no `GET /api/v1/members` or CCID search endpoint.
+
+Use `$gym-fe-review` with `CHAT_CONTEXT/frontend_skills/implementations/05_members.md`.
+
+## Reviewed - 2026-06-02 - FE 05 Members
+
+Review found two issues:
+
+- Medium: offline-payment success feedback is lost because activation immediately triggers a full
+  detail loading branch that unmounts the payment panel.
+- Low: invalid manual `subscription_id` feedback is unreachable while the confirm button is disabled.
+
+Build passed with `npm run build`. Browser review was not run in this turn because MCP Playwright is
+not available.
+
+Use `$gym-fe-implement` to fix `CHAT_CONTEXT/frontend_skills/reviews/05_members.md`, then
+`$gym-fe-test`.
+
+## Implemented Review Fixes - 2026-06-02 - FE 05 Members
+
+Fixed both FE05 review findings:
+
+- Offline-payment success feedback now lives in `MemberDetailView` and survives the post-activation
+  data refresh.
+- Manual `subscription_id` input now shows field-level invalid ObjectID feedback while the confirm
+  button remains disabled.
+
+Build passed with `npm run build`.
+
+## Tested - 2026-06-02 - FE 05 Members
+
+Build passed and Vite route smoke returned `200 OK` for `/app/members`, `/app/members/new`, and
+`/app/members/:id`. The dev server was started on `127.0.0.1:5173` with escalation after sandbox
+localhost bind failed, then stopped after the route checks.
+
+Browser desktop/mobile interaction checks and live backend member create/get/activation API checks
+were not run because MCP Playwright/browser tooling and backend credentials/session were unavailable
+in this turn.
+
+Not ready for `$gym-fe-complete` until a browser pass verifies activation success feedback,
+invalid-ID feedback, and narrow viewport layout.
