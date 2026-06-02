@@ -52,3 +52,8 @@ npm run build
 - Prevented session create form values from being overwritten by auth employee object refresh; trainer
   ID now defaults only when the field is still empty.
 - Build passed with `npm run build`.
+
+## Post-push review fix - 2026-06-02
+
+- Render a visible refresh-failure alert in the session detail success branch when a background
+  refresh after enroll/check-in succeeds at mutation time but fails to reload detail data.

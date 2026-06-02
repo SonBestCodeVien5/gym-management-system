@@ -39,3 +39,9 @@
 ## Handoff to test
 
 - After fixes, test lifecycle success messages, refund amount display after refresh, invalid direct lookup, reference-list fallback, and create date conversion.
+
+## Post-push review - 2026-06-02
+
+| Severity | File | Issue | Fix |
+|---|---|---|---|
+| low | `frontend/src/components/subscriptions/SubscriptionDetailView.jsx:35` | Background detail refresh errors after lifecycle/refund mutations are stored in `subscriptionState.error`, but the success branch never renders that error. If the mutation succeeds and the follow-up detail fetch fails, staff keep the success notice but see stale subscription data with no visible refresh failure. | Render a small alert in the success branch when `subscriptionState.error` is present, or make background refresh return/throw a refresh error that the child panel can display separately. |

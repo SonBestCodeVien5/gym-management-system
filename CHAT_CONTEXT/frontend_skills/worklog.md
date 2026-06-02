@@ -428,3 +428,33 @@ management.
 Recommended next action: use `$gym-git` to review/commit/push the FE06-FE10 review, fix, test, and
 completion notes. Use `$gym-fe-test` later if a seeded backend/auth session is available for live
 browser/API verification.
+
+## Tested - 2026-06-02 - FE 05 To FE 10 Mocked Browser Pass
+
+Ran a follow-up frontend test pass after the FE07/FE09 post-push refresh-alert fixes.
+
+- Build passed with `npm run build`.
+- Playwright mocked-auth/API interaction verified FE07 subscription suspend success plus visible
+  background refresh-failure alert.
+- Playwright mocked-auth/API interaction verified FE09 session enrollment success plus visible
+  background refresh-failure alert on a `390x844` mobile viewport.
+- Mocked browser route smoke covered FE05, FE06, FE08, and FE10 routes that previously had no browser
+  evidence.
+
+Live backend CRUD/API smokes remain pending until seeded credentials/session data are available.
+
+## Completed - 2026-06-02 - FE 07 And FE 09 Refresh Alert Fixes
+
+Completed the post-push FE07/FE09 review-fix cycle and frontend test handoff.
+
+- FE07 subscription detail now shows a visible stale-data alert when lifecycle/refund mutation
+  succeeds but the background detail refresh fails.
+- FE09 session detail now shows a visible stale-data alert when enroll/check-in mutation succeeds but
+  the background detail refresh fails.
+- `npm run build`, targeted Playwright mocked interaction checks, and broad mocked route smoke are
+  recorded in FE05-FE10 test notes.
+- Backend API behavior did not change, so `docs/api_contract.md` and `api_test.http` did not need
+  edits.
+
+Recommended next action: use `$gym-git` to commit and push the current frontend fix/test/completion
+changes.

@@ -32,7 +32,9 @@ curl -sS -i http://127.0.0.1:5173/app/members
 
 ## Manual UI/API checks
 
-- [ ] Desktop viewport: skipped; MCP Playwright/browser tooling is not available in this turn.
+- [x] Desktop viewport: mocked-auth Playwright route-render smoke opened `/app/members`,
+  `/app/members/new`, and `/app/members/:id`; each resolved to the protected app route instead of
+  `/login`.
 - [ ] Mobile viewport: skipped; MCP Playwright/browser tooling is not available in this turn.
 - [ ] API success path: skipped; no live backend credentials/session were provided for member
   create/get/subscriptions/activation.
@@ -50,6 +52,7 @@ curl -sS -i http://127.0.0.1:5173/app/members
 
 ## Final result
 
-- Result: build and HTTP route smoke passed; browser/API verification remains unrun.
+- Result: build, HTTP route smoke, and mocked-auth desktop browser route smoke passed; live backend
+  member activation verification remains unrun.
 - Ready for `$gym-fe-complete`: no. Run a browser pass for activation success feedback, invalid-ID
   feedback, and narrow viewport layout before completion.

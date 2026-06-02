@@ -51,3 +51,8 @@ npm run build
   success notices and refund amount feedback remain mounted.
 - Connected subscription create validation errors with `aria-invalid` and `aria-describedby`.
 - Build passed with `npm run build`.
+
+## Post-push review fix - 2026-06-02
+
+- Render a visible refresh-failure alert in the subscription detail success branch when a background
+  refresh after lifecycle/refund succeeds at mutation time but fails to reload detail data.

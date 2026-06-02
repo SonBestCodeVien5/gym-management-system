@@ -84,6 +84,12 @@ function SessionDetailView({ sessionId, navigate }) {
         actions={<button className="btn-outline" type="button" onClick={() => navigate('/app/sessions')}>Sessions</button>}
       />
 
+      {sessionState.error ? (
+        <div className="form-alert" role="alert">
+          Detail refresh failed. Showing the last loaded session data. {apiErrorText(sessionState.error)}
+        </div>
+      ) : null}
+
       <DataPanel title="Session summary">
         <dl className="detail-grid">
           <div><dt>Scheduled</dt><dd>{formatDateTime(session.scheduled_at)}</dd></div>

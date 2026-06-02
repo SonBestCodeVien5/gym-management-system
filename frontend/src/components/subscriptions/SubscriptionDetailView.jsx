@@ -84,6 +84,12 @@ function SubscriptionDetailView({ subscriptionId, navigate }) {
         actions={<button className="btn-outline" type="button" onClick={() => navigate('/app/subscriptions')}>Subscriptions</button>}
       />
 
+      {subscriptionState.error ? (
+        <div className="form-alert" role="alert">
+          Detail refresh failed. Showing the last loaded subscription data. {apiErrorText(subscriptionState.error)}
+        </div>
+      ) : null}
+
       <SubscriptionSummaryPanel subscription={subscription} navigate={navigate} />
 
       <div className="module-page__grid">

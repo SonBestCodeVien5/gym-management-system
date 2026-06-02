@@ -39,3 +39,9 @@
 ## Handoff to test
 
 - After fixes, test enroll/check-in success feedback, capacity refresh, filter query params including `branchId`, and create form behavior for trainer and manager/admin roles.
+
+## Post-push review - 2026-06-02
+
+| Severity | File | Issue | Fix |
+|---|---|---|---|
+| low | `frontend/src/components/sessions/SessionDetailView.jsx:40` | Background detail refresh errors after enroll/check-in mutations are stored in `sessionState.error`, but the success branch never renders that error. If the mutation succeeds and the follow-up detail fetch fails, staff keep the success notice but see stale capacity/enrollment data with no visible refresh failure. | Render a small alert in the success branch when `sessionState.error` is present, or make background refresh return/throw a refresh error that the child panel can display separately. |

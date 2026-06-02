@@ -59,10 +59,11 @@ Planned next surfaces:
   login/restore/logout was not re-smoked during FE04 because no credentials or seeded local session
   were available.
 - FE06-FE10 interfaces are implemented, reviewed, review-fixed, build-verified, and completed with
-  explicit skipped live verification notes. The batch covers courses/branches, subscriptions,
-  attendance, sessions, and admin employee management. Protected-route browser and live backend
-  CRUD/API smokes remain pending because no backend/auth session was available; the attempted Vite
-  route check redirected to `/login`.
+  explicit skipped live verification notes. A follow-up mocked browser pass also covered FE05,
+  FE06, FE08, and FE10 route rendering, plus FE07 subscription and FE09 session mutation-success /
+  background-refresh-failure alerts. The batch covers courses/branches, subscriptions, attendance,
+  sessions, and admin employee management. Live backend CRUD/API smokes remain pending because no
+  seeded backend credentials/session data were available.
 - Frontend delivery now has dedicated `$gym-fe-*` skills and `frontend_skills/` memory.
 
 ## Rules Worth Remembering
@@ -101,9 +102,9 @@ Planned next surfaces:
 
 ## Resume Point
 
-FE06-FE10 interface completion notes are current.
+FE07/FE09 refresh-alert fixes and FE05-FE10 mocked browser test notes are current.
 Start from:
 
-1. `$gym-git` to review/commit/push the current FE06-FE10 review, fix, test, and completion changes
+1. `$gym-git` to review/commit/push the current FE07/FE09 fix plus FE05-FE10 test/completion notes
 2. `$gym-fe-test` if a seeded backend/auth session is available for live browser/API smokes
 3. `$gym-fe-plan` for the next frontend cycle after the current tree is committed
