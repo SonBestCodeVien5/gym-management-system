@@ -29,22 +29,21 @@ Hệ thống sử dụng **JWT (JSON Web Token)** stateless với cặp Access T
 
 ### 2. Bảng phân quyền theo Role
 
-| Endpoint | Member | Receptionist | Trainer | Manager |
-|----------|--------|--------------|---------|---------|
-| POST /members | ✗ | ✓ | ✗ | ✓ |
-| POST /subscriptions | ✗ | ✓ | ✗ | ✓ |
-| PATCH /subscriptions/:id/suspend | ✗ | ✓ | ✗ | ✓ |
-| POST /attendance/checkin | ✗ | ✓ | ✗ | ✓ |
-| POST /attendance/report | ✓ | ✓ | ✗ | ✓ |
-| GET /attendance/history | ✓ (bản thân) | ✓ | ✓ | ✓ |
-| GET /subscriptions/:id | ✓ (bản thân) | ✓ | ✗ | ✓ |
-| GET /branches/nearby | ✓ | ✓ | ✓ | ✓ |
-| POST /employees | ✗ | ✗ | ✗ | ✓ |
-| GET /reports/* | ✗ | ✗ | ✗ | ✓ |
+| Endpoint group | Admin | Manager | Receptionist | Trainer |
+|----------|-------|---------|--------------|---------|
+| Member create/get/list-subscriptions/activate | ✓ | ✓ | ✓ | ✗ |
+| Subscription create/get/refund/suspend/unsuspend/expire | ✓ | ✓ | ✓ | ✗ |
+| Attendance check-in/report/makeup/history | ✓ | ✓ | ✓ | ✗ |
+| Session create/list/get/enroll/check-in | ✓ | ✓ | ✗ | ✓ |
+| Course CRUD | ✓ | ✓ | ✗ | ✗ |
+| Branch CRUD/nearby | ✓ | ✓ | ✗ | ✗ |
+| Employee management | ✓ | ✗ | ✗ | ✗ |
+| Dashboard/report aggregates | ✓ | ✓ | ✗ | ✗ |
 
 > **Quy tắc bổ sung:**
 > - Role guard đã implemented.
 > - Branch-scope authorization theo `branchId` là planned/future work.
+> - Member App riêng cho học viên là future work; các endpoint hiện tại dành cho staff portal.
 
 ### 3. Middleware xác thực (Go)
 
@@ -70,6 +69,7 @@ Ghi chu:
 | Method | Endpoint | Mô tả |
 |--------|----------|-------|
 | POST | /api/v1/auth/login | Đăng nhập, trả về Access Token + Refresh Token. (implemented) |
+| GET | /api/v1/auth/me | Lấy thông tin nhân viên hiện tại từ access token. (implemented) |
 | POST | /api/v1/auth/refresh | Rotate refresh token và cấp lại access token. (implemented) |
 | POST | /api/v1/auth/logout | Hủy refresh token. (implemented) |
 
@@ -119,9 +119,11 @@ Ghi chu:
 
 | Method | Endpoint | Mô tả |
 |--------|----------|-------|
-| POST | /api/v1/employees | Tạo hồ sơ nhân viên mới. (planned) |
-| GET | /api/v1/employees/:id | Xem thông tin nhân viên. (planned) |
-| PATCH | /api/v1/employees/:id | Cập nhật vai trò / chi nhánh của nhân viên. (planned) |
+| POST | /api/v1/employees | Admin tạo hồ sơ nhân viên mới. (implemented) |
+| GET | /api/v1/employees | Admin liệt kê nhân viên, có filter role/status/branch. (implemented) |
+| GET | /api/v1/employees/:id | Admin xem thông tin nhân viên. (implemented) |
+| PATCH | /api/v1/employees/:id | Admin cập nhật profile, role, branch, level, email, mã nhân viên hoặc status. (implemented) |
+| PATCH | /api/v1/employees/:id/password | Admin reset mật khẩu nhân viên và revoke refresh token đang hoạt động. (implemented) |
 
 ### Courses
 
@@ -129,9 +131,19 @@ Ghi chu:
 |--------|----------|-------|
 | GET | /api/v1/courses | Danh sách gói tập (có filter theo level). (implemented) |
 | GET | /api/v1/courses/:id | Xem chi tiet goi tap. (implemented) |
-| POST | /api/v1/courses | Tạo gói tập mới (Manager only). (implemented) |
+| POST | /api/v1/courses | Tạo gói tập mới (Admin/Manager). (implemented) |
 | PATCH | /api/v1/courses/:id | Cập nhật gói tập. (implemented) |
 | DELETE | /api/v1/courses/:id | Xoa goi tap. (implemented) |
+
+### Dashboard/Reports
+
+| Method | Endpoint | Mô tả |
+|--------|----------|-------|
+| GET | /api/v1/dashboard/summary | KPI tổng quan: active members, net revenue, check-ins hôm nay, classes tuần này. (implemented MVP) |
+| GET | /api/v1/dashboard/revenue | Revenue bucket theo ngày, gồm gross/refund/net. (implemented MVP) |
+| GET | /api/v1/dashboard/plans | Phân bổ gói tập theo course. (implemented MVP) |
+| GET | /api/v1/dashboard/members/recent | Học viên mới tạo gần đây. (implemented MVP) |
+| GET | /api/v1/dashboard/sessions/today | Lịch session trong ngày. (implemented MVP) |
 
 ---
 
@@ -153,6 +165,8 @@ Field `sessionPerWeek` trong Subscriptions cần được kiểm tra tại mỗi
 ---
 
 ## IV. CRON JOBS - BỔ SUNG ĐẦY ĐỦ
+
+Các job dưới đây là **planned/future work**, chưa có trong implementation hiện tại.
 
 | Job | Lịch chạy | Mô tả |
 |-----|-----------|-------|
@@ -224,5 +238,8 @@ Hệ thống hiện đã có collection `sessions` để quản lý lịch tập
 - **Không tạo 2 thẻ Active cùng lúc:** Planned/future hardening. Trước khi tạo Subscription mới,
   kiểm tra member đã có thẻ nào `status = Active` chưa. Nếu có → yêu cầu kết thúc hoặc hoàn tiền
   thẻ cũ trước.
-- **Refund chỉ do Manager thực hiện:** Endpoint `/refund` yêu cầu role Manager và ghi log lý do.
-- **Audit log:** Các thao tác quan trọng (tạo thẻ, hoàn tiền, bảo lưu) nên ghi vào một collection `AuditLogs` riêng với `{ actorId, action, targetId, timestamp, metadata }` để phục vụ tra cứu khi có tranh chấp.
+- **Refund hiện tại:** Endpoint `/refund` đã implemented cho staff được phân quyền
+  (`admin`, `manager`, `receptionist`) và ghi bản ghi vào collection `refunds`.
+- **Audit log nâng cao:** Future work. Các thao tác quan trọng (tạo thẻ, hoàn tiền, bảo lưu) có thể
+  ghi thêm vào một collection `AuditLogs` riêng với `{ actorId, action, targetId, timestamp,
+  metadata }` để phục vụ tra cứu khi có tranh chấp.
