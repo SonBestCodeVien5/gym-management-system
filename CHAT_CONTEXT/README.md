@@ -25,7 +25,7 @@ Read this file when a new chat needs a short project handoff.
 
 ## Current State
 
-Snapshot date: 2026-06-02.
+Snapshot date: 2026-06-04.
 
 Stack:
 - Go + Gin + MongoDB.
@@ -65,9 +65,9 @@ Planned next surfaces:
   background-refresh-failure alerts. The batch covers courses/branches, subscriptions, attendance,
   sessions, and admin employee management. Live backend CRUD/API smokes remain pending because no
   seeded backend credentials/session data were available.
-- Backend dashboard/report aggregate APIs are implemented and tested. FE11 can now wire the live
-  dashboard against `GET /api/v1/dashboard/summary`, `/revenue`, `/plans`, `/members/recent`, and
-  `/sessions/today`.
+- Backend dashboard/report aggregate APIs are implemented and tested. FE11 live dashboard APIs are
+  implemented, reviewed, tested, and complete against `GET /api/v1/dashboard/summary`,
+  `/revenue`, `/plans`, `/members/recent`, and `/sessions/today`.
 - Frontend delivery now has dedicated `$gym-fe-*` skills and `frontend_skills/` memory.
 
 ## Rules Worth Remembering
@@ -108,10 +108,10 @@ Planned next surfaces:
 
 ## Resume Point
 
-FE07/FE09 refresh-alert fixes and FE05-FE10 mocked browser test notes are current.
+FE11 is complete and FE12 remains the next frontend cycle.
 Start from:
 
-1. `$gym-fe-implement` for FE11 live dashboard APIs using
-   `CHAT_CONTEXT/frontend_skills/plans/11_live_dashboard_apis.md`
-2. `$gym-fe-test` if a seeded backend/auth session is available for live browser/API smokes
+1. `$gym-fe-implement` for FE12 UX/Test Hardening using
+   `CHAT_CONTEXT/frontend_skills/plans/12_ux_test_hardening.md`
+2. `$gym-fe-test` if you want a final FE12 browser/build pass after any further changes
 3. `$gym-git` to review/commit/push the current backend dashboard and frontend planning/test notes

@@ -15,10 +15,25 @@ Use this file for short frontend roadmap and completion summaries.
 - [x] FE 08 Attendance - check-in, report missed, makeup, subscription attendance history
 - [x] FE 09 Sessions - session list/calendar, create, enroll, session check-in
 - [x] FE 10 Employees - admin-only staff management and password reset
-- [ ] FE 11 Live Dashboard APIs - implemented, awaiting frontend review/test completion
+- [x] FE 11 Live Dashboard APIs - completed
 - [ ] FE 12 UX/Test Hardening - limited hardening pass run; full matrix still pending
 
 Roadmap source: `CHAT_CONTEXT/frontend_skills/plans/00_frontend_roadmap.md`.
+
+## Completed - 2026-06-04 - FE 11 Live Dashboard APIs
+
+Build and mocked browser smoke passed for the live dashboard after the FE11 review fixes.
+
+- Desktop dashboard render passed with live KPI cards, negative revenue bars, recent members table
+  using `NAME / LEVEL / JOINED / STATUS`, and today's sessions.
+- Mobile `390x844` viewport passed with no page-level horizontal overflow.
+- Empty state, section error, and receptionist forbidden states all rendered correctly in the mocked
+  dashboard flow.
+- Stale refresh state was fixed in code earlier in the cycle, but there is still no user-visible
+  refresh control to drive that branch directly from the UI.
+
+FE11 is now complete. Use `$gym-fe-test` only if a future regression pass is needed; otherwise move
+to FE12.
 
 ## Planned - 2026-05-29 - FE 00 Frontend Roadmap
 

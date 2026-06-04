@@ -1,6 +1,6 @@
 # FE Plan - 11 Live Dashboard APIs
 
-Status: Implemented, awaiting frontend review/test completion
+Status: Completed
 
 Created: 2026-06-02
 

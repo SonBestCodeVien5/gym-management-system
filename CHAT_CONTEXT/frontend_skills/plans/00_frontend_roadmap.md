@@ -452,7 +452,7 @@ UX states:
 
 ### FE 11 Live Dashboard APIs
 
-Status: implemented, awaiting frontend review/test completion.
+Status: completed.
 
 Plan file: `CHAT_CONTEXT/frontend_skills/plans/11_live_dashboard_apis.md`
 
@@ -596,5 +596,5 @@ When a feature calls backend APIs:
 
 ## Next Action
 
-Use `$gym-fe-review` with `CHAT_CONTEXT/frontend_skills/implementations/11_live_dashboard_apis.md`
-and `CHAT_CONTEXT/frontend_skills/implementations/12_ux_test_hardening.md`.
+Use `$gym-fe-implement` with `CHAT_CONTEXT/frontend_skills/plans/12_ux_test_hardening.md`
+for the next cycle, or `$gym-fe-test` if you need one more verification pass after FE12 changes.
