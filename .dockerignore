@@ -1,0 +1,12 @@
+.git
+.env
+.playwright-mcp
+CHAT_CONTEXT/backend_skills/.scratch
+CHAT_CONTEXT/backend_skills/tmp
+CHAT_CONTEXT/backend_skills/session_*.md
+CHAT_CONTEXT/backend_skills/local_notes.md
+bin
+vendor
+frontend/node_modules
+frontend/dist
+fe-tham-khao

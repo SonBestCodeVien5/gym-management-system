@@ -1,8 +1,11 @@
-# Huong Dan Local Dev - Phase 2
+# Huong Dan Local Dev Va Demo
 
 ## 1. Muc tieu tai lieu
 Tai lieu nay tong hop toan bo quy trinh da lam de ban co the:
+- Chay full stack bang Docker Compose
 - Chay backend Go + MongoDB local
+- Chay frontend React/Vite local
+- Nap demo data bang seed command
 - Test API (`/ping`, auth, members, subscriptions, attendance, sessions)
 - Xem record trong MongoDB nhanh
 - Ket noi MongoDB Compass dung cau hinh
@@ -34,9 +37,53 @@ Luot request subscription:
 HTTP Request -> Subscription Handler -> Subscription Service -> Member/Course/Branch Repo + Subscription Repo -> MongoDB -> JSON Response.
 
 ## 3. Chay he thong local
-### 3.1 Chay MongoDB bang Docker
+### 3.1 Chay full stack bang Docker
 ```bash
+docker compose up -d --build
+```
+
+Neu Docker bao thieu plugin `docker-buildx`, build bang legacy builder truoc:
+
+```bash
+DOCKER_BUILDKIT=0 docker compose build
 docker compose up -d
+```
+
+Nap demo data:
+```bash
+docker compose --profile seed run --rm seed
+```
+
+Neu may thieu `docker-buildx`, dung cung fallback cho seed profile:
+```bash
+DOCKER_BUILDKIT=0 docker compose --profile seed run --rm seed
+```
+
+Mo ung dung:
+- Frontend: `http://localhost:5173`
+- API: `http://localhost:8080/ping`
+- MongoDB: `localhost:27017`
+
+Tai khoan demo:
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@gym.test` | `demo123456` |
+| Manager | `manager@gym.test` | `demo123456` |
+| Receptionist | `receptionist@gym.test` | `demo123456` |
+| Trainer | `trainer@gym.test` | `demo123456` |
+
+Reset Docker database chi khi that su muon xoa data local:
+```bash
+docker compose down -v
+```
+
+Neu MongoDB bao loi featureCompatibilityVersion do volume cu duoc tao boi ban MongoDB moi hon,
+hay dung lenh reset tren chi khi ban dong y xoa database Docker local.
+
+### 3.2 Chay rieng MongoDB bang Docker de dev backend
+```bash
+docker compose up -d mongodb
 ```
 
 Kiem tra container:
@@ -44,10 +91,11 @@ Kiem tra container:
 docker ps --filter name=gym_mongodb --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
 ```
 
-### 3.2 Kiem tra file `.env`
+### 3.3 Kiem tra file `.env`
 Noi dung can dung:
 ```env
 MONGODB_URI=mongodb://admin:password123@127.0.0.1:27017/?authSource=admin&directConnection=true
+DB_NAME=gym_management
 PORT=8080
 CORS_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
 JWT_ACCESS_SECRET=replace-with-a-long-random-access-secret
@@ -57,20 +105,23 @@ JWT_REFRESH_TTL=168h
 BOOTSTRAP_ADMIN_EMPLOYEE_ID=ADMIN001
 BOOTSTRAP_ADMIN_FULL_NAME=Gym Admin
 BOOTSTRAP_ADMIN_EMAIL=admin@gym.test
-BOOTSTRAP_ADMIN_PASSWORD=change-me-before-running
+BOOTSTRAP_ADMIN_PASSWORD=demo123456
 ```
 
 `JWT_ACCESS_SECRET` va `JWT_REFRESH_SECRET` bat buoc phai co. Neu thieu, server se dung loi khi
 khoi tao auth service. `BOOTSTRAP_ADMIN_EMAIL` + `BOOTSTRAP_ADMIN_PASSWORD` tao admin dau tien neu
 email chua ton tai.
 
+`DB_NAME` mac dinh la `gym_management` neu khong khai bao. Nen khai bao ro bien nay khi chay seed,
+Docker, hoac khi muon tach database demo/test/local.
+
 `CORS_ALLOWED_ORIGINS` dung cho browser FE local. Neu chay Vite o `localhost:5173`, giu gia tri mau
 o tren. Neu bien nay rong, backend khong tra CORS header.
 
-### 3.3 Build va run backend
+### 3.4 Build va run backend
 ```bash
 go build ./... && echo "BUILD OK"
-go run cmd/server/main.go
+go run ./cmd/server
 ```
 
 Neu thanh cong, log se co:
@@ -78,12 +129,46 @@ Neu thanh cong, log se co:
 - `MongoDB indexes ensured successfully`
 - `Listening and serving HTTP on :8080`
 
-### 3.4 Route hien co
+### 3.5 Nap demo data local
+Seed command doc `.env`, tao index, va upsert demo data theo ID co dinh nen co the chay lai nhieu
+lan ma khong tao ban ghi trung:
+
+```bash
+go run ./cmd/seed
+```
+
+Seed tao demo employees, branches, courses, members, subscriptions, attendances, sessions va refund
+de dashboard/frontend co du lieu mau.
+
+### 3.6 Chay frontend local
+```bash
+cp frontend/.env.example frontend/.env
+npm --prefix frontend install
+npm --prefix frontend run dev
+```
+
+`frontend/.env` dung:
+
+```env
+VITE_API_BASE_URL=http://localhost:8080
+```
+
+### 3.7 Route hien co
 - `GET /ping`
 - `POST /api/v1/auth/login`
 - `GET /api/v1/auth/me`
 - `POST /api/v1/auth/refresh`
 - `POST /api/v1/auth/logout`
+- `POST /api/v1/employees`
+- `GET /api/v1/employees`
+- `GET /api/v1/employees/:id`
+- `PATCH /api/v1/employees/:id`
+- `PATCH /api/v1/employees/:id/password`
+- `GET /api/v1/dashboard/summary`
+- `GET /api/v1/dashboard/revenue`
+- `GET /api/v1/dashboard/plans`
+- `GET /api/v1/dashboard/members/recent`
+- `GET /api/v1/dashboard/sessions/today`
 - `POST /api/v1/members`
 - `GET /api/v1/members/:id`
 - `GET /api/v1/members/:id/subscriptions`
@@ -135,7 +220,7 @@ Content-Type: application/json
 
 {
   "email": "admin@gym.test",
-  "password": "change-me-before-running"
+  "password": "demo123456"
 }
 ```
 
@@ -154,7 +239,7 @@ Login:
 ```bash
 curl -s -X POST http://localhost:8080/api/v1/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"email":"admin@gym.test","password":"change-me-before-running"}'
+  -d '{"email":"admin@gym.test","password":"demo123456"}'
 ```
 
 Gan token de goi route protected:
@@ -315,3 +400,6 @@ Cach sua:
 10. Da co `internal/app` de dung chung route/dependency wiring cho server va integration tests.
 11. Da co integration tests voi MongoDB test DB rieng cho auth, role guard, subscription,
     duplicate conflict, attendance makeup, va branch nearby.
+12. Da co dashboard/report aggregate APIs cho admin/manager.
+13. Da co frontend React/Vite staff portal ket noi live API.
+14. Da co full-stack Docker Compose va seed demo data command.

@@ -14,6 +14,178 @@ Dùng file này để giữ roadmap và completion summary ngắn cho feature ba
 - [x] Integration tests & fixtures
 - [x] Frontend readiness mini-cycle
 - [x] Dashboard/report aggregate APIs
+- [x] Final project package: seed data, Docker, README, report alignment
+
+---
+
+# Feature - Final project package
+
+## Status
+- Planned: yes
+- Implemented: yes
+- Reviewed: yes
+- Tested: yes
+- Docs updated: yes
+
+## Plan summary - 2026-06-04
+
+### Goal
+Finish the project as a runnable, demonstrable, and report-ready submission package: deterministic
+demo data, full-stack Docker, root README/project overview, local run guidance, and report material
+alignment.
+
+### Key decisions
+- Do not add new public HTTP endpoints in this phase unless implementation finds a small support gap
+  that must be explicitly documented.
+- Add a seed/demo command instead of reusing integration-test fixtures for local data.
+- Make seed data idempotent by stable unique keys and require any destructive reset to be explicit.
+- Add configurable `DB_NAME` support so local, Docker, and seed flows can target the same intended
+  database.
+- Package MongoDB, backend API, and frontend in Docker with documented local placeholder secrets.
+- Reconcile stale report material so employee management and dashboard/report APIs are shown as
+  implemented.
+
+### Next action
+Use `$gym-implement` with `CHAT_CONTEXT/backend_skills/plans/11_final_project_package.md`.
+
+## Implementation summary - 2026-06-04
+
+### Result
+- Added configurable `DB_NAME` support with `gym_management` fallback.
+- Added `cmd/seed` deterministic demo data command and seeded the local `gym_management` database.
+- Added full-stack Docker packaging for MongoDB, API, frontend, and a `seed` compose profile.
+- Rewrote root README as final evaluator quickstart with Docker, seed, demo accounts, local dev,
+  verification commands, and docs/report links.
+- Updated `.env`, `.env.example`, `frontend/.env.example`, local dev docs, docs hub, API samples,
+  report evidence, and a final report assembly draft.
+
+### Verification
+- `env GOCACHE=/tmp/gocache go build ./...` - pass; Go printed the existing read-only module
+  stat-cache warning but exited `0`.
+- `env GOCACHE=/tmp/gocache go test ./...` - pass.
+- `npm --prefix frontend run build` - pass.
+- `docker compose config` - pass.
+- `docker compose --profile seed config` - pass.
+- `env DOCKER_BUILDKIT=0 docker compose build` outside sandbox - pass. Plain `docker compose build`
+  could not run because the local Docker CLI is missing the `docker-buildx` plugin.
+- `env GOCACHE=/tmp/gocache go run ./cmd/seed` outside sandbox - pass and seeded demo data.
+
+### Next action
+Use `$gym-review` with `CHAT_CONTEXT/backend_skills/implementations/11_final_project_package.md`.
+
+## Review summary - 2026-06-04
+
+### Result
+- Review requested fixes before final test/complete.
+- Main finding: seed natural-key upserts can leave relationship records pointing at fixed demo IDs
+  when matching natural-key records already exist with different `_id` values.
+- Additional findings: frontend Docker context needs its own `.dockerignore`, Docker buildx fallback
+  should be documented, and `api_test.http` still contains stale sample IDs.
+
+### Verification
+- `git diff --check` - pass.
+- Build/test/Docker/seed pass evidence remains in the implementation note; review did not rerun the
+  full command matrix.
+
+### Next action
+Use `$gym-implement` to fix findings from
+`CHAT_CONTEXT/backend_skills/reviews/11_final_project_package.md`.
+
+## Review fix implementation - 2026-06-04
+
+### Result
+- Fixed seed relationship safety by capturing actual `_id` values after natural-key upserts and using
+  them for branches, subscriptions, attendances, sessions, and refunds.
+- Added `frontend/.dockerignore` for reproducible frontend Docker context.
+- Documented the `DOCKER_BUILDKIT=0 docker compose build` fallback in README/local dev guide.
+- Replaced stale `api_test.http` ObjectIDs with seeded demo variables and avoided sample employee
+  email conflict with the seeded trainer.
+
+### Verification
+- `env GOCACHE=/tmp/gocache go build ./...` - pass; Go printed the existing read-only module
+  stat-cache warning but exited `0`.
+- `env GOCACHE=/tmp/gocache go test ./...` - pass.
+- `env GOCACHE=/tmp/gocache go run ./cmd/seed` outside sandbox - pass on an already-seeded DB.
+- `npm --prefix frontend run build` - pass.
+- `docker compose config` - pass.
+- `docker compose --profile seed config` - pass.
+- `env DOCKER_BUILDKIT=0 docker compose build` outside sandbox - pass.
+
+### Next action
+Use `$gym-review` with `CHAT_CONTEXT/backend_skills/implementations/11_final_project_package.md`.
+
+## Re-review summary - 2026-06-04
+
+### Result
+- Review passed after the fix pass.
+- Previous high seed relationship finding is resolved by actual-ID capture after natural-key upserts.
+- Previous Docker/docs/API sample findings are resolved by `frontend/.dockerignore`,
+  buildx fallback docs, and seeded demo ID variables in `api_test.http`.
+
+### Verification
+- `git diff --check` - pass.
+- Build/test/Docker/seed pass evidence remains in the implementation note; re-review did not rerun
+  the full command matrix.
+
+### Next action
+Use `$gym-test` with `CHAT_CONTEXT/backend_skills/reviews/11_final_project_package.md`.
+
+## Test summary - 2026-06-04
+
+### Result
+- Final package test pass with one local-volume caveat.
+- Go build/test, frontend build, compose config/profile config, Docker legacy-builder build, clean
+  Compose stack, seed idempotency, protected API smoke, frontend login/dashboard smoke, and DB count
+  checks passed.
+- Default `docker compose up -d` hit an existing local `gym-management-system_mongo_data` volume with
+  Mongo featureCompatibilityVersion `8.2`, which `mongo:7` cannot open. The volume was preserved;
+  clean-volume verification used `docker compose -p gym-final-test ...`.
+
+### Verification
+- `env GOCACHE=/tmp/gocache go build ./...` - pass with existing read-only stat-cache warning.
+- `env GOCACHE=/tmp/gocache go test ./...` - pass.
+- `npm --prefix frontend run build` - pass.
+- `docker compose config` and `docker compose --profile seed config` - pass.
+- `env DOCKER_BUILDKIT=0 docker compose build` - pass.
+- `env DOCKER_BUILDKIT=0 docker compose -p gym-final-test up -d --build` - pass.
+- `env DOCKER_BUILDKIT=0 docker compose -p gym-final-test --profile seed run --rm seed` twice -
+  pass.
+- Manual API/frontend smoke - pass.
+- `git diff --check` - pass.
+
+### Next action
+Use `$gym-complete` with `CHAT_CONTEXT/backend_skills/tests/11_final_project_package.md`.
+
+## Completion - 2026-06-04
+
+### Result
+- Final project package cycle completed.
+- Durable docs, API samples, report material, backend memory, and chat snapshot are aligned with the
+  shipped Docker/seed/README package.
+- No public HTTP contract changed in this phase; `docs/api_contract.md` remains the current API
+  contract.
+
+### Docs updated
+- [x] `README.md`
+- [x] `docs/README.md`
+- [x] `docs/local_dev_guide.md`
+- [x] `docs/report-materials/07_current_implementation_evidence.md`
+- [x] `docs/report-materials/README.md`
+- [x] `docs/report-materials/final_report.md`
+- [x] `api_test.http`
+- [x] `CHAT_CONTEXT/README.md`
+- [x] `CHAT_CONTEXT/backend_skills/worklog.md`
+
+### Remaining risks
+- Existing local Docker volumes created by newer MongoDB versions may need an intentional
+  `docker compose down -v` reset before using the default `mongo:7` service.
+- Frontend Docker API base URL is build-time config.
+- Branch-scope authorization, report export, online payment, notifications, and Member App remain
+  future work.
+
+### Next action
+Use `$gym-git` to inspect the full diff and prepare the final commit, or hand off the project for
+submission review.
 
 ---
 

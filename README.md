@@ -1,181 +1,203 @@
-# gym-management-system
+# Gym Management System
 
-Multi-branch gym system management backend built with Go, Gin, and MongoDB.
+Full-stack multi-branch gym management system built with Go, Gin, MongoDB, and a React/Vite staff
+portal.
 
-## Overview
+The project supports member registration, subscription lifecycle management, offline payment
+activation, attendance and makeup sessions, class sessions, staff authentication, employee
+management, branch/course administration, and management dashboard metrics.
 
-This project follows a simple layered structure:
+## Tech Stack
 
-- `handlers`: HTTP layer (request parsing, response mapping).
-- `service`: business rules and workflow orchestration.
-- `repository`: data access to MongoDB.
-- `models`: domain data models.
+| Layer | Technology |
+|---|---|
+| Backend API | Go, Gin |
+| Database | MongoDB |
+| Frontend | React 18, Vite |
+| Auth | Employee login, access tokens, refresh-token rotation |
+| Packaging | Docker Compose with MongoDB, API, frontend, and seed profile |
 
-HTTP errors use a shared response contract:
-`{"error":{"code":"...","message":"...","details":{}}}`. Success responses keep the existing
-`message`/`data` shape.
+## Architecture
 
-Documentation map: see [docs/README.md](docs/README.md).
+Backend requests follow a layered flow:
 
-Current API contract: see [docs/api_contract.md](docs/api_contract.md).
+```text
+HTTP request
+  -> Gin route
+  -> Handler: parse request and map HTTP responses
+  -> Service: validate business rules and orchestrate workflows
+  -> Repository: read/write MongoDB
+  -> MongoDB
+```
 
-Project continuity for Codex and chat handoff starts at
-[CHAT_CONTEXT/README.md](CHAT_CONTEXT/README.md). Repo-scoped Codex skills live under
-[.codex/skills](.codex/skills); start with `$gym-plan`, `$gym-implement`, `$gym-review`,
-`$gym-test`, `$gym-complete`, `$gym-resume`, `$gym-status`, `$gym-docs`, `$gym-report`, or
-`$gym-git` for focused work. Prompt and phase workflow guide:
-[.codex/GYM_SKILLS_WORKFLOW.md](.codex/GYM_SKILLS_WORKFLOW.md).
+HTTP errors use the shared response contract:
+
+```json
+{"error":{"code":"INVALID_INPUT","message":"invalid request body","details":{}}}
+```
+
+Successful responses keep the existing `message` and `data` shape.
 
 ## Implemented Features
 
-### 1) Member Registration and Offline Activation
+- Auth: login, current employee restore, refresh rotation, logout revoke, role guards.
+- Employees: admin-only create/list/get/update/password reset/deactivate.
+- Members: register, get by ID, activate offline payment, list member subscriptions.
+- Courses: create/list/get/update/delete training packages.
+- Branches: create/list/get/update/delete and nearby search with GeoJSON `2dsphere`.
+- Subscriptions: create pending subscriptions, activate, suspend, unsuspend, expire, refund.
+- Attendance: check-in, report missed sessions, makeup sessions, subscription attendance history.
+- Sessions: create/list/get/enroll/check-in class sessions.
+- Dashboard: summary KPIs, revenue buckets, plan distribution, recent members, today's sessions.
+- Data integrity: central MongoDB index bootstrap for unique, query, partial unique, and TTL indexes.
+- Frontend staff portal: dashboard and operational modules backed by the live API.
+- Demo seed data: deterministic local dataset for demos and evaluator walkthroughs.
 
-- `POST /api/v1/members`
-- `GET /api/v1/members/:id`
-- `GET /api/v1/members/:id/subscriptions`
-- `PATCH /api/v1/members/:id/activate`
+## Quickstart With Docker
 
-`activate` requires body `subscription_id` and performs:
-
-1. Confirm subscription payment (`pending -> active`, set `payment_date`).
-2. Mark member as registered (`is_registered = true`).
-
-### 2) Subscription Management
-
-- `POST /api/v1/subscriptions`
-- `GET /api/v1/subscriptions/:id`
-- `PATCH /api/v1/subscriptions/:id/suspend`
-- `PATCH /api/v1/subscriptions/:id/unsuspend`
-- `PATCH /api/v1/subscriptions/:id/expire`
-- `POST /api/v1/subscriptions/:id/refund`
-
-Behavior:
-
-- New subscription starts with `status = pending`.
-- Offline payment confirmation is tied to member activate flow.
-- Suspension stores details in `suspension` field and sets `status = suspended`.
-
-### 3) Course CRUD
-
-- `POST /api/v1/courses`
-- `GET /api/v1/courses`
-- `GET /api/v1/courses/:id`
-- `PATCH /api/v1/courses/:id`
-- `DELETE /api/v1/courses/:id`
-
-### 4) Branch CRUD
-
-- `POST /api/v1/branches`
-- `GET /api/v1/branches`
-- `GET /api/v1/branches/:id`
-- `GET /api/v1/branches/nearby`
-- `PATCH /api/v1/branches/:id`
-- `DELETE /api/v1/branches/:id`
-
-### 5) Attendance
-
-- `POST /api/v1/attendance/checkin`
-- `POST /api/v1/attendance/report`
-- `POST /api/v1/attendance/makeup`
-- `GET /api/v1/subscriptions/:id/attendance`
-
-Check-in effects (for `attended` or `makeup` status):
-
-1. Create attendance record.
-2. Decrease `remaining_sessions` of subscription.
-3. Increase `total_sessions_attended` of member.
-4. Auto-expire subscription if remaining sessions reach 0.
-
-### 6) Sessions
-
-- `POST /api/v1/sessions`
-- `GET /api/v1/sessions`
-- `GET /api/v1/sessions/:id`
-- `POST /api/v1/sessions/:id/enroll`
-- `POST /api/v1/sessions/:id/checkin`
-
-### 7) Auth and Role Guard
-
-- `POST /api/v1/auth/login`
-- `GET /api/v1/auth/me`
-- `POST /api/v1/auth/refresh`
-- `POST /api/v1/auth/logout`
-
-Behavior:
-
-- Protected routes under `/api/v1/*` require `Authorization: Bearer <access_token>`.
-- `/api/v1/auth/me` returns the current active employee from the access token, using the same
-  compact employee shape as login.
-- Access tokens are short-lived; refresh tokens are rotated and stored only as hashes.
-- Role guard currently protects member, subscription, course, branch, attendance, and session routes.
-- First admin can be bootstrapped from `BOOTSTRAP_ADMIN_*` environment variables.
-- Browser FE dev can enable allow-list CORS with `CORS_ALLOWED_ORIGINS`.
-
-### 8) Employee Management
-
-- `POST /api/v1/employees`
-- `GET /api/v1/employees`
-- `GET /api/v1/employees/:id`
-- `PATCH /api/v1/employees/:id`
-- `PATCH /api/v1/employees/:id/password`
-
-Behavior:
-
-- Employee management routes are admin-only.
-- Staff passwords are stored only as bcrypt hashes.
-- Responses never expose `password_hash` or `normalized_email`.
-- Password reset and employee deactivation revoke active refresh tokens.
-- Offboarding uses `status = inactive`; no hard delete endpoint is exposed.
-
-### 9) Error Response Consistency
-
-- All backend error responses use stable `error.code` values such as `INVALID_INPUT`,
-  `INVALID_ID`, `INVALID_DATE`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, and
-  `INTERNAL_ERROR`.
-- Invalid request bodies are sanitized and no longer return raw Gin binding errors.
-- The shared error helper lives in `internal/handlers/response.go`.
-
-### 10) Indexes and Data Integrity
-
-- Startup runs central MongoDB index bootstrap through `pkg/database.EnsureIndexes`.
-- Unique indexes enforce member CCID, branch code, employee email/ID, refresh-token hash, refund
-  subscription, duplicate session check-in, and duplicate makeup reuse.
-- Query and TTL indexes support current subscription, attendance, session, employee, refund, and
-  refresh-token flows.
-
-### 11) Frontend Readiness
-
-- Explicit allow-list CORS support through `CORS_ALLOWED_ORIGINS`.
-- Global preflight handling before auth guards, so browser `OPTIONS` requests work without bearer
-  tokens.
-- `GET /api/v1/auth/me` lets FE restore current staff context after reload or token refresh.
-
-### 12) Integration Tests and Fixtures
-
-- `internal/app` builds the real router/dependency graph for both `cmd/server` and integration
-  tests.
-- `internal/testutil` creates isolated MongoDB test databases, bootstraps indexes, logs in fixture
-  users, and sends JSON HTTP requests through `httptest`.
-- `internal/integration` covers auth/role guard, subscription activation, duplicate conflicts,
-  attendance makeup reuse, and branch nearby behavior.
-
-## Run Locally
-
-1. Set environment variables from `.env.example`, especially `MONGODB_URI`,
-   `JWT_ACCESS_SECRET`, and `JWT_REFRESH_SECRET`.
-2. Run server:
+Run the full stack:
 
 ```bash
-go run cmd/server/main.go
+docker compose up -d --build
 ```
 
-3. Login with the bootstrap admin, paste the returned tokens into `api_test.http`, then run the
-   protected API samples.
-
-Run tests:
+If Docker reports a missing `docker-buildx` plugin on this machine, build with the legacy builder
+first:
 
 ```bash
-go test ./...
+DOCKER_BUILDKIT=0 docker compose build
+docker compose up -d
 ```
 
-Integration tests use local MongoDB when reachable and skip cleanly when it is not running.
+Load deterministic demo data:
+
+```bash
+docker compose --profile seed run --rm seed
+```
+
+On a machine missing `docker-buildx`, use the same legacy-builder prefix for the seed profile:
+
+```bash
+DOCKER_BUILDKIT=0 docker compose --profile seed run --rm seed
+```
+
+Open:
+
+- Frontend: `http://localhost:5173`
+- API health: `http://localhost:8080/ping`
+- MongoDB: `localhost:27017`
+
+Demo accounts:
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@gym.test` | `demo123456` |
+| Manager | `manager@gym.test` | `demo123456` |
+| Receptionist | `receptionist@gym.test` | `demo123456` |
+| Trainer | `trainer@gym.test` | `demo123456` |
+
+Stop the stack:
+
+```bash
+docker compose down
+```
+
+Reset local Docker data only when you intentionally want a fresh database:
+
+```bash
+docker compose down -v
+```
+
+Use that reset path if MongoDB refuses to start because an old local Docker volume was created by a
+newer MongoDB feature compatibility version.
+
+## Local Development
+
+Copy or adjust environment files:
+
+```bash
+cp .env.example .env
+cp frontend/.env.example frontend/.env
+```
+
+Start MongoDB:
+
+```bash
+docker compose up -d mongodb
+```
+
+Run the backend:
+
+```bash
+go run ./cmd/server
+```
+
+Seed demo data into the configured `DB_NAME`:
+
+```bash
+go run ./cmd/seed
+```
+
+Run the frontend:
+
+```bash
+npm --prefix frontend install
+npm --prefix frontend run dev
+```
+
+The frontend reads `VITE_API_BASE_URL`; by default it points at `http://localhost:8080`.
+
+## Configuration
+
+Important backend environment variables:
+
+| Variable | Purpose |
+|---|---|
+| `MONGODB_URI` | MongoDB connection string |
+| `DB_NAME` | Application database name, defaults to `gym_management` |
+| `PORT` | Backend API port, defaults to `8080` |
+| `CORS_ALLOWED_ORIGINS` | Comma-separated browser origins for local FE dev |
+| `JWT_ACCESS_SECRET` | Access-token signing secret |
+| `JWT_REFRESH_SECRET` | Refresh-token signing secret |
+| `BOOTSTRAP_ADMIN_*` | Optional first admin account created on startup |
+
+The example secrets and demo passwords are local-development placeholders.
+
+## Verification
+
+Backend:
+
+```bash
+env GOCACHE=/tmp/gocache go build ./...
+env GOCACHE=/tmp/gocache go test ./...
+```
+
+Frontend:
+
+```bash
+npm --prefix frontend run build
+```
+
+Docker:
+
+```bash
+docker compose config
+docker compose build
+```
+
+Use `DOCKER_BUILDKIT=0 docker compose build` on machines without the `docker-buildx` plugin.
+
+Integration tests use isolated `gym_test_*` MongoDB databases and skip cleanly when MongoDB is not
+reachable.
+
+## Documentation
+
+- Documentation hub: [docs/README.md](docs/README.md)
+- API contract: [docs/api_contract.md](docs/api_contract.md)
+- Local development guide: [docs/local_dev_guide.md](docs/local_dev_guide.md)
+- Code reading guide: [docs/code_reading_guide.md](docs/code_reading_guide.md)
+- Architecture rationale: [docs/faq_why.md](docs/faq_why.md)
+- Formal report source material: [docs/report-materials/README.md](docs/report-materials/README.md)
+- Current implementation evidence: [docs/report-materials/07_current_implementation_evidence.md](docs/report-materials/07_current_implementation_evidence.md)
+
+Project continuity for Codex/chat handoff starts at [CHAT_CONTEXT/README.md](CHAT_CONTEXT/README.md).

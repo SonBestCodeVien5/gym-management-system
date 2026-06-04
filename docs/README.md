@@ -6,6 +6,7 @@ This folder is the durable documentation surface for the project.
 
 | Need | Start here | Notes |
 |---|---|---|
+| Final project quickstart | [../README.md](../README.md) | Full-stack overview, Docker run, seed data, demo accounts, verification commands. |
 | Current API behavior | [api_contract.md](api_contract.md) | Reconcile with handlers, services, routes, and `api_test.http` before changing API docs. |
 | Local development | [local_dev_guide.md](local_dev_guide.md) | Run and debug the Go + MongoDB backend locally. |
 | Code navigation | [code_reading_guide.md](code_reading_guide.md) | Read the backend by feature flow and layer. |
@@ -13,6 +14,7 @@ This folder is the durable documentation surface for the project.
 | Development history | [development_journal.md](development_journal.md) | Timeline, issues, and learning notes. |
 | System analysis/report guide | [system_analysis_design_guide.md](system_analysis_design_guide.md) | Guidance for assembling the formal report. |
 | Report source material | [report-materials/README.md](report-materials/README.md) | Requirement, design, UI, rollout, and conclusion drafts. |
+| Final report draft | [report-materials/final_report.md](report-materials/final_report.md) | Report-ready assembly from current implementation evidence. |
 
 ## Boundaries
 

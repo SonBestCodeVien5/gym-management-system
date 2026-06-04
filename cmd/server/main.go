@@ -35,7 +35,7 @@ func main() {
 	// Close DB connection on shutdown.
 	defer dbClient.Disconnect(context.Background())
 
-	db := dbClient.Database("gym_management")
+	db := dbClient.Database(databaseNameFromEnv())
 	indexCtx, indexCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer indexCancel()
 	if err := database.EnsureIndexes(indexCtx, db); err != nil {
@@ -108,4 +108,12 @@ func csvFromEnv(key string) []string {
 		}
 	}
 	return values
+}
+
+func databaseNameFromEnv() string {
+	dbName := strings.TrimSpace(os.Getenv("DB_NAME"))
+	if dbName == "" {
+		return "gym_management"
+	}
+	return dbName
 }

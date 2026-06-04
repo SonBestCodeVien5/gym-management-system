@@ -3,6 +3,17 @@
 @refresh_token = paste_refresh_token_here
 @restricted_access_token = paste_receptionist_or_trainer_access_token_here
 
+# Deterministic IDs for a fresh database seeded by `go run ./cmd/seed`.
+# If your DB already had matching demo records with different IDs, use list/get endpoints to refresh
+# these values.
+@demo_trainer_employee_id = 665000000000000000000004
+@demo_branch_central_id = 665000000000000000000101
+@demo_course_basic_id = 665000000000000000000201
+@demo_member_active_id = 665000000000000000000301
+@demo_member_pending_id = 665000000000000000000303
+@demo_subscription_active_id = 665000000000000000000401
+@demo_subscription_pending_id = 665000000000000000000403
+
 # Health check
 GET {{baseUrl}}/ping
 
@@ -14,7 +25,7 @@ Content-Type: application/json
 
 {
   "email": "admin@gym.test",
-  "password": "change-me-before-running"
+  "password": "demo123456"
 }
 
 ###
@@ -72,19 +83,19 @@ Authorization: Bearer {{restricted_access_token}}
 ###
 
 # Dashboard summary - admin/manager only
-GET {{baseUrl}}/api/v1/dashboard/summary?branch_id=69f20a180c4cd4cdf57684fe&from=2026-06-01T00:00:00Z&to=2026-06-30T23:59:59Z
+GET {{baseUrl}}/api/v1/dashboard/summary?branch_id={{demo_branch_central_id}}&from=2026-06-01T00:00:00Z&to=2026-06-30T23:59:59Z
 Authorization: Bearer {{access_token}}
 
 ###
 
 # Dashboard revenue buckets - admin/manager only
-GET {{baseUrl}}/api/v1/dashboard/revenue?branch_id=69f20a180c4cd4cdf57684fe&from=2026-06-01T00:00:00Z&to=2026-06-30T23:59:59Z&bucket=day
+GET {{baseUrl}}/api/v1/dashboard/revenue?branch_id={{demo_branch_central_id}}&from=2026-06-01T00:00:00Z&to=2026-06-30T23:59:59Z&bucket=day
 Authorization: Bearer {{access_token}}
 
 ###
 
 # Dashboard plan distribution - admin/manager only
-GET {{baseUrl}}/api/v1/dashboard/plans?branch_id=69f20a180c4cd4cdf57684fe
+GET {{baseUrl}}/api/v1/dashboard/plans?branch_id={{demo_branch_central_id}}
 Authorization: Bearer {{access_token}}
 
 ###
@@ -96,7 +107,7 @@ Authorization: Bearer {{access_token}}
 ###
 
 # Dashboard today's sessions - admin/manager only
-GET {{baseUrl}}/api/v1/dashboard/sessions/today?branch_id=69f20a180c4cd4cdf57684fe&date=2026-06-02T00:00:00Z
+GET {{baseUrl}}/api/v1/dashboard/sessions/today?branch_id={{demo_branch_central_id}}&date=2026-06-04T00:00:00Z
 Authorization: Bearer {{access_token}}
 
 ###
@@ -119,33 +130,33 @@ Content-Type: application/json
 Authorization: Bearer {{access_token}}
 
 {
-  "employee_id": "EMP001",
-  "full_name": "Tran Van Trainer",
-  "email": "trainer@gym.test",
+  "employee_id": "EMP-SAMPLE-001",
+  "full_name": "Sample Trainer",
+  "email": "sample.trainer@gym.test",
   "password": "strong-password-123",
   "role": ["trainer"],
   "level": "advanced",
   "phone": "0900000002",
-  "branch_id": ["69f20a180c4cd4cdf57684fe"],
+  "branch_id": ["{{demo_branch_central_id}}"],
   "status": "active"
 }
 
 ###
 
 # List employees
-GET {{baseUrl}}/api/v1/employees?role=trainer&status=active&branch_id=69f20a180c4cd4cdf57684fe
+GET {{baseUrl}}/api/v1/employees?role=trainer&status=active&branch_id={{demo_branch_central_id}}
 Authorization: Bearer {{access_token}}
 
 ###
 
 # Get employee by ID
-GET {{baseUrl}}/api/v1/employees/69f20c000c4cd4cdf5768500
+GET {{baseUrl}}/api/v1/employees/{{demo_trainer_employee_id}}
 Authorization: Bearer {{access_token}}
 
 ###
 
 # Update employee
-PATCH {{baseUrl}}/api/v1/employees/69f20c000c4cd4cdf5768500
+PATCH {{baseUrl}}/api/v1/employees/{{demo_trainer_employee_id}}
 Content-Type: application/json
 Authorization: Bearer {{access_token}}
 
@@ -159,7 +170,7 @@ Authorization: Bearer {{access_token}}
 ###
 
 # Reset employee password
-PATCH {{baseUrl}}/api/v1/employees/69f20c000c4cd4cdf5768500/password
+PATCH {{baseUrl}}/api/v1/employees/{{demo_trainer_employee_id}}/password
 Content-Type: application/json
 Authorization: Bearer {{access_token}}
 
@@ -174,7 +185,7 @@ POST {{baseUrl}}/api/v1/auth/login
 Content-Type: application/json
 
 {
-  "email": "trainer@gym.test",
+  "email": "sample.trainer@gym.test",
   "password": "new-strong-password-123"
 }
 
@@ -235,22 +246,22 @@ Authorization: Bearer {{access_token}}
 
 ###
 # Get member by ID
-GET {{baseUrl}}/api/v1/members/69e100da9359b4be784078df
+GET {{baseUrl}}/api/v1/members/{{demo_member_active_id}}
 Authorization: Bearer {{access_token}}
 
 ###
 # List subscriptions by member ID
-GET {{baseUrl}}/api/v1/members/69dfa3af8f14bfa54ed2509d/subscriptions
+GET {{baseUrl}}/api/v1/members/{{demo_member_pending_id}}/subscriptions
 Authorization: Bearer {{access_token}}
 
 ###
 # Activate member after offline payment confirmation
-PATCH {{baseUrl}}/api/v1/members/69dfa3af8f14bfa54ed2509d/activate
+PATCH {{baseUrl}}/api/v1/members/{{demo_member_pending_id}}/activate
 Content-Type: application/json
 Authorization: Bearer {{access_token}}
 
 {
-  "subscription_id": "69f20b22f79bb78cac99aa0a"
+  "subscription_id": "{{demo_subscription_pending_id}}"
 }
 
 ###
@@ -260,9 +271,9 @@ Content-Type: application/json
 Authorization: Bearer {{access_token}}
 
 {
-  "member_id": "69dfa3af8f14bfa54ed2509d",
-  "course_id": "69f20a180c4cd4cdf57684fd",
-  "home_branch_id": "69f20a180c4cd4cdf57684fe",
+  "member_id": "{{demo_member_pending_id}}",
+  "course_id": "{{demo_course_basic_id}}",
+  "home_branch_id": "{{demo_branch_central_id}}",
   "start_date": "2026-04-28T10:00:00Z",
   "end_date": "2026-05-28T10:00:00Z",
   "session_per_week": 3,
@@ -273,12 +284,12 @@ Authorization: Bearer {{access_token}}
 
 ###
 # Get subscription by ID
-GET {{baseUrl}}/api/v1/subscriptions/69f20b22f79bb78cac99aa0a
+GET {{baseUrl}}/api/v1/subscriptions/{{demo_subscription_active_id}}
 Authorization: Bearer {{access_token}}
 
 ###
 # Suspend subscription
-PATCH {{baseUrl}}/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/suspend
+PATCH {{baseUrl}}/api/v1/subscriptions/{{demo_subscription_active_id}}/suspend
 Content-Type: application/json
 Authorization: Bearer {{access_token}}
 
@@ -292,7 +303,7 @@ Authorization: Bearer {{access_token}}
 ###
 
 # Invalid subscription date should return 400 with error.code = INVALID_DATE
-PATCH {{baseUrl}}/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/suspend
+PATCH {{baseUrl}}/api/v1/subscriptions/{{demo_subscription_active_id}}/suspend
 Content-Type: application/json
 Authorization: Bearer {{access_token}}
 
@@ -306,17 +317,17 @@ Authorization: Bearer {{access_token}}
 ###
 
 # Resume subscription
-PATCH {{baseUrl}}/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/unsuspend
+PATCH {{baseUrl}}/api/v1/subscriptions/{{demo_subscription_active_id}}/unsuspend
 Authorization: Bearer {{access_token}}
 
 ###
 # Expire subscription manually
-PATCH {{baseUrl}}/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/expire
+PATCH {{baseUrl}}/api/v1/subscriptions/{{demo_subscription_active_id}}/expire
 Authorization: Bearer {{access_token}}
 
 ###
 # Refund subscription
-POST {{baseUrl}}/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/refund
+POST {{baseUrl}}/api/v1/subscriptions/{{demo_subscription_active_id}}/refund
 Content-Type: application/json
 Authorization: Bearer {{access_token}}
 
@@ -345,12 +356,12 @@ Authorization: Bearer {{access_token}}
 
 ###
 # Get course by ID
-GET {{baseUrl}}/api/v1/courses/69f20a180c4cd4cdf57684fd
+GET {{baseUrl}}/api/v1/courses/{{demo_course_basic_id}}
 Authorization: Bearer {{access_token}}
 
 ###
 # Update course
-PATCH {{baseUrl}}/api/v1/courses/69f20a180c4cd4cdf57684fd
+PATCH {{baseUrl}}/api/v1/courses/{{demo_course_basic_id}}
 Content-Type: application/json
 Authorization: Bearer {{access_token}}
 
@@ -364,7 +375,7 @@ Authorization: Bearer {{access_token}}
 
 ###
 # Delete course
-DELETE {{baseUrl}}/api/v1/courses/69f20a180c4cd4cdf57684fd
+DELETE {{baseUrl}}/api/v1/courses/{{demo_course_basic_id}}
 Authorization: Bearer {{access_token}}
 
 ###
@@ -407,12 +418,12 @@ Authorization: Bearer {{access_token}}
 
 ###
 # Get branch by ID
-GET {{baseUrl}}/api/v1/branches/69f20a180c4cd4cdf57684fe
+GET {{baseUrl}}/api/v1/branches/{{demo_branch_central_id}}
 Authorization: Bearer {{access_token}}
 
 ###
 # Update branch
-PATCH {{baseUrl}}/api/v1/branches/69f20a180c4cd4cdf57684fe
+PATCH {{baseUrl}}/api/v1/branches/{{demo_branch_central_id}}
 Content-Type: application/json
 Authorization: Bearer {{access_token}}
 
@@ -449,7 +460,7 @@ Authorization: Bearer {{access_token}}
 ###
 
 # Delete branch
-DELETE {{baseUrl}}/api/v1/branches/69f20a180c4cd4cdf57684fe
+DELETE {{baseUrl}}/api/v1/branches/{{demo_branch_central_id}}
 Authorization: Bearer {{access_token}}
 
 ###
@@ -459,8 +470,8 @@ Content-Type: application/json
 Authorization: Bearer {{access_token}}
 
 {
-  "subscription_id": "69f20b22f79bb78cac99aa0a",
-  "branch_id": "69f20a180c4cd4cdf57684fe",
+  "subscription_id": "{{demo_subscription_active_id}}",
+  "branch_id": "{{demo_branch_central_id}}",
   "date": "2026-05-10T08:00:00Z",
   "status": "attended"
 }
@@ -472,8 +483,8 @@ Content-Type: application/json
 Authorization: Bearer {{access_token}}
 
 {
-  "subscription_id": "69f20b22f79bb78cac99aa0a",
-  "branch_id": "69f20a180c4cd4cdf57684fe",
+  "subscription_id": "{{demo_subscription_active_id}}",
+  "branch_id": "{{demo_branch_central_id}}",
   "date": "2026-05-12T08:00:00Z"
 }
 
@@ -484,13 +495,13 @@ Content-Type: application/json
 Authorization: Bearer {{access_token}}
 
 {
-  "subscription_id": "69f20b22f79bb78cac99aa0a",
-  "branch_id": "69f20a180c4cd4cdf57684fe",
+  "subscription_id": "{{demo_subscription_active_id}}",
+  "branch_id": "{{demo_branch_central_id}}",
   "date": "2026-05-14T08:00:00Z",
   "is_makeup_for": "2026-05-12T08:00:00Z"
 }
 
 ###
 # List attendance by subscription
-GET {{baseUrl}}/api/v1/subscriptions/69f20b22f79bb78cac99aa0a/attendance
+GET {{baseUrl}}/api/v1/subscriptions/{{demo_subscription_active_id}}/attendance
 Authorization: Bearer {{access_token}}

@@ -31,14 +31,18 @@ Phien ban hien tai da hoan thanh cac nhom chuc nang backend chinh:
 - Diem danh, bao nghi va tap bu.
 - Lich lop/session: tao, liet ke, xem chi tiet, dang ky, check-in theo session.
 - Dang nhap nhan vien, refresh/logout token, middleware xac thuc va role guard.
+- Quan ly nhan vien admin-only: tao, liet ke, xem chi tiet, cap nhat, reset password/deactivate.
+- Dashboard/report aggregates cho admin/manager: summary KPI, revenue, plan distribution, recent
+  members, today sessions.
+- Frontend Staff Portal MVP bang React/Vite tich hop live API.
+- Docker Compose full-stack va seed demo data phuc vu demo/cham bai.
 
 Nhung phan van la dinh huong:
 
-- Employee management endpoints de tao/sua/xem nhan vien.
 - Branch-scope authorization theo tung chi nhanh.
 - Cron jobs va thong bao tu dong.
-- Frontend Staff Portal/Member App.
-- Bao cao/thong ke quan tri nang cao.
+- Member App rieng cho hoc vien.
+- Report export PDF/CSV va thong ke tai chinh nang cao.
 - Thanh toan online, face recognition, audit log day du.
 
 ---
@@ -54,8 +58,10 @@ Nhung phan van la dinh huong:
 | Attendance | Check-in, report missed, makeup, history by subscription | Implemented |
 | Sessions | Create/list/get/enroll/check-in using existing attendance rules | Implemented |
 | Auth | Employee login, access token, refresh token rotation, logout revoke, role guard | Implemented |
-| Employees | Employee model and bootstrap admin for auth | Partial; CRUD management endpoints planned |
-| Reports/dashboard | Not implemented as backend endpoints | Planned |
+| Employees | Admin-only create/list/get/update/password reset/deactivate | Implemented |
+| Reports/dashboard | Summary KPIs, revenue buckets, plan distribution, recent members, today sessions | Implemented as MVP |
+| Frontend | React/Vite staff portal consuming live backend APIs | Implemented as MVP |
+| Demo/package | Docker Compose full stack and deterministic seed command | Implemented as MVP |
 | Cron/notifications | Not implemented | Planned |
 
 ---
@@ -75,8 +81,10 @@ Nhung phan van la dinh huong:
 | FR-09 | Tim chi nhanh gan nhat | `GET /api/v1/branches/nearby` | `branches.location` GeoJSON + `2dsphere` index | Manual API phase evidence | Implemented |
 | FR-10 | Lich lop/session | `/api/v1/sessions*` endpoints | `sessions`, enrolled subscription IDs | Build/test + API samples | Implemented |
 | FR-11 | Dang nhap va phan quyen | `/api/v1/auth/login`, `/refresh`, `/logout`; protected business routes | `employees`, `refresh_tokens` | Unit tests, middleware tests, manual API + DB verification | Implemented |
-| FR-12 | Quan ly nhan vien | Planned employee CRUD endpoints | `employees` model exists | Not tested as feature | Planned |
-| FR-13 | Bao cao/thong ke | Planned dashboard/report endpoints | Aggregations not implemented | Not tested | Planned |
+| FR-12 | Quan ly nhan vien | `/api/v1/employees*` admin-only endpoints | `employees`, `refresh_tokens` revoke on reset/deactivate | Unit/service/integration and build evidence in phase notes | Implemented |
+| FR-13 | Bao cao/thong ke | `/api/v1/dashboard/*` admin/manager endpoints | Aggregates from members/subscriptions/refunds/attendance/sessions | Build/test and dashboard phase evidence | Implemented as MVP |
+| FR-14 | Frontend staff portal | React/Vite routes under `frontend/src` | Live API integration through bearer tokens | Frontend build/browser smoke phase evidence | Implemented as MVP |
+| FR-15 | Demo/packaging | Docker Compose and `cmd/seed` | Deterministic demo records in MongoDB | Build/config/seed smoke evidence | Implemented as MVP |
 
 ---
 
@@ -117,7 +125,8 @@ He thong auth hien tai danh cho staff/employee:
 Gioi han can ghi ro:
 
 - Branch-scope authorization chua ap dung trong cycle nay.
-- Employee CRUD endpoint chua co; admin dau tien bootstrap bang env.
+- Employee CRUD endpoint da co nhung van la admin-only; branch-scope permission theo tung chi nhanh
+  chua duoc ap dung.
 - JWT duoc ky HS256 bang stdlib crypto trong code hien tai, khong dung thu vien `golang-jwt/jwt`.
 
 ### 4.3 Data Model Highlights
@@ -133,6 +142,9 @@ Gioi han can ghi ro:
 | `employees` | Staff auth identity, roles, branch assignment |
 | `refresh_tokens` | Hash refresh token, expiry, revoke timestamp |
 | `refunds` | Audit record cho hoan tien MVP |
+
+Dashboard/report endpoints doc aggregate tu `members`, `subscriptions`, `refunds`, `attendance`,
+va `sessions`; hien chua co collection report rieng.
 
 ---
 
@@ -187,6 +199,9 @@ Bang chung kiem thu co the dua vao chuong testing:
 | Middleware tests | Missing token `401`, invalid token `401`, allowed role `200`, forbidden role `403`, unexpected service error `500` |
 | Manual API | Auth login, protected route with/without token, refresh rotation, reused old refresh token, logout idempotency |
 | DB verification | Admin bootstrap, bcrypt password hash, refresh-token hash storage, no raw token, `revoked_at` after refresh/logout |
+| Integration tests | `internal/integration` uses real router wiring and isolated MongoDB test DBs |
+| Frontend build/smoke | `npm --prefix frontend run build` and frontend phase browser smokes |
+| Docker/demo package | `docker compose config/build` and deterministic `cmd/seed` demo data flow |
 
 De viet bao cao, nen trinh bay testing theo 3 lop:
 
@@ -200,25 +215,24 @@ De viet bao cao, nen trinh bay testing theo 3 lop:
 
 ### Can state as current limitations
 
-- Chua co endpoint CRUD nhan vien; moi co model employee va bootstrap admin.
 - Chua co branch-scope guard.
-- Chua co TTL index cleanup cho refresh tokens.
+- TTL index cleanup cho refresh tokens la eventual theo co che MongoDB, khong phai xoa tuc thi.
 - Refresh rotation co residual availability risk: token cu bi revoke truoc khi replacement persist.
 - Chua co transaction MongoDB cho mot so flow gom nhieu write nhu refund audit va attendance side
   effects.
-- Chua co Cron jobs, notification, report dashboard, online payment, face recognition.
-- Frontend Staff Portal/Member App hien moi la thiet ke/material, chua phai implementation trong repo.
+- Dashboard/report hien la MVP read-only; chua co PDF/CSV export hoac report scheduling.
+- Frontend Staff Portal la MVP cho nhan vien; chua co Member App rieng cho hoc vien.
+- Chua co Cron jobs, notification, online payment, face recognition.
 
 ### Suitable future work list
 
-1. Employee management: tao/sua/xem staff, reset password, gan role/branch.
-2. Branch-scope authorization theo branch assignment.
-3. Index/data-integrity hardening: TTL refresh token, unique refund by subscription, duplicate
-   makeup guard.
-4. Integration tests voi fixture MongoDB.
-5. Reporting endpoints va dashboard.
-6. Payment gateway va audit log tai chinh.
-7. Frontend implementation cho Staff Portal va Member App.
+1. Branch-scope authorization theo branch assignment.
+2. Permanent Playwright regression suite cho frontend.
+3. Report export PDF/CSV, scheduled reports, va deeper revenue/accounting views.
+4. Payment gateway va audit log tai chinh.
+5. Cron jobs, notification/reminder, va operational automation.
+6. Member App rieng cho hoc vien.
+7. MongoDB transaction hardening cho cac flow nhieu write neu he thong len production.
 
 ---
 
@@ -255,10 +269,11 @@ De viet bao cao, nen trinh bay testing theo 3 lop:
 ## 9. Report-Ready Paragraph
 
 "He thong Gym Management System duoc trien khai theo kien truc phan lop Handler - Service -
-Repository - MongoDB. Cach to chuc nay giup tach ro trach nhiem: handler chi xu ly HTTP input/output,
-service dam nhan business rules, repository phu trach truy cap MongoDB va index. Phien ban backend
-hien tai da hoan thanh cac luong nghiep vu cot loi gom quan ly hoc vien, goi tap, chi nhanh, the
-tap, diem danh, bao nghi/tap bu, lich lop, tim chi nhanh gan nhat va xac thuc/phan quyen nhan vien.
-Qua trinh kiem thu ket hop automated tests, middleware tests, manual API va xac minh truc tiep tren
-MongoDB, dam bao cac rule quan trong nhu khong tin client ve tien, refresh token chi luu dang hash,
-va role guard tra dung `401/403` duoc kiem chung."
+Repository - MongoDB, kem frontend Staff Portal bang React/Vite. Cach to chuc nay giup tach ro trach
+nhiem: handler chi xu ly HTTP input/output, service dam nhan business rules, repository phu trach
+truy cap MongoDB va index. Phien ban hien tai da hoan thanh cac luong nghiep vu cot loi gom quan ly
+hoc vien, goi tap, chi nhanh, the tap, diem danh, bao nghi/tap bu, lich lop, tim chi nhanh gan nhat,
+xac thuc/phan quyen nhan vien, quan ly staff va dashboard quan tri MVP. Qua trinh kiem thu ket hop
+automated tests, middleware tests, integration tests, frontend build/browser smoke, manual API va xac
+minh truc tiep tren MongoDB, dam bao cac rule quan trong nhu khong tin client ve tien, refresh token
+chi luu dang hash, va role guard tra dung `401/403` duoc kiem chung."

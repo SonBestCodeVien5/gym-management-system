@@ -48,6 +48,7 @@ Implemented backend surfaces:
 | Data integrity | Central MongoDB index bootstrap with unique/query/partial unique/TTL indexes |
 | Frontend readiness | Allow-list CORS for browser FE dev and current employee restore endpoint |
 | Integration tests | `internal/app` shared router wiring, `internal/testutil` fixtures, and MongoDB-backed integration tests |
+| Final package | Full-stack Docker, seed demo data command, root quickstart README, report assembly draft |
 
 Planned next surfaces:
 - CI automation and expanded integration coverage for sessions/not-found cases remain follow-ups.
@@ -74,6 +75,10 @@ Planned next surfaces:
   and build/browser smoke passed. Full route/viewport matrix, seeded live backend checks, and a
   permanent Playwright suite remain deferred follow-ups.
 - Frontend delivery now has dedicated `$gym-fe-*` skills and `frontend_skills/` memory.
+- Final project package is implemented, reviewed, tested, and completed. The project now has
+  configurable `DB_NAME`, `cmd/seed` demo data with actual-ID relationship capture, full-stack
+  Docker Compose, final root README quickstart, reconciled report material, and verified
+  API/frontend smoke on a clean Docker volume.
 
 ## Rules Worth Remembering
 
@@ -114,8 +119,7 @@ Planned next surfaces:
 ## Resume Point
 
 FE11 and FE12 are complete as frontend cycles.
+Final project package implementation, review, test, and completion are complete.
 Start from:
 
-1. `$gym-git` to review or commit the current frontend docs/context sync
-2. `$gym-fe-plan` if you want to start the next frontend cycle
-3. `$gym-fe-test` if you want a regression pass after any later UI changes
+1. `$gym-git` to inspect the final diff and prepare commit/handoff, or submission review.

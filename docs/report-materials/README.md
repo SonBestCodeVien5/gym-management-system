@@ -14,6 +14,7 @@ context and from implementation-facing docs.
 | Implementation plan | [05_implementation_plan.md](05_implementation_plan.md) |
 | Conclusion and future work | [06_conclusion_future_work.md](06_conclusion_future_work.md) |
 | Current implementation evidence and report assembly | [07_current_implementation_evidence.md](07_current_implementation_evidence.md) |
+| Final report assembly draft | [final_report.md](final_report.md) |
 | Session business update | [sessions_business_update.md](sessions_business_update.md) |
 
 ## Use With
