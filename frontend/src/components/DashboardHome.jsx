@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import KpiCard from './KpiCard.jsx'
 import MemberTable from './MemberTable.jsx'
 import PlanDonut from './PlanDonut.jsx'
@@ -187,6 +187,7 @@ function mapSessions(items) {
 function DashboardHome({ employee, navItems, activeItem }) {
   const { accessToken } = useAuth()
   const [expandedMobilePanel, setExpandedMobilePanel] = useState(null)
+  const requestIdRef = useRef(0)
   const [dashboardState, setDashboardState] = useState({
     status: 'idle',
     data: EMPTY_DASHBOARD,
@@ -214,6 +215,7 @@ function DashboardHome({ employee, navItems, activeItem }) {
     (highest, item) => (!highest || item.value > highest.value ? item : highest),
     null,
   )
+  const isDashboardBusy = dashboardState.status === 'loading' || dashboardState.status === 'refreshing'
   const todayLabel = new Intl.DateTimeFormat('en-US', {
     weekday: 'long',
     month: 'short',
@@ -222,68 +224,65 @@ function DashboardHome({ employee, navItems, activeItem }) {
   const updatedAtLabel = data.summary?.range?.to ? `Updated ${formatDateLabel(data.summary.range.to)}` : 'Live dashboard'
   const sectionErrorMessages = Object.values(dashboardState.errors).filter(Boolean)
 
-  useEffect(() => {
+  const loadDashboard = useCallback(async () => {
     if (!accessToken || !canUseDashboard) {
       return
     }
 
-    let active = true
+    const requestId = requestIdRef.current + 1
+    requestIdRef.current = requestId
 
-    async function loadDashboard() {
+    setDashboardState((current) => ({
+      ...current,
+      status: current.data.summary ? 'refreshing' : 'loading',
+      error: null,
+      errors: {},
+    }))
+
+    const [summaryResult, revenueResult, plansResult, membersResult, sessionsResult] = await Promise.allSettled([
+      getDashboardSummary(accessToken),
+      getDashboardRevenue(accessToken),
+      getDashboardPlanDistribution(accessToken),
+      getDashboardRecentMembers(accessToken, { limit: 5 }),
+      getDashboardTodaySessions(accessToken),
+    ])
+
+    if (requestId !== requestIdRef.current) {
+      return
+    }
+
+    if (summaryResult.status === 'rejected') {
       setDashboardState((current) => ({
-        ...current,
-        status: current.data.summary ? 'refreshing' : 'loading',
-        error: null,
+        status: current.data.summary ? 'stale' : 'error',
+        data: current.data,
         errors: {},
+        error: summaryResult.reason,
       }))
-
-      const [summaryResult, revenueResult, plansResult, membersResult, sessionsResult] = await Promise.allSettled([
-        getDashboardSummary(accessToken),
-        getDashboardRevenue(accessToken),
-        getDashboardPlanDistribution(accessToken),
-        getDashboardRecentMembers(accessToken, { limit: 5 }),
-        getDashboardTodaySessions(accessToken),
-      ])
-
-      if (!active) {
-        return
-      }
-
-      if (summaryResult.status === 'rejected') {
-        setDashboardState((current) => ({
-          status: current.data.summary ? 'stale' : 'error',
-          data: current.data,
-          errors: {},
-          error: summaryResult.reason,
-        }))
-        return
-      }
-
-      setDashboardState((current) => ({
-        status: 'success',
-        data: {
-          summary: summaryResult.value.data,
-          revenue: revenueResult.status === 'fulfilled' ? revenueResult.value.data?.items || [] : current.data.revenue,
-          plans: plansResult.status === 'fulfilled' ? plansResult.value.data?.items || [] : current.data.plans,
-          members: membersResult.status === 'fulfilled' ? membersResult.value.data?.items || [] : current.data.members,
-          sessions: sessionsResult.status === 'fulfilled' ? sessionsResult.value.data?.items || [] : current.data.sessions,
-        },
-        errors: {
-          revenue: revenueResult.status === 'rejected' ? apiErrorText(revenueResult.reason) : null,
-          plans: plansResult.status === 'rejected' ? apiErrorText(plansResult.reason) : null,
-          members: membersResult.status === 'rejected' ? apiErrorText(membersResult.reason) : null,
-          sessions: sessionsResult.status === 'rejected' ? apiErrorText(sessionsResult.reason) : null,
-        },
-        error: null,
-      }))
+      return
     }
 
-    loadDashboard()
-
-    return () => {
-      active = false
-    }
+    setDashboardState((current) => ({
+      status: 'success',
+      data: {
+        summary: summaryResult.value.data,
+        revenue: revenueResult.status === 'fulfilled' ? revenueResult.value.data?.items || [] : current.data.revenue,
+        plans: plansResult.status === 'fulfilled' ? plansResult.value.data?.items || [] : current.data.plans,
+        members: membersResult.status === 'fulfilled' ? membersResult.value.data?.items || [] : current.data.members,
+        sessions: sessionsResult.status === 'fulfilled' ? sessionsResult.value.data?.items || [] : current.data.sessions,
+      },
+      errors: {
+        revenue: revenueResult.status === 'rejected' ? apiErrorText(revenueResult.reason) : null,
+        plans: plansResult.status === 'rejected' ? apiErrorText(plansResult.reason) : null,
+        members: membersResult.status === 'rejected' ? apiErrorText(membersResult.reason) : null,
+        sessions: sessionsResult.status === 'rejected' ? apiErrorText(sessionsResult.reason) : null,
+      },
+      error: null,
+    }))
   }, [accessToken, canUseDashboard])
+
+  useEffect(() => {
+    loadDashboard()
+  }, [loadDashboard])
 
   if (!canUseDashboard) {
     return (
@@ -365,6 +364,14 @@ function DashboardHome({ employee, navItems, activeItem }) {
                 : updatedAtLabel}
           </span>
           <span>{branchCount} assigned branches</span>
+          <button
+            type="button"
+            className="dashboard-refresh-button"
+            onClick={loadDashboard}
+            disabled={isDashboardBusy}
+          >
+            {dashboardState.status === 'refreshing' ? 'Refreshing' : 'Refresh'}
+          </button>
         </div>
       </section>
 
@@ -459,9 +466,11 @@ function DashboardHome({ employee, navItems, activeItem }) {
       </div>
 
       <div className="mobile-expand-row">
-        <section className="ops-panel mobile-expand-panel" aria-labelledby="mobile-members-title">
+        <section className="ops-panel mobile-expand-panel" aria-labelledby="mobile-members-title" id="mobile-members-panel">
           <button
             type="button"
+            aria-label="Toggle latest member registrations"
+            aria-controls="mobile-members-panel"
             aria-expanded={expandedMobilePanel === 'members'}
             onClick={() => setExpandedMobilePanel((current) => (current === 'members' ? null : 'members'))}
           >
@@ -474,9 +483,11 @@ function DashboardHome({ employee, navItems, activeItem }) {
           {expandedMobilePanel === 'members' ? <MemberTable members={latestMembers} /> : null}
         </section>
 
-        <section className="ops-panel mobile-expand-panel" aria-labelledby="mobile-sessions-title">
+        <section className="ops-panel mobile-expand-panel" aria-labelledby="mobile-sessions-title" id="mobile-sessions-panel">
           <button
             type="button"
+            aria-label="Toggle today's sessions"
+            aria-controls="mobile-sessions-panel"
             aria-expanded={expandedMobilePanel === 'sessions'}
             onClick={() => setExpandedMobilePanel((current) => (current === 'sessions' ? null : 'sessions'))}
           >

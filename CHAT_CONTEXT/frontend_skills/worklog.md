@@ -16,7 +16,7 @@ Use this file for short frontend roadmap and completion summaries.
 - [x] FE 09 Sessions - session list/calendar, create, enroll, session check-in
 - [x] FE 10 Employees - admin-only staff management and password reset
 - [x] FE 11 Live Dashboard APIs - completed
-- [ ] FE 12 UX/Test Hardening - limited hardening pass run; full matrix still pending
+- [x] FE 12 UX/Test Hardening - completed as MVP; full matrix, mobile sweep, and permanent Playwright suite deferred
 
 Roadmap source: `CHAT_CONTEXT/frontend_skills/plans/00_frontend_roadmap.md`.
 
@@ -34,6 +34,21 @@ Build and mocked browser smoke passed for the live dashboard after the FE11 revi
 
 FE11 is now complete. Use `$gym-fe-test` only if a future regression pass is needed; otherwise move
 to FE12.
+
+## Completed - 2026-06-04 - FE 12 UX/Test Hardening
+
+FE12 is complete as an MVP hardening cycle with documented limitations.
+
+- Dashboard stale-refresh UX is now visible from the UI with a manual refresh control and a stale
+  alert that preserves the last successful snapshot.
+- Dashboard/mobile accessibility cleanup now gives the Members and Sessions expandable panels
+  distinct accessible names.
+- Build, whitespace, and targeted browser smoke all passed.
+- The remaining full route/viewport matrix, seeded live backend browser checks, and permanent
+  Playwright suite are deferred as follow-ups.
+
+Use `$gym-git` if you want to review or commit the current frontend docs/context sync, or start the
+next frontend cycle when ready.
 
 ## Planned - 2026-05-29 - FE 00 Frontend Roadmap
 
@@ -526,6 +541,24 @@ permanent Playwright automation remain follow-ups.
 
 Use `$gym-fe-review` with `CHAT_CONTEXT/frontend_skills/implementations/11_live_dashboard_apis.md`
 and `CHAT_CONTEXT/frontend_skills/implementations/12_ux_test_hardening.md`.
+
+## Implemented/Tested - 2026-06-04 - FE 12 UX/Test Hardening Follow-up
+
+Ran a FE12 follow-up pass to close the remaining dashboard hardening gaps:
+
+- Added a visible dashboard refresh control so stale live-dashboard state can be exercised from the
+  UI and not only in async code paths.
+- Fixed the mobile members and sessions expand labels so browser automation and assistive tech can
+  distinguish the panels cleanly.
+- Rebuilt the frontend successfully after the change.
+- Started Vite on alternate port `5178` for the follow-up smoke after `5174` had already been used
+  in earlier verification.
+- Used MCP Playwright mocked auth/API to verify the refresh button, a stale refresh failure path,
+  mobile `390x844` no-overflow behavior, distinct mobile expand labels, and the receptionist
+  forbidden state.
+
+This improves FE12 coverage but still does not replace a full viewport matrix or a reusable
+Playwright suite.
 
 ## Reviewed - 2026-06-02 - FE 11 And FE 12 Limited Pass
 

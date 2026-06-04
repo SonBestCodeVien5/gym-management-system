@@ -51,8 +51,9 @@ Implemented backend surfaces:
 
 Planned next surfaces:
 - CI automation and expanded integration coverage for sessions/not-found cases remain follow-ups.
-- FE02 dashboard reference is complete functionally. FE02.1 dashboard responsive repair is a
-  temporary containment pass, with final responsive design deferred to FE12.
+- FE02 dashboard reference is complete functionally. FE02.1 dashboard responsive repair was a
+  temporary containment pass; FE12 later completed the broader dashboard hardening as an MVP with
+  the full route/viewport matrix deferred.
 - FE03 app routing/API foundation is implemented, reviewed, tested, and complete.
 - FE04 brand asset integration is implemented, reviewed, tested, and complete. The frontend now uses
   selected official Iron Forge runtime assets for favicon/metadata, login/sidebar/status branding,
@@ -68,6 +69,10 @@ Planned next surfaces:
 - Backend dashboard/report aggregate APIs are implemented and tested. FE11 live dashboard APIs are
   implemented, reviewed, tested, and complete against `GET /api/v1/dashboard/summary`,
   `/revenue`, `/plans`, `/members/recent`, and `/sessions/today`.
+- FE12 UX/Test Hardening is complete as an MVP hardening cycle. Dashboard stale-refresh behavior is
+  visible from the UI, the mobile Members/Sessions expand buttons have distinct accessible names,
+  and build/browser smoke passed. Full route/viewport matrix, seeded live backend checks, and a
+  permanent Playwright suite remain deferred follow-ups.
 - Frontend delivery now has dedicated `$gym-fe-*` skills and `frontend_skills/` memory.
 
 ## Rules Worth Remembering
@@ -108,10 +113,9 @@ Planned next surfaces:
 
 ## Resume Point
 
-FE11 is complete and FE12 remains the next frontend cycle.
+FE11 and FE12 are complete as frontend cycles.
 Start from:
 
-1. `$gym-fe-implement` for FE12 UX/Test Hardening using
-   `CHAT_CONTEXT/frontend_skills/plans/12_ux_test_hardening.md`
-2. `$gym-fe-test` if you want a final FE12 browser/build pass after any further changes
-3. `$gym-git` to review/commit/push the current backend dashboard and frontend planning/test notes
+1. `$gym-git` to review or commit the current frontend docs/context sync
+2. `$gym-fe-plan` if you want to start the next frontend cycle
+3. `$gym-fe-test` if you want a regression pass after any later UI changes
